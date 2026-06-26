@@ -14,7 +14,7 @@ public class FootballFieldContext : DbContext
     {
         
     }
-    public DbSet<TestEntity> TestEntities { get; set; }
+    
 
 
 }
