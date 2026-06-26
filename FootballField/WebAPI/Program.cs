@@ -1,4 +1,11 @@
+using FootballField.DataAccess.Concrete.EntityFramework; 
+using Microsoft.EntityFrameworkCore;
+using FootballField.DataAccess.Concrete;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<FootballFieldContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 1. .NET 10'un Kendi Servis Tanımlamaları (Başka hiçbir harici paket yok)
 builder.Services.AddControllers();
