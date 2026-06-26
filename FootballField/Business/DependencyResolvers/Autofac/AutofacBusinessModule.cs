@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Business.DependencyResolvers.Autofac
 {
-    internal class AutofacBusinessModule : Module
+    public class AutofacBusinessModule : Module
     {
     }
 }
