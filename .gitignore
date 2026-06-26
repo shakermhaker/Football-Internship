@@ -483,3 +483,4 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 /FootballField/WebAPI/appsettings.json
+/FootballField/WebAPI/appsettings.Development.json
