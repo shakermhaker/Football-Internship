@@ -1,7 +1,7 @@
 <Solution>
   <Project Path="Business/Business.csproj" Id="79b982e1-151d-4bcf-9ea1-bcf6331ceda6" />
   <Project Path="Console/Console.csproj" Id="37238c7f-d2d2-4363-b159-13774e583c09" />
-  <Project Path="Core/Core.csproj" Id="e970cd4f-a03e-4d55-ab55-0b9f83338a55" />
+  <Project Path="Core/Core.csproj" Id="370babe4-a1a5-4516-9107-184aed85d64a" />
   <Project Path="DataAccess/DataAccess.csproj" Id="10bf5961-28ae-4aa8-8d5a-70c0c3cdfedc" />
   <Project Path="Entities/Entities.csproj" Id="95b0a27a-436a-428c-9a9e-881b0650ce1b" />
   <Project Path="WebAPI/WebAPI.csproj" Id="507edf95-aa22-478b-b87c-0146d98d32bf" />
