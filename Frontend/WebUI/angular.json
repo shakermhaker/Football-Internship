@@ -3,7 +3,7 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": "b5ec3fcf-f6ab-4260-9fb7-741331492ca1"
+    "analytics": "a99afa08-09f2-49ef-9e5d-74994e38a67e"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -25,15 +25,30 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets",
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "src/assets/plugins/global/fonts",
+                "output": "assets/fonts/"
               }
             ],
             "styles": [
-  "node_modules/primeicons/primeicons.css",
-  "src/styles.scss"
-]
+              "src/styles.scss",
+              "src/assets/plugins/global/plugins.bundle.css",
+              "src/assets/css/style.bundle.css"
+            ],
+            "scripts": [
+              "src/assets/plugins/global/plugins.bundle.js",
+              "src/assets/js/scripts.bundle.js"
+            ],
+            "server": "src/main.server.ts",
+            "outputMode": "server",
+            "security": {
+              "allowedHosts": []
+            },
+            "ssr": {
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {
