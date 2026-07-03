@@ -1,0 +1,52 @@
+<div style="text-align: center; margin-bottom: 2rem;">
+  <h2 style="margin: 0; color: #2c3e50; font-weight: 700;">Kayıt Ol</h2>
+  <p style="color: #7f8c8d; margin-top: 0.5rem; font-size: 0.95rem;">Halı saha sistemine hoş geldiniz</p>
+</div>
+
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 1.5rem;">
+  
+  <div style="display: flex; gap: 1rem;">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+      <span class="p-input-icon-left" style="width: 100%;">
+        <i class="pi pi-user" style="position: absolute; top: 50%; transform: translateY(-50%); left: 10px; color: #95a5a6;"></i>
+        <input type="text" pInputText formControlName="firstName" placeholder="Adınız" style="width: 100%; padding-left: 2.5rem;" />
+      </span>
+      <small *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.invalid" style="color: #e74c3c;">
+        En az 2 karakter girmelisiniz.
+      </small>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+      <span class="p-input-icon-left" style="width: 100%;">
+        <i class="pi pi-user" style="position: absolute; top: 50%; transform: translateY(-50%); left: 10px; color: #95a5a6;"></i>
+        <input type="text" pInputText formControlName="lastName" placeholder="Soyadınız" style="width: 100%; padding-left: 2.5rem;" />
+      </span>
+      <small *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.invalid" style="color: #e74c3c;">
+        En az 2 karakter girmelisiniz.
+      </small>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+    <span class="p-input-icon-left" style="width: 100%;">
+      <i class="pi pi-envelope" style="position: absolute; top: 50%; transform: translateY(-50%); left: 10px; color: #95a5a6;"></i>
+      <input type="email" pInputText formControlName="email" placeholder="E-posta Adresi" style="width: 100%; padding-left: 2.5rem;" />
+    </span>
+    <small *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" style="color: #e74c3c;">
+      Lütfen geçerli bir e-posta adresi giriniz.
+    </small>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+    <span class="p-input-icon-left" style="width: 100%;">
+      <i class="pi pi-lock" style="position: absolute; top: 50%; transform: translateY(-50%); left: 10px; color: #95a5a6;"></i>
+      <input type="password" pInputText formControlName="password" placeholder="Şifre" style="width: 100%; padding-left: 2.5rem;" />
+    </span>
+    <small *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" style="color: #e74c3c;">
+      Şifreniz en az 6 karakter olmalıdır.
+    </small>
+  </div>
+
+  <p-button type="submit" label="Kayıt Ol" icon="pi pi-user-plus" [style]="{'width': '100%', 'margin-top': '0.5rem'}"></p-button>
+
+</form>
