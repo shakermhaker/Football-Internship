@@ -5,17 +5,23 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class User : IEntity
+    public class User : IEntity , ICoreUser
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Surname { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public byte[] PasswordSalt { get; set; }
+        public byte[] PasswordHash { get; set; }
+
         public string Phone { get; set; } = string.Empty;
+        public bool Status { get; set; }
         public DateTime BirthDate { get; set; }
 
         // Navigation Properties
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        //public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<UserOperationClaim> UserOperationClaims { get; set; } = new List<UserOperationClaim>();
+
         public ICollection<Business> UserBusinesses { get; set; } = new List<Business>();
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
     }
