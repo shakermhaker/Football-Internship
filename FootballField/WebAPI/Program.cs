@@ -1,11 +1,60 @@
-using FootballField.DataAccess.Concrete.EntityFramework; 
-using Microsoft.EntityFrameworkCore;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Core.DependencyResolvers;
+using Core.Extensions;
+using Core.Utilities.IoC;
 using FootballField.DataAccess.Concrete;
+using FootballField.DataAccess.Concrete.EntityFramework;
+using Microsoft.EntityFrameworkCore;
+using Core.Utilities.Security.Encryption;
+using Core.Utilities.Security.JWT;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Business.DependencyResolvers.Autofac;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200") // Sadece bizim Angular projesine izin ver
+                  .AllowAnyHeader()                   // Gelen tüm HTTP başlıklarına (Content-Type, Authorization vb.) izin ver
+                  .AllowAnyMethod()                   // GET, POST, PUT, DELETE hepsine izin ver
+                  .AllowCredentials();                // İleride JWT Cookie kullanırsak sorun çıkmasın diye izin ver
+        });
+});
+// 💡 Eski "Configuration" yerine artık "builder.Configuration" kullanıyoruz
+var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
-builder.Services.AddDbContext<FootballFieldContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// JWT Kimlik Doğrulama Ayarlarını Enjekte Ediyoruz
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidIssuer = tokenOptions.Issuer,
+            ValidAudience = tokenOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
+        };
+    });
+
+// Core katmanından gelen Cross-Cutting Concerns (Caching, Performance vb.) modülleri
+builder.Services.AddDependencyResolvers(new ICoreModule[] {
+    new CoreModule()
+});
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    containerBuilder.RegisterModule(new AutofacBusinessModule());
+});
+
+
 
 // 1. .NET 10'un Kendi Servis Tanımlamaları (Başka hiçbir harici paket yok)
 builder.Services.AddControllers();
@@ -23,6 +72,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
+
+
+app.UseCors("AllowAngularApp");
+
 app.UseAuthorization();
 app.MapControllers();
 

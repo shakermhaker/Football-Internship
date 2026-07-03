@@ -20,10 +20,10 @@ namespace Core.Utilities.Security.JWT
         public JwtHelper(IConfiguration configuration)
         {
             Configuration = configuration;
-            //_tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
+                _tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
         }
-        public AccessToken CreateToken(ICoreUser user, List<IOperationClaim> operationClaims)
+        public AccessToken CreateToken(ICoreUser user, IEnumerable<IOperationClaim> operationClaims)
         {
             _accessTokenExpiration = DateTime.Now.AddMinutes(_tokenOptions.AccessTokenExpiration);
             var securityKey = SecurityKeyHelper.CreateSecurityKey(_tokenOptions.SecurityKey);
@@ -41,7 +41,7 @@ namespace Core.Utilities.Security.JWT
         }
 
         public JwtSecurityToken CreateJwtSecurityToken(TokenOptions tokenOptions, ICoreUser user,
-            SigningCredentials signingCredentials, List<IOperationClaim> operationClaims)
+            SigningCredentials signingCredentials, IEnumerable<IOperationClaim> operationClaims)
         {
             var jwt = new JwtSecurityToken(
                 issuer: tokenOptions.Issuer,
@@ -54,7 +54,7 @@ namespace Core.Utilities.Security.JWT
             return jwt;
         }
 
-        private IEnumerable<Claim> SetClaims(ICoreUser user, List<IOperationClaim> operationClaims)
+        private IEnumerable<Claim> SetClaims(ICoreUser user, IEnumerable<IOperationClaim> operationClaims)
         {
             var claims = new List<Claim>();
             claims.AddNameIdentifier(user.Id.ToString());
