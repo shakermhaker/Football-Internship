@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router'; // Yönlendirme için bunu ekledik
-import { AuthService } from '../../../Core/services/auth.service'
+import { AuthService } from '../../../core/services/auth.service';
 
 declare var Swal: any;
 
