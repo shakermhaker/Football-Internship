@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
-    public class AuthController : Controller
+    [Route("api/[controller]")] // 1. EKLENEN SATIR: Adresi api/Auth olarak ayarlar
+    [ApiController]             // 2. EKLENEN SATIR: Bunun bir API olduğunu belirtir
+    public class AuthController : ControllerBase // 3. DEĞİŞEN KISIM: Controller -> ControllerBase
     {
-        private readonly IAuthService _authService; 
+        private readonly IAuthService _authService;
 
         public AuthController(IAuthService authService)
         {

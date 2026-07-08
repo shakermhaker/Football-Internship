@@ -1,1 +1,48 @@
-<p>login works!</p>
+<div class="w-lg-500px p-10 p-lg-15 mx-auto football-dark-card rounded shadow-sm">
+  
+  <form class="form w-100" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    
+    <div class="text-center mb-10">
+      <h1 class="text-orange mb-3">Sahaya Çık!</h1>
+      <div class="text-gray-400 fw-bold fs-4">
+        Rezervasyon yapmak için giriş yap
+      </div>
+    </div>
+
+    <div class="fv-row mb-10">
+      <label class="form-label fs-6 fw-bolder text-white">E-Posta</label>
+      <input 
+        class="form-control form-control-lg form-control-solid custom-input" 
+        type="email" 
+        formControlName="email" 
+        autocomplete="off" 
+        placeholder="ornek@mail.com" 
+      />
+    </div>
+
+    <div class="fv-row mb-10">
+      <div class="d-flex justify-content-between mt-n5">
+        <label class="form-label fs-6 fw-bolder text-white mb-3">Şifre</label>
+      </div>
+      <input 
+        class="form-control form-control-lg form-control-solid custom-input" 
+        type="password" 
+        formControlName="password" 
+        autocomplete="off" 
+        placeholder="••••••••" 
+      />
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-lg w-100 football-btn" [disabled]="loginForm.invalid">
+        <span class="indicator-label fs-4">Giriş Yap</span>
+      </button>
+    </div>
+    
+    <div class="text-center mt-8">
+      <span class="text-gray-400 fw-bold fs-5">Hesabın yok mu?</span>
+      <a routerLink="/auth/register" class="link-success fw-bolder fs-5 ms-2">Hemen Kaydol</a>
+    </div>
+
+  </form>
+</div>

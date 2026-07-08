@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout.component';
 import { MainLayoutComponent } from './shared/layouts/main-layout.component';
 import { RegisterComponent } from './features/auth/register/register.component';
-import { Login } from './features/auth/login/login';
+import { LoginComponent } from './features/auth/login/login';
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
   {
@@ -10,7 +10,7 @@ export const routes: Routes = [
     component: AuthLayoutComponent,
     children: [
       { path: 'register', component: RegisterComponent },
-      { path: 'login', component: Login } // 2. Buradaki yorum satırını kaldır ve aktif et
+      { path: 'login', component: LoginComponent } // 2. Buradaki yorum satırını kaldır ve aktif et
     ]
   },
 
