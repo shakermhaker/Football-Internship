@@ -1,1 +1,11 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg-dark: #121417;
+  --accent-orange: #ff7d00; // Senin turuncun
+  --accent-green: #00ff41;  // Senin yeşilin
+  --text-light: #ffffff;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+}
