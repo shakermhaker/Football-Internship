@@ -1,16 +1,21 @@
 import { Routes } from '@angular/router';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout.component';
 import { MainLayoutComponent } from './shared/layouts/main-layout.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { LoginComponent } from './features/auth/login/login';
+
 export const routes: Routes = [
-  // 1. Auth Sayfaları Grubu
+  // 1. Auth Sayfaları Grubu (Lazy Loading ile)
   {
     path: 'auth',
     component: AuthLayoutComponent,
     children: [
-      { path: 'register', component: RegisterComponent },
-      { path: 'login', component: LoginComponent } // 2. Buradaki yorum satırını kaldır ve aktif et
+      { 
+        path: 'register', 
+        loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) 
+      },
+      { 
+        path: 'login', 
+        loadComponent: () => import('./features/auth/login/login').then(m => m.LoginComponent) 
+      }
     ]
   },
 
@@ -19,14 +24,14 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      // Ana sayfaya gelindiğinde sahaları göstereceğin component buraya gelecek
+       // Sahalar buraya eklenecek
     ]
   },
 
   // 3. Fallback/Catch-All Rota
   {
     path: '**',
-    redirectTo: 'auth/login', // Saçma bir URL girilirse register yerine login'e atmak daha mantıklı olabilir
+    redirectTo: 'auth/login',
     pathMatch: 'full'
   }
 ];
