@@ -19,15 +19,21 @@ namespace WebAPI.Controllers
         public ActionResult Login(UserForLoginDto userForLoginDto)
         {
             var userToLogin = _authService.Login(userForLoginDto);
-            if (!userToLogin.Success)
-            { 
-                return BadRequest(userToLogin.Message);
-            }
+            if (!userToLogin.Success) return BadRequest(userToLogin.Message);
 
             var result = _authService.CreateAccessToken(userToLogin.Data);
-            if(result.Success)
+            if (result.Success)
             {
-                return Ok(result.Data);
+                // Token'ı Cookie'ye ekle
+                Response.Cookies.Append("auth_token", result.Data.Token, new CookieOptions
+                {
+                    HttpOnly = true,    // JS erişemez (GÜVENLİ!)
+                    Secure = true,      // Sadece HTTPS üzerinden gider
+                    SameSite = SameSiteMode.Strict, // CSRF koruması
+                    Expires = DateTime.Now.AddDays(1)
+                });
+
+                return Ok(new { message = "Giriş başarılı" });
             }
             return BadRequest(result.Message);
         }

@@ -18,6 +18,8 @@ export class AuthService {
   // SADECE BU KISMI EKLEDİK
   login(data: any): Observable<any> {
     // Login işlemi için backend'e POST isteği atıyoruz
-    return this.http.post(`${this.apiUrl}/login`, data);
+    return this.http.post(`${this.apiUrl}/login`, data, { 
+    withCredentials: true // Cookie'yi tarayıcıya kaydetmek için 
+  });
   }
 }
