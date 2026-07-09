@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
-    public class AuthController : Controller
+    [Route("api/[controller]")] // 1. EKLENEN SATIR: Adresi api/Auth olarak ayarlar
+    [ApiController]             // 2. EKLENEN SATIR: Bunun bir API olduğunu belirtir
+    public class AuthController : ControllerBase // 3. DEĞİŞEN KISIM: Controller -> ControllerBase
     {
-        private readonly IAuthService _authService; 
+        private readonly IAuthService _authService;
 
         public AuthController(IAuthService authService)
         {
@@ -17,15 +19,21 @@ namespace WebAPI.Controllers
         public ActionResult Login(UserForLoginDto userForLoginDto)
         {
             var userToLogin = _authService.Login(userForLoginDto);
-            if (!userToLogin.Success)
-            { 
-                return BadRequest(userToLogin.Message);
-            }
+            if (!userToLogin.Success) return BadRequest(userToLogin.Message);
 
             var result = _authService.CreateAccessToken(userToLogin.Data);
-            if(result.Success)
+            if (result.Success)
             {
-                return Ok(result.Data);
+                // Token'ı Cookie'ye ekle
+                Response.Cookies.Append("auth_token", result.Data.Token, new CookieOptions
+                {
+                    HttpOnly = true,    // JS erişemez (GÜVENLİ!)
+                    Secure = true,      // Sadece HTTPS üzerinden gider
+                    SameSite = SameSiteMode.Strict, // CSRF koruması
+                    Expires = DateTime.Now.AddDays(1)
+                });
+
+                return Ok(new { message = "Giriş başarılı" });
             }
             return BadRequest(result.Message);
         }

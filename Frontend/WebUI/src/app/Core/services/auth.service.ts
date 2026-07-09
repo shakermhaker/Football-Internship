@@ -14,4 +14,12 @@ export class AuthService {
     // Neden Observable ve subscribe? Veri akışını boru hattıyla dinlemek için RxJS yapısı kullanıyoruz.
     return this.http.post(`${this.apiUrl}/register`, payload);
   }
+
+  // SADECE BU KISMI EKLEDİK
+  login(data: any): Observable<any> {
+    // Login işlemi için backend'e POST isteği atıyoruz
+    return this.http.post(`${this.apiUrl}/login`, data, { 
+    withCredentials: true // Cookie'yi tarayıcıya kaydetmek için 
+  });
+  }
 }
