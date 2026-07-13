@@ -3,7 +3,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
     "outDir": "./out-tsc/app",
+    "rootDir": ".",
     "types": [
       "node"
     ]
