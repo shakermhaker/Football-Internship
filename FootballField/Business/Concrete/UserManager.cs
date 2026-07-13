@@ -1,7 +1,8 @@
 ﻿using Business.Abstract;
 using Business.BusinessAspects.Autofac;
-using Core.Aspects.Autofac.Validation;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Autofac.Validation;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using System;
@@ -26,7 +27,8 @@ namespace Business.Concrete
         //örnek olarak kalsınlar commentte zaten
         //[SecuredOperation("product.add,admin")]
         //[ValidationAspect(typeof(SomethingValidator))]
-
+        //[CacheAspect]
+        
         public User Get(User user)
         {
            return _userDal.Get(u => u.Id == user.Id);
@@ -35,7 +37,7 @@ namespace Business.Concrete
         {
             _userDal.Update(user);
         }
-
+        //[CacheRemoveAspect("IUserService.Get")]
         public void Add(User user)
         {
             _userDal.Add(user);
