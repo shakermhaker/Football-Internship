@@ -22,4 +22,9 @@ export class AuthService {
     withCredentials: true // Cookie'yi tarayıcıya kaydetmek için 
   });
   }
+
+  sendVerificationEmail(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/resendVerificationEmail`, { email: email });
+  }
+  
 }

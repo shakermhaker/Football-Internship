@@ -21,6 +21,15 @@ namespace Business.Concrete
             return _userDal.GetClaims(user);
         }
 
+        public User Get(User user)
+        {
+           return _userDal.Get(u => u.Id == user.Id);
+        }
+        public void Update(User user)
+        {
+            _userDal.Update(user);
+        }
+
         public void Add(User user)
         {
             _userDal.Add(user);

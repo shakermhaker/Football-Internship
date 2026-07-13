@@ -16,6 +16,8 @@ namespace Entities.Concrete
 
         public string Phone { get; set; } = string.Empty;
         public bool Status { get; set; }
+
+        public bool IsEmailConfirmed { get; set; }
         public DateTime BirthDate { get; set; }
 
         // Navigation Properties

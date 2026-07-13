@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Core.Utilities.Results;
+using Entities.Concrete;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,11 +17,60 @@ namespace WebAPI.Controllers
             _authService = authService;
         }
 
+        [HttpPost("resendVerificationEmail")]
+        public async Task<IActionResult> ResendVerificationEmail([FromBody] string email)
+        {
+            // E-posta boş gelmiş mi kontrolü
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new ErrorResult("E-posta adresi boş olamaz."));
+            }
+
+            // Business katmanına işi devrediyoruz
+            var result = await _authService.ResendVerificationEmailAsync(email);
+
+            // Eğer kullanıcı yoksa veya zaten onaylıysa BadRequest dönüyoruz
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            // Başarılıysa 200 OK ile mesajı dönüyoruz
+            return Ok(result);
+        }
+
+        [HttpGet("verifyUserAccount")]
+        public async Task<IActionResult> VerifyUserAccount([FromQuery] int userId, [FromQuery] string token)
+        {
+            // Parametreler eksik mi diye güvenlik kontrolü
+            if (userId <= 0 || string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Geçersiz veya eksik doğrulama bağlantısı.");
+            }
+
+            
+            var result = await _authService.VerifyUserAccountAsync(userId, token);
+
+            if (!result.Success)
+            {
+                
+                return BadRequest(result.Message);
+            }
+
+            
+
+            return Redirect("http://localhost:4200/auth/login");
+        }
+
+
         [HttpPost("login")]
         public ActionResult Login(UserForLoginDto userForLoginDto)
         {
             var userToLogin = _authService.Login(userForLoginDto);
-            if (!userToLogin.Success) return BadRequest(userToLogin.Message);
+            if (!userToLogin.Success)
+            {
+                return BadRequest(userToLogin);
+            }
 
             var result = _authService.CreateAccessToken(userToLogin.Data);
             if (result.Success)
@@ -39,9 +90,9 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("register")]
-        public ActionResult Register(UserForRegisterDto userForRegisterDto)
+        public async Task<ActionResult> Register(UserForRegisterDto userForRegisterDto)
         {
-            var registerResult = _authService.Register(userForRegisterDto, userForRegisterDto.Password);
+            var registerResult = await _authService.Register(userForRegisterDto, userForRegisterDto.Password);
             var result =_authService.CreateAccessToken(registerResult.Data);
             if (!result.Success)
             {

@@ -93,12 +93,12 @@ onRegisterSubmit(): void {
           // 3. SWEETALERT VE REDIRECT AKIŞI
           // Metronic'in entegre SweetAlert kütüphanesini tetikliyoruz
           Swal.fire({
-            text: "Registration successful! Please check your email to verify your account.",
+            text: "Kayıt Başarılı, Hesabınızı doğrulamak için lütfen mailinizi kontrol ediniz!",
             icon: "success",
             buttonsStyling: false,
-            confirmButtonText: "Ok, got it!",
+            confirmButtonText: "Tamam!",
             customClass: {
-              confirmButton: "btn btn-danger" // Metronic'in mavi buton stilini verdik
+              confirmButton: "btn btn-danger"
             }
           }).then((result: any) => {
             // Kullanıcı "Ok, got it!" butonuna bastığı an burası tetiklenir
@@ -116,10 +116,10 @@ onRegisterSubmit(): void {
           
           // Hata durumunda da kullanıcıya kırmızı bir pop-up gösterelim
           Swal.fire({
-            text: "Sorry, looks like there are some errors detected, please try again.",
+            text: "Bir hata oluştu, lütfen tekrar deneyiniz",
             icon: "error",
             buttonsStyling: false,
-            confirmButtonText: "Ok, got it!",
+            confirmButtonText: "Tamam!",
             customClass: {
               confirmButton: "btn btn-danger"
             }
