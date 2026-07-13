@@ -18,6 +18,8 @@ namespace Entities.Concrete
         public bool Status { get; set; }
 
         public bool IsEmailConfirmed { get; set; }
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? EmailVerificationTokenExpires { get; set; }
         public DateTime BirthDate { get; set; }
 
         // Navigation Properties

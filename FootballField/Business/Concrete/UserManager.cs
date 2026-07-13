@@ -1,4 +1,7 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
+using Core.Aspects.Autofac.Validation;
+using Business.ValidationRules.FluentValidation;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using System;
@@ -20,6 +23,9 @@ namespace Business.Concrete
         {
             return _userDal.GetClaims(user);
         }
+        //örnek olarak kalsınlar commentte zaten
+        //[SecuredOperation("product.add,admin")]
+        //[ValidationAspect(typeof(SomethingValidator))]
 
         public User Get(User user)
         {

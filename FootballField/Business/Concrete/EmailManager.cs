@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Business.Abstract;
+﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Entities.DTOs;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Business.Concrete
 {
@@ -14,6 +15,8 @@ namespace Business.Concrete
     {
         private readonly EmailSettings _emailSettings;
 
+
+        
         public EmailManager(IOptions<EmailSettings> emailSettings)
         {
            _emailSettings = emailSettings.Value;

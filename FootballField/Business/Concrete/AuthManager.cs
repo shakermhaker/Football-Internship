@@ -61,8 +61,11 @@ namespace Business.Concrete
             string token = Guid.NewGuid().ToString(); 
 
             string encodedToken = Uri.EscapeDataString(token);
+            user.EmailVerificationToken = token;
+            user.EmailVerificationTokenExpires = DateTime.UtcNow.AddHours(24);
+            _userService.Update(user);
 
-            
+
             string verificationUrl = $"{_appUrls.BaseApiUrl}/api/Auth/verifyUserAccount?userId={user.Id}&token={encodedToken}";
 
             string htmlBody = $@"
@@ -104,10 +107,22 @@ namespace Business.Concrete
                 return new SuccessDataResult<User>(user, "Hesabınız zaten doğrulanmış.");
             }
 
-            
-            user.IsEmailConfirmed = true;
+            if (user.EmailVerificationToken != token)
+            {
+                return new ErrorDataResult<User>("Doğrulama bağlantısı geçersiz veya bozulmuş!");
+            }
 
-            
+            if (user.EmailVerificationTokenExpires < DateTime.Now)
+            {
+                return new ErrorDataResult<User>("Doğrulama bağlantısının süresi dolmuş. Lütfen giriş ekrandan yeni bir link isteyin.");
+            }
+
+
+            user.IsEmailConfirmed = true;
+            user.EmailVerificationToken = null;         
+            user.EmailVerificationTokenExpires = null;
+
+
             _userService.Update(user);
 
             return new SuccessDataResult<User>(user, "E-posta adresiniz başarıyla doğrulanmış ve hesabınız aktif edilmiştir!");
