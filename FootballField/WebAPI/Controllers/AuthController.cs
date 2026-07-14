@@ -92,24 +92,24 @@ namespace WebAPI.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> Register(UserForRegisterDto userForRegisterDto)
         {
-            // Kayıt işlemini başlatıyoruz
-            var registerResult = _authService.Register(userForRegisterDto, userForRegisterDto.Password);
+            // 1. AWAIT KULLANIMI: İşlemin bitmesini bekleyip paketi (Task'i) açıyoruz
+            var registerResult = await _authService.Register(userForRegisterDto, userForRegisterDto.Password);
 
-            // KRİTİK KONTROL: Kayıt işlemi başarılı oldu mu? (Örn: Bu e-posta zaten kullanılıyor olabilir)
+            // 2. KRİTİK KONTROL: Kayıt başarılı oldu mu?
             if (!registerResult.Success)
             {
-                // Başarısızsa (kullanıcı varsa vb.) token üretmeye geçmeden işlemi durdur ve hata mesajını dön
                 return BadRequest(registerResult.Message);
             }
 
-            var registerResult = await _authService.Register(userForRegisterDto, userForRegisterDto.Password);
-            var result =_authService.CreateAccessToken(registerResult.Data);
+            // 3. TOKEN ÜRETİMİ: Kayıt başarılıysa token oluşturuyoruz
+            var result = _authService.CreateAccessToken(registerResult.Data);
+
             if (!result.Success)
             {
                 return BadRequest(result.Message);
             }
 
-            // Her şey kusursuzsa token'ı (ve dolayısıyla başarı mesajını) Angular'a gönderiyoruz
+            // 4. BAŞARILI DÖNÜŞ: Her şey tamamsa token'ı Angular'a yolluyoruz
             return Ok(result.Data);
         }
     }
