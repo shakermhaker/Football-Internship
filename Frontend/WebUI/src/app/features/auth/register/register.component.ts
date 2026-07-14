@@ -75,12 +75,12 @@ export class RegisterComponent implements OnInit {
           console.log('Registration success:', response);
 
           Swal.fire({
-            text: "Kayıt başarılı! Hesabını doğrulamak için e-postanı kontrol et.",
+            text: "Kayıt Başarılı, Hesabınızı doğrulamak için lütfen mailinizi kontrol ediniz!",
             icon: "success",
             buttonsStyling: false,
-            confirmButtonText: "Tamamdır",
+            confirmButtonText: "Tamam!",
             customClass: {
-              confirmButton: "btn btn-success" 
+              confirmButton: "btn btn-danger"
             }
           }).then((result: any) => {
             if (result.isConfirmed) {

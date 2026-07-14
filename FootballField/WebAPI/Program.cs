@@ -1,18 +1,21 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Business.DependencyResolvers.Autofac;
 using Core.DependencyResolvers;
 using Core.Extensions;
 using Core.Utilities.IoC;
-using FootballField.DataAccess.Concrete;
-using FootballField.DataAccess.Concrete.EntityFramework;
-using Microsoft.EntityFrameworkCore;
 using Core.Utilities.Security.Encryption;
 using Core.Utilities.Security.JWT;
+using Entities.DTOs;
+using FootballField.DataAccess.Concrete;
+using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Business.DependencyResolvers.Autofac;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<AppUrlSettings>(builder.Configuration.GetSection("AppUrlSettings"));
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
