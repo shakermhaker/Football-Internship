@@ -1,55 +1,60 @@
-<div class="card p-5 mx-auto" style="background-color: #1a1d21; border: 1px solid #28a745; border-radius: 10px; width: 100%; max-width: 600px;">
+<div class="auth-card-container">
   
   <h2 class="text-center mb-2" style="color: #ff7d00 !important; font-weight: bold;">Sahaya Katıl!</h2>
-  <p class="text-center text-secondary mb-5" style="color: #ffffff !important;"">Hemen kayıt ol ve rezervasyon yap</p>
 
-  <form>
+  <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()">
+    <div class="text-center mb-10">
+      <div class="fw-bold fs-4" style="color: #e4e6eb !important;">
+        Hemen kayıt ol ve rezervasyon yap
+      </div>
+    </div>
+
     <div class="row mb-4">
       <div class="col-md-6">
         <label class="mb-2" style="color: #ffffff !important;">Ad</label>
-        <input type="text" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="Adınız">
+        <input type="text" formControlName="firstName" class="auth-input" placeholder="Adınız">
       </div>
       <div class="col-md-6 mt-4 mt-md-0">
         <label class="mb-2" style="color: #ffffff !important;">Soyad</label>
-        <input type="text" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="Soyadınız">
+        <input type="text" formControlName="lastName" class="auth-input" placeholder="Soyadınız">
       </div>
     </div>
 
     <div class="row mb-4">
       <div class="col-md-6">
         <label class="mb-2" style="color: #ffffff !important;">Telefon</label>
-        <input type="tel" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="0555 555 55 55">
+        <input type="tel" formControlName="phoneNumber" class="auth-input" placeholder="0555 555 55 55">
       </div>
       <div class="col-md-6 mt-4 mt-md-0">
         <label class="mb-2" style="color: #ffffff !important;">Doğum Tarihi</label>
-        <input type="date" class="form-control bg-dark text-white" style="border: 1px solid #444; color-scheme: dark;">
+        <input type="date" formControlName="birthDate" class="auth-input">
       </div>
     </div>
 
     <div class="mb-4">
       <label class="mb-2" style="color: #ffffff !important;">E-Posta</label>
-      <input type="email" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="ornek@mail.com">
+      <input type="email" formControlName="email" class="auth-input" placeholder="ornek@mail.com">
     </div>
 
     <div class="row mb-5">
       <div class="col-md-6">
         <label class="mb-2" style="color: #ffffff !important;">Şifre</label>
-        <input type="password" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="••••••••" minlength="6" required>
+        <input type="password" formControlName="password" class="auth-input" placeholder="••••••••">
         <small class="text-secondary mt-1 d-block">En az 6 karakter</small>
       </div>
       <div class="col-md-6 mt-4 mt-md-0">
         <label class="mb-2" style="color: #ffffff !important;">Şifre Tekrar</label>
-        <input type="password" class="form-control bg-dark text-white" style="border: 1px solid #444;" placeholder="••••••••" minlength="6" required>
+        <input type="password" formControlName="confirmPassword" class="auth-input" placeholder="••••••••">
       </div>
     </div>
 
-    <button type="submit" class="btn w-100 mb-3" style="background-color: #333; color: white; border: 1px solid #555;">
-      Kayıt Ol
+    <button type="submit" [disabled]="registerForm.invalid" class="auth-btn w-100 mb-3">
+        <span class="indicator-label fs-4">Kayıt Ol</span>
     </button>
 
-    <div class="text-center mt-3" style="color: #6c757d;">
-      Zaten hesabın var mı? 
-      <a routerLink="/auth/login" class="link-success fw-bolder fs-5 ms-2">Giriş Yap</a>
+    <div class="text-center mb-10 fw-bold fs-5" style="color: #e4e6eb !important;">
+    Zaten hesabın var mı? 
+    <a routerLink="/auth/login" class="link-success fw-bolder fs-5 ms-2">Giriş Yap</a>
     </div>
   </form>
 
