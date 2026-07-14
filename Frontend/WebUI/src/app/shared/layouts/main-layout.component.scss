@@ -1,0 +1,18 @@
+.navbar {
+  background-color: #1a1d21; // Arka plandan biraz daha açık bir koyu
+  border-bottom: 1px solid #333;
+  
+  a {
+    color: var(--text-light);
+    text-decoration: none;
+    margin: 0 10px;
+    &:hover { color: var(--accent-orange); } // Üzerine gelince turuncu olsun
+  }
+}
+
+.login-btn {
+  background-color: var(--accent-orange);
+  padding: 5px 15px;
+  border-radius: 5px;
+  color: white !important;
+}

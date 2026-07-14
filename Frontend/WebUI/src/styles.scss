@@ -1,1 +1,73 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg-dark: #121417;
+  --accent-orange: #ff7d00; // Senin turuncun
+  --accent-green: #00ff41;  // Senin yeşilin
+  --text-light: #ffffff;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+}
+/* Login ve Register için Ortak Kart Tasarımı */
+.auth-card-container {
+  background-color: #1a1d21;
+  border: 1px solid #00ff41; 
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.15); 
+  
+  /* Genişlik ayarları (önceden yaptığımız gibi) */
+  width: 550px; /* İki kartın enini de bu ölçüye kilitler, büzülmeyi engeller */
+  max-width: 90vw; /* Mobilden veya küçük ekrandan girilirse ekranı patlatmasın diye ufak bir sigorta */
+  margin: 0 auto;
+  padding: 3rem; 
+  
+  /* YENİ EKLENENLER: Yükseklik sabitleme ve dikey hizalama */
+  min-height: 650px; /* İki kutunun da en az bu boyda olmasını zorunlu kılar */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* İçindeki form elemanlarını dikeyde tam ortalar */
+}
+
+/* Ortak Input Tasarımı */
+.auth-input {
+  background-color: #212529 !important; /* Koyu gri/siyah arka plan */
+  border: 1px solid #444 !important; /* İnce, şık bir çerçeve */
+  color: #ffffff !important;
+  border-radius: 8px; /* Hafif oval köşeler */
+  padding: 0.75rem 1rem;
+  width: 100%;
+  transition: border-color 0.3s ease;
+
+  /* Tıklanınca (Focus) çerçevenin yeşil veya turuncu parlaması için */
+  &:focus {
+    border-color: #00ff41 !important;
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+/* Ortak Buton Tasarımı */
+.auth-btn {
+  background-color: #333 !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 600 !important;
+  transition: all 0.3s ease;
+
+  /* Üzerine gelince hafif açılması için */
+  &:hover {
+    background-color: #444 !important;
+  }
+
+  /* İŞTE KRİTİK NOKTA: Buton kilitliyken (disabled) nasıl görünecek? */
+  &:disabled {
+    background-color: #2a2a2a !important; /* Çok daha soluk bir arka plan */
+    color: #666 !important; /* Soluk yazı rengi */
+    border-color: #333 !important;
+    cursor: not-allowed !important; /* Fare imlecini "yasak" işaretine çevirir */
+    opacity: 0.7;
+  }
+}

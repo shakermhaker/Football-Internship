@@ -131,16 +131,25 @@ namespace Business.Concrete
         public async Task<IDataResult<User>> Register(UserForRegisterDto userForRegisterDto, string password)
         {
             byte[] passwordHash, passwordSalt;
+
+            // Şifreyi tuzlayıp (salt) hashliyoruz
             HashingHelper.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+
             var user = new User
             {
                 Email = userForRegisterDto.Email,
                 FirstName = userForRegisterDto.FirstName,
                 LastName = userForRegisterDto.LastName,
+
+                // YENİ EKLENEN ALANLAR BURADA EŞLEŞTİRİLİYOR
+                Phone = userForRegisterDto.PhoneNumber,
+                BirthDate = DateTime.SpecifyKind(userForRegisterDto.BirthDate, DateTimeKind.Utc),
+
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Status = true
+                Status = true // Kullanıcı varsayılan olarak aktif başlar
             };
+
             _userService.Add(user);
             await SendVerificationEmailAsync(user);
             
