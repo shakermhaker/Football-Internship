@@ -1,5 +1,7 @@
 ﻿
+using Core.Utilities.Results;
 using Entities.Concrete;
+using Entities.DTOs;
 using System.Collections.Generic;
 
 namespace Business.Abstract
@@ -11,5 +13,7 @@ namespace Business.Abstract
         void Update(User user);
         void Add(User user);
         User GetByMail(string email);
+        IDataResult<UserProfileDto> GetUserProfileByEmail(string email);
+        IDataResult<UserProfileDto> GetUserProfileByGuid(Guid rowGuid);
     }
 }

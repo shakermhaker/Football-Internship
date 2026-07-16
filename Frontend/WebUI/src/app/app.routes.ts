@@ -27,7 +27,18 @@ export const routes: Routes = [
        // Sahalar buraya eklenecek
     ]
   },
+   {
+    path: 'user',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent)
+      }
 
+      
+    ]
+  },
   // 3. Fallback/Catch-All Rota
   {
     path: '**',

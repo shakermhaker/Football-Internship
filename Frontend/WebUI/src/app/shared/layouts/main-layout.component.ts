@@ -16,6 +16,8 @@ import { RouterOutlet, RouterLink } from '@angular/router';
           <a routerLink="/nasil-calisir" class="text-white text-decoration-none mx-3 hover-turuncu">Nasıl Çalışır</a>
           <a routerLink="/auth/register" class="text-white text-decoration-none mx-3 hover-turuncu">Üye Ol</a>
           <a routerLink="/hakkimizda" class="text-white text-decoration-none mx-3 hover-turuncu">Hakkımızda</a>
+          <a routerLink="/user/profile" class="text-white text-decoration-none mx-3 hover-turuncu">Profil</a>
+          
         </div>
         <a routerLink="/auth/login" class="btn" style="background-color: #ff7d00; color: white;">Giriş Yap</a>
       </nav>

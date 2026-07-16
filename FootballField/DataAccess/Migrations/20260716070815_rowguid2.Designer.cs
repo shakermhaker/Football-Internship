@@ -3,6 +3,7 @@ using System;
 using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    partial class FootballFieldContextModelSnapshot : ModelSnapshot
+    [Migration("20260716070815_rowguid2")]
+    partial class rowguid2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -291,17 +294,12 @@ namespace DataAccess.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid>("RowGuid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("NEWID()");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Status")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RowGuid")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });

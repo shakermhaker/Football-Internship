@@ -80,8 +80,9 @@ namespace WebAPI.Controllers
                 {
                     HttpOnly = true,    // JS erişemez (GÜVENLİ!)
                     Secure = true,      // Sadece HTTPS üzerinden gider
-                    SameSite = SameSiteMode.Strict, // CSRF koruması
-                    Expires = DateTime.Now.AddDays(1)
+                    SameSite = SameSiteMode.None,
+                    Path = "/",
+                    Expires = DateTime.Now.AddDays(7)
                 });
 
                 return Ok(new { message = "Giriş başarılı" });

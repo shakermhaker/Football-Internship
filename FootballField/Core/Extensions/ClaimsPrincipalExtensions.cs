@@ -16,5 +16,14 @@ namespace Core.Extensions
         {
             return claimsPrincipal?.Claims(ClaimTypes.Role);
         }
+
+        public static string GetUserEmail(this ClaimsPrincipal user)
+        {
+            return user.FindFirst(ClaimTypes.Email)?.Value
+                ?? user.FindFirst("email")?.Value
+                ?? user.FindFirst("Email")?.Value
+                ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
+                ?? string.Empty;
+        }
     }
 }
