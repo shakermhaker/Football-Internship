@@ -48,6 +48,18 @@ export const routes: Routes = [
       
     ]
   },
+     {
+    path: 'business',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: 'business-register',
+        loadComponent: () => import('./features/business/business-register/business-register.component').then(m => m.BusinessRegisterComponent)
+      }
+
+      
+    ]
+  },
   // 3. Fallback/Catch-All Rota
   // 3. Fallback: Bilinmeyen yolda login'e değil, ana sayfaya atalım
   {

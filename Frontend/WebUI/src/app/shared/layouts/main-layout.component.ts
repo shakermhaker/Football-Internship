@@ -23,7 +23,15 @@ import { UserService } from '../../core/services/user.service';
           <a routerLink="/about" routerLinkActive="border-bottom border-dark border-2" [routerLinkActiveOptions]="{exact: true}" class="text-dark text-decoration-none fw-medium pb-1">Hakkımızda</a>
         </div>
         
-        <div>
+        <div class="d-flex align-items-center gap-3">
+            
+            <a *ngIf="authService.isLoggedIn$ | async" 
+               routerLink="/business/business-register" 
+               class="text-white text-decoration-none fw-bold" 
+               style="background-color: #28a745; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);">
+              İşletme Hesabı Ol
+            </a>
+
             <div *ngIf="authService.isLoggedIn$ | async" class="position-relative d-flex align-items-center">
                 
                 <div (click)="isMenuOpen = !isMenuOpen" class="d-flex align-items-center" style="cursor: pointer;">
@@ -80,7 +88,7 @@ export class MainLayoutComponent implements OnInit{
 
   logout() {
     this.authService.logout();
-    this.isMenuOpen = false; // Çıkış yapınca menüyü kapatıyoruz ki arkada açık kalmasın
+    this.isMenuOpen = false;
   }
   ngOnInit() {
     // F5 atıldığında sinyal boşalacağı için veriyi API'den geri çekme güvencemiz:
