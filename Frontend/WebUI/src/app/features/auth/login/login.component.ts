@@ -13,8 +13,7 @@ import Swal from 'sweetalert2';
     ReactiveFormsModule, 
     RouterModule
   ],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.scss']
+  templateUrl: './login.component.html'
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);

@@ -1,73 +1,122 @@
+/* 🎨 LIGHT & SOFT STARTUP KONSEPTİ */
 :root {
-  --bg-dark: #121417;
-  --accent-orange: #ff7d00; // Senin turuncun
-  --accent-green: #00ff41;  // Senin yeşilin
-  --text-light: #ffffff;
+  --accent-orange: #ff7d00;
+  --text-dark: #111827;     /* Başlıklar ve buton için siyah/koyu lacivert */
+  --text-muted: #6b7280;    /* Açıklamalar için gri */
+  --bg-input: #f3f4f6;      /* Input arka planı */
+  --border-input: #e5e7eb;  /* Input çerçevesi */
+  --accent-green: #10b981;  /* Hemen Kaydol linki yeşili */
 }
 
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-light);
+  /* Arka plan rengi (Resim yüklenene kadar veya yüklenmezse diye sigorta) */
+  background-color: #f3f4f6; 
+  
+  /* İŞTE KRİTİK KISIM: Resmi tek başına, açık açık veriyoruz */
+  background-image: url('http://localhost:4200/assets/images/ff-background-img.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  
+  color: var(--text-dark);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  margin: 0;
 }
-/* Login ve Register için Ortak Kart Tasarımı */
+
+/* 🧊 BEYAZ YUMUŞAK KART */
 .auth-card-container {
-  background-color: #1a1d21;
-  border: 1px solid #00ff41; 
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.15); 
-  
-  /* Genişlik ayarları (önceden yaptığımız gibi) */
-  width: 550px; /* İki kartın enini de bu ölçüye kilitler, büzülmeyi engeller */
-  max-width: 90vw; /* Mobilden veya küçük ekrandan girilirse ekranı patlatmasın diye ufak bir sigorta */
-  margin: 0 auto;
-  padding: 3rem; 
-  
-  /* YENİ EKLENENLER: Yükseklik sabitleme ve dikey hizalama */
-  min-height: 650px; /* İki kutunun da en az bu boyda olmasını zorunlu kılar */
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.03);
+  width: 480px;
+  max-width: 90vw;
+  margin: 4rem auto;
+  padding: 3.5rem 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* İçindeki form elemanlarını dikeyde tam ortalar */
 }
 
-/* Ortak Input Tasarımı */
-.auth-input {
-  background-color: #212529 !important; /* Koyu gri/siyah arka plan */
-  border: 1px solid #444 !important; /* İnce, şık bir çerçeve */
-  color: #ffffff !important;
-  border-radius: 8px; /* Hafif oval köşeler */
-  padding: 0.75rem 1rem;
-  width: 100%;
-  transition: border-color 0.3s ease;
+/* ✍️ İKONLU MODERN INPUTLAR */
+.input-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
 
-  /* Tıklanınca (Focus) çerçevenin yeşil veya turuncu parlaması için */
-  &:focus {
-    border-color: #00ff41 !important;
-    outline: none;
-    box-shadow: none;
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Sol taraftaki ikon */
+  .icon-left {
+    position: absolute;
+    left: 14px;
+    top: 38px; /* Label boşluğunu hesaplayarak aşağı indirdik */
+    color: #9ca3af;
+  }
+
+  /* Sağ taraftaki göz ikonu */
+  .icon-right {
+    position: absolute;
+    right: 14px;
+    top: 38px;
+    color: #9ca3af;
+    cursor: pointer;
   }
 }
 
-/* Ortak Buton Tasarımı */
-.auth-btn {
-  background-color: #333 !important;
-  color: #ffffff !important;
-  border: 1px solid #555 !important;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-weight: 600 !important;
+.auth-input-modern {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem; /* İkon için soldan boşluk bıraktık */
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 12px;
+  color: var(--text-dark);
+  font-size: 0.95rem;
   transition: all 0.3s ease;
 
-  /* Üzerine gelince hafif açılması için */
-  &:hover {
-    background-color: #444 !important;
+  &:focus {
+    border-color: var(--accent-orange);
+    background-color: #ffffff;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 125, 0, 0.1);
   }
 
-  /* İŞTE KRİTİK NOKTA: Buton kilitliyken (disabled) nasıl görünecek? */
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+/* 🔘 SİMSİYAH TOK BUTON */
+.btn-modern-dark {
+  background-color: var(--text-dark);
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  width: 100%;
+  border: none;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px; /* Yazı ve ok işareti arasındaki boşluk */
+
+  &:hover {
+    background-color: #1f2937; /* Hafif açılır */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(17, 24, 39, 0.15);
+  }
+
   &:disabled {
-    background-color: #2a2a2a !important; /* Çok daha soluk bir arka plan */
-    color: #666 !important; /* Soluk yazı rengi */
-    border-color: #333 !important;
-    cursor: not-allowed !important; /* Fare imlecini "yasak" işaretine çevirir */
-    opacity: 0.7;
+    background-color: #d1d5db;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
