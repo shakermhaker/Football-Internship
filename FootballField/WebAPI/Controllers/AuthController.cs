@@ -90,6 +90,27 @@ namespace WebAPI.Controllers
             return BadRequest(result.Message);
         }
 
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+           
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.None,
+                Secure = true,                
+                Path = "/",                   
+
+                Expires = DateTimeOffset.UtcNow.AddDays(-1)
+            };
+
+            Response.Cookies.Delete("auth_token", cookieOptions);
+
+            Response.Cookies.Append("auth_token", "", cookieOptions);
+
+            return Ok(new { success = true, message = "Güvenli bir şekilde çıkış yapıldı ve oturum çerezi temizlendi." });
+        }
+
         [HttpPost("register")]
         public async Task<ActionResult> Register(UserForRegisterDto userForRegisterDto)
         {

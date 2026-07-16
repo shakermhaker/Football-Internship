@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject ,OnInit} from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common'; 
 import { AuthService } from '../../core/services/auth.service'; 
+import { UserService } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -22,14 +23,24 @@ import { AuthService } from '../../core/services/auth.service';
           <a routerLink="/about" routerLinkActive="border-bottom border-dark border-2" [routerLinkActiveOptions]="{exact: true}" class="text-dark text-decoration-none fw-medium pb-1">Hakkımızda</a>
         </div>
         
-        <div>
+        <div class="d-flex align-items-center gap-3">
+            
+            <a *ngIf="authService.isLoggedIn$ | async" 
+               routerLink="/business/business-register" 
+               class="text-white text-decoration-none fw-bold" 
+               style="background-color: #28a745; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);">
+              İşletme Hesabı Ol
+            </a>
+
             <div *ngIf="authService.isLoggedIn$ | async" class="position-relative d-flex align-items-center">
                 
                 <div (click)="isMenuOpen = !isMenuOpen" class="d-flex align-items-center" style="cursor: pointer;">
-                     <div class="d-flex justify-content-center align-items-center bg-dark rounded-circle shadow-sm" style="width: 35px; height: 35px;">
-                         <span class="text-white fs-6 fw-bold">U</span>
+                     <div class="d-flex justify-content-center align-items-center bg-warning rounded-circle shadow-sm" style="width: 35px; height: 35px;">
+                         <span class="text-white fs-6 fw-bold">{{ user()?.firstName?.charAt(0) || 'O' }}</span>
                      </div>
-                     <span class="ms-3 fw-bold text-dark">*********</span>
+                     <span class="ms-3 fw-bold text-dark">
+                     {{ user()?.firstName }} {{ user()?.lastName }}
+                      </span>
                 </div>
 
                 <div *ngIf="isMenuOpen" 
@@ -37,7 +48,7 @@ import { AuthService } from '../../core/services/auth.service';
                      style="position: absolute; right: 0; top: 130%; background-color: white; z-index: 1050; border: 1px solid #f4f4f4; border-radius: 8px;">
                     
                     <div class="menu-item px-5">
-                        <a (click)="isMenuOpen = false" routerLink="/profile" class="menu-link px-5 text-dark text-decoration-none d-block py-2">Profilim</a>
+                        <a (click)="isMenuOpen = false" routerLink="/user/profile" class="menu-link px-5 text-dark text-decoration-none d-block py-2">Profilim</a>
                     </div>
                     
                     <div class="separator my-1 border-light"></div>
@@ -67,14 +78,24 @@ import { AuthService } from '../../core/services/auth.service';
     </div>
   `
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit{
   authService = inject(AuthService);
+  private userService = inject(UserService);
   
   // Menünün açık/kapalı durumunu tutan Angular değişkeni
   isMenuOpen = false; 
+  user = this.userService.currentUser;
 
   logout() {
     this.authService.logout();
-    this.isMenuOpen = false; // Çıkış yapınca menüyü kapatıyoruz ki arkada açık kalmasın
+    this.isMenuOpen = false;
+  }
+  ngOnInit() {
+    // F5 atıldığında sinyal boşalacağı için veriyi API'den geri çekme güvencemiz:
+    if (!this.user()) {
+      this.userService.fetchMyProfile().subscribe({
+        error: (err) => console.error('Layout profil verisini çekemedi:', err)
+      });
+    }
   }
 }
