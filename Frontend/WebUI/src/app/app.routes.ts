@@ -36,7 +36,19 @@ export const routes: Routes = [
       }
     ]
   },
+   {
+    path: 'user',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent)
+      }
 
+      
+    ]
+  },
+  // 3. Fallback/Catch-All Rota
   // 3. Fallback: Bilinmeyen yolda login'e değil, ana sayfaya atalım
   {
     path: '**',

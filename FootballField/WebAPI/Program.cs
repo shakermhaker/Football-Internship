@@ -18,7 +18,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<AppUrlSettings>(builder.Configuration.GetSection("AppUrlSettings"));
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularApp",
+    options.AddPolicy("AllowAngularApp",    
         policy =>
         {
             policy.WithOrigins("http://localhost:4200") // Sadece bizim Angular projesine izin ver
@@ -43,6 +43,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = tokenOptions.Audience,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // Tarayıcıdan "auth_token" isimli çerez gelmiş mi diye bakıyoruz:
+                var accessToken = context.Request.Cookies["auth_token"];
+
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -80,6 +94,7 @@ app.UseRouting();
 
 app.UseCors("AllowAngularApp");
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

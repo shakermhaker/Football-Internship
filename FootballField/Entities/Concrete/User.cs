@@ -8,6 +8,7 @@ namespace Entities.Concrete
     public class User : IEntity , ICoreUser
     {
         public int Id { get; set; }
+        public Guid RowGuid { get; set; } = Guid.NewGuid();
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
