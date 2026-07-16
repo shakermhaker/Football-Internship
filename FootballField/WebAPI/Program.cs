@@ -14,6 +14,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<FootballFieldContext>(options =>
+{
+    // 🎯 appsettings.json dosyasından "PostgreSQL" isimli bağlantı adresini okuyoruz:
+    var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
+
+    // Npgsql motoruna bu bağlantı adresini kullanmasını söylüyoruz:
+    options.UseNpgsql(connectionString);
+});
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<AppUrlSettings>(builder.Configuration.GetSection("AppUrlSettings"));
 builder.Services.AddCors(options =>

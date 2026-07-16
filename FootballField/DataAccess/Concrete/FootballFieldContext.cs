@@ -10,9 +10,17 @@ namespace FootballField.DataAccess.Concrete.EntityFramework;
 
 public class FootballFieldContext : DbContext
 {
+    public FootballFieldContext(DbContextOptions<FootballFieldContext> options) : base(options)
+    {
+    }
+
+    // 🎯 2. KRİTİK EKLEME: Boş Constructor (EF Core Migration araçları bazen arar, hata vermesin diye koyarız)
+    public FootballFieldContext()
+    {
+    }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=emre0660");
+        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=omer123");
     }
     // --- DbSet Tanımlamaları ---
     public DbSet<Business> Businesses { get; set; }
