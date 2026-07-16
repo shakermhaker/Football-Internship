@@ -1,18 +1,33 @@
 .navbar {
-  background-color: #1a1d21; // Arka plandan biraz daha açık bir koyu
-  border-bottom: 1px solid #333;
+  /* Arka planı ve alt çizgiyi global değişkenlerimize bağladık */
+  background-color: var(--bg-light-nav); 
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 0; /* Navbar'a dikeyde biraz nefes aldırır, eğer zaten varsa burayı silebilirsin */
   
   a {
-    color: var(--text-light);
+    color: var(--text-dark);
     text-decoration: none;
-    margin: 0 10px;
-    &:hover { color: var(--accent-orange); } // Üzerine gelince turuncu olsun
+    margin: 0 15px; /* Tıklanabilir alanı biraz daha ferahlattık */
+    font-weight: 500; /* Linkleri bir tık daha belirgin yapar */
+    transition: color 0.3s ease; /* Rengin aniden değil, yumuşakça dönmesini sağlar */
+    
+    &:hover { 
+      color: var(--accent-orange); 
+    }
   }
 }
 
 .login-btn {
   background-color: var(--accent-orange);
-  padding: 5px 15px;
-  border-radius: 5px;
-  color: white !important;
+  padding: 8px 20px; /* Butonu biraz daha tok, tıklanmaya hazır hale getirdik */
+  border-radius: 8px; /* Form inputlarındaki 8px ovallik ile tam takım oldu */
+  color: #ffffff !important;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease; /* Hover animasyonları için */
+
+  &:hover {
+    background-color: #e67000; /* Orijinal turuncunun bir tık daha koyusu, basılma hissi verir */
+    transform: translateY(-1px); /* Üzerine gelince çok hafif yukarı kalkar */
+  }
 }

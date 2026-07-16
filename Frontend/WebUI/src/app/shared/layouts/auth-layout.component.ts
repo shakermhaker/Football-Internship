@@ -1,44 +1,50 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router'; // RouterLink çok önemli!
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'; // <-- RouterLinkActive Eklendi!
 
 @Component({
   selector: 'app-auth-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink], 
+  imports: [RouterOutlet, RouterLink, RouterLinkActive], // <-- Buraya da eklendi!
   template: `
-    <div class="d-flex flex-column min-vh-100" style="background-color: #121417;">
+    <div class="d-flex flex-column min-vh-100" 
+         style="background-image: url('/assets/images/ff-background-img.png'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
       
-      <nav class="navbar d-flex justify-content-between p-4" style="background-color: #1a1d21; border-bottom: 1px solid #333;">
-        <div class="brand text-white fs-3 fw-bold">FootballField</div>
+      <nav class="navbar d-flex justify-content-between align-items-center p-4 bg-transparent border-0">
+        <a routerLink="/" class="fs-4 fw-bolder text-dark text-decoration-none" style="letter-spacing: -0.5px;">FootballField</a>
         
-        <div class="menu">
-          <a routerLink="/" class="text-white text-decoration-none mx-3 hover-turuncu">Ana Sayfa</a>
-          <a routerLink="/nasil-calisir" class="text-white text-decoration-none mx-3 hover-turuncu">Nasıl Çalışır</a>
-          <a routerLink="/auth/register" class="text-white text-decoration-none mx-3 hover-turuncu">Üye Ol</a>
-          <a routerLink="/hakkimizda" class="text-white text-decoration-none mx-3 hover-turuncu">Hakkımızda</a>
+        <div class="menu d-none d-md-flex gap-4">
+          <a routerLink="/" 
+             routerLinkActive="border-bottom border-dark border-2" 
+             [routerLinkActiveOptions]="{exact: true}" 
+             class="text-dark text-decoration-none fw-medium pb-1">Ana Sayfa</a>
+             
+          <a routerLink="/how-it-works" 
+             routerLinkActive="border-bottom border-dark border-2" 
+             [routerLinkActiveOptions]="{exact: true}" 
+             class="text-dark text-decoration-none fw-medium pb-1">Nasıl Çalışır</a>
+             
+          <a routerLink="/auth/register" 
+             routerLinkActive="border-bottom border-dark border-2" 
+             [routerLinkActiveOptions]="{exact: true}" 
+             class="text-dark text-decoration-none fw-medium pb-1">Üye Ol</a>
+             
+          <a routerLink="/about" 
+             routerLinkActive="border-bottom border-dark border-2" 
+             [routerLinkActiveOptions]="{exact: true}" 
+             class="text-dark text-decoration-none fw-medium pb-1">Hakkımızda</a>
         </div>
-        <a routerLink="/auth/login" class="btn" style="background-color: #ff7d00; color: white;">Giriş Yap</a>
+        
+        <a routerLink="/auth/login" class="text-white text-decoration-none fw-bold" 
+           style="background-color: #ff7d00; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(255, 125, 0, 0.2);">
+          Giriş Yap
+        </a>
       </nav>
 
       <div class="d-flex flex-column flex-center flex-grow-1 p-5">
         <router-outlet></router-outlet> 
       </div>
-
-      <footer class="text-center p-4" style="color: #6c757d;">
-        © 2026 FootballField, Inc. All rights reserved.
-      </footer>
       
     </div>
-  `,
-  styles: [`
-  /* Logonun kesinlikle beyaz olması için */
-  .brand { color: #ffffff !important; text-decoration: none; }
-  
-  /* Linklerin beyaz olması ve alt çizgilerinin kalkması için */
-  .menu a { color: #ffffff !important; text-decoration: none; transition: 0.3s; }
-  
-  /* Üzerine gelince senin turuncuna dönmesi için */
-  .menu a:hover { color: #ff7d00 !important; }
-`]
+  `
 })
 export class AuthLayoutComponent {}
