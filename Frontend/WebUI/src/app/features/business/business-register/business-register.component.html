@@ -23,31 +23,41 @@
     </div>
 
     <div class="row">
+      
       <div class="col-md-6">
         <div class="input-wrapper">
           <label>İl</label>
-          <i class="ki-duotone ki-map icon-left fs-4"></i>
-          <select class="auth-input-modern form-select" style="padding-left: 2.75rem; cursor: pointer;">
-            <option value="" disabled selected hidden>İlinizi seçin</option>
-            <option value="34">İstanbul</option>
-            <option value="06">Ankara</option>
-            <option value="35">İzmir</option>
-          </select>
+          <i class="ki-duotone ki-map icon-left fs-4" style="z-index: 10;"></i>
+          <ng-select 
+            [items]="cities()" 
+            bindLabel="name" 
+            bindValue="id" 
+            placeholder="İlinizi seçin"
+            [(ngModel)]="selectedCityId"
+            (change)="onCityChange($event)"
+            name="city"
+            class="auth-select-modern">
+          </ng-select>
         </div>
       </div>
       
       <div class="col-md-6">
         <div class="input-wrapper">
           <label>İlçe</label>
-          <i class="ki-duotone ki-compass icon-left fs-4"></i>
-          <select class="auth-input-modern form-select" style="padding-left: 2.75rem; cursor: pointer;">
-            <option value="" disabled selected hidden>İlçenizi seçin</option>
-            <option value="1">Kadıköy</option>
-            <option value="2">Çankaya</option>
-            <option value="3">Bornova</option>
-          </select>
+          <i class="ki-duotone ki-compass icon-left fs-4" style="z-index: 10;"></i>
+          <ng-select 
+            [items]="districts()" 
+            bindLabel="name" 
+            bindValue="id" 
+            placeholder="İlçenizi seçin"
+            [(ngModel)]="selectedDistrictId"
+            name="district"
+            class="auth-select-modern"
+            [disabled]="districts().length === 0">
+          </ng-select>
         </div>
       </div>
+
     </div>
 
     <h5 class="fw-bold mb-4 mt-2" style="font-size: 0.95rem; color: var(--text-dark);">İletişim Bilgileri</h5>

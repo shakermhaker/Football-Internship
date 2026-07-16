@@ -17,6 +17,7 @@ namespace Entities.Concrete
 
         public int UserId { get; set; }
         public User User { get; set; } = null!;
+        public bool IsApproved { get; set; } = false;
 
         // Navigation Properties
         public ICollection<FootballField> FootballFields { get; set; } = new List<FootballField>();

@@ -42,7 +42,14 @@ namespace Business.DependencyResolvers.Autofac
                 {
                     Selector = new AspectInterceptorSelector()
                 }).SingleInstance();
+            // Veri Erişim (DAL) Katmanı Kayıtları
+            builder.RegisterType<EfCityDal>().As<ICityDal>().SingleInstance();
+            builder.RegisterType<EfDistrictDal>().As<IDistrictDal>().SingleInstance();
 
+            // İş (Business) Katmanı Kaydı
+            builder.RegisterType<LocationsManager>().As<ILocationService>().SingleInstance();
+            builder.RegisterType<BusinessManager>().As<IBusinessService>().SingleInstance();
+            builder.RegisterType<EfBusinessDal>().As<IBusinessDal>().SingleInstance();
         }
 
     }
