@@ -1,0 +1,85 @@
+<div class="auth-card-container" style="width: 650px; max-width: 95vw;">
+  
+  <h2 class="text-center fw-bolder mb-2" style="color: var(--accent-orange);">
+    İşletme Hesabını Kaydet 🏪
+  </h2>
+  <p class="text-center mb-5" style="color: var(--text-muted); font-size: 0.95rem;">
+    İşletme bilgilerinizi girerek hesabınızı oluşturun
+  </p>
+
+  <form>
+    <h5 class="fw-bold mb-4" style="font-size: 0.95rem; color: var(--text-dark);">Temel Bilgiler</h5>
+    
+    <div class="input-wrapper">
+      <label>İşletme Adı</label>
+      <i class="ki-duotone ki-user icon-left fs-4"></i>
+      <input type="text" class="auth-input-modern" placeholder="İşletme adınızı giriniz">
+    </div>
+
+    <div class="input-wrapper">
+      <label>Açık Adres</label>
+      <i class="ki-duotone ki-geolocation icon-left fs-4"></i>
+      <input type="text" class="auth-input-modern" placeholder="İşletme adresinizi tam olarak giriniz">
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="input-wrapper">
+          <label>İl</label>
+          <i class="ki-duotone ki-map icon-left fs-4"></i>
+          <select class="auth-input-modern form-select" style="padding-left: 2.75rem; cursor: pointer;">
+            <option value="" disabled selected hidden>İlinizi seçin</option>
+            <option value="34">İstanbul</option>
+            <option value="06">Ankara</option>
+            <option value="35">İzmir</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="input-wrapper">
+          <label>İlçe</label>
+          <i class="ki-duotone ki-compass icon-left fs-4"></i>
+          <select class="auth-input-modern form-select" style="padding-left: 2.75rem; cursor: pointer;">
+            <option value="" disabled selected hidden>İlçenizi seçin</option>
+            <option value="1">Kadıköy</option>
+            <option value="2">Çankaya</option>
+            <option value="3">Bornova</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <h5 class="fw-bold mb-4 mt-2" style="font-size: 0.95rem; color: var(--text-dark);">İletişim Bilgileri</h5>
+    
+    <div class="row">
+      <div class="col-md-6">
+        <div class="input-wrapper">
+          <label>Telefon</label>
+          <i class="ki-duotone ki-phone icon-left fs-4"></i>
+          <input type="tel" class="auth-input-modern" placeholder="0555 555 55 55">
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="input-wrapper">
+          <label>E-posta</label>
+          <i class="ki-duotone ki-sms icon-left fs-4"></i>
+          <input type="email" class="auth-input-modern" placeholder="ornek@mail.com">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-modern-dark mt-4">
+      Kaydet <i class="ki-duotone ki-double-right fs-3 ms-2"></i>
+    </button>
+
+    <div class="text-center mt-4" style="font-size: 0.9rem; color: var(--text-muted);">
+      Vazgeçtin mi? 
+      <a routerLink="/" style="color: var(--accent-green); font-weight: 600; text-decoration: none;">
+        Ana Sayfa'ya Dön
+      </a>
+    </div>
+    
+  </form>
+</div>
