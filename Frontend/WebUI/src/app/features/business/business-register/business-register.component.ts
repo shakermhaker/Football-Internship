@@ -21,12 +21,15 @@ export class BusinessRegisterComponent implements OnInit {
 
   cities = signal<any[]>([]); 
   districts = signal<any[]>([]); 
+;
   
   // DTO'da beklediğimiz alanlar için değişkenler
   businessName: string = '';
   fullAddress: string = '';
   selectedCityId: number | null = null; 
   selectedDistrictId: number | null = null; 
+  phone: string = '';
+  email: string = ''
 
   ngOnInit() {
     this.locationService.getCities().subscribe({
