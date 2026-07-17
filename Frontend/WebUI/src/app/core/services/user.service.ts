@@ -9,6 +9,10 @@ export interface UserProfile {
   lastName: string;
   email: string;
   status: boolean;
+
+  hasBusiness: boolean;
+  isBusinessApproved: boolean;
+  businessName: string;
 }
 export interface DataResult<T> {
   data: T;

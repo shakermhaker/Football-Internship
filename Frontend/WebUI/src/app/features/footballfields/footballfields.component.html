@@ -1,0 +1,35 @@
+<div class="container mt-4">
+  
+  <!-- Yükleniyor Animasyonu -->
+  @if (isLoading()) {
+    <div class="text-center my-5">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2 text-muted">Sahalar aranıyor...</p>
+    </div>
+  }
+
+  <!-- Veriler Geldiğinde Kartları Listele -->
+  @if (!isLoading()) {
+    <div class="row g-4">
+      
+      <!-- dbFields içindeki her bir 'field' (saha) için döngü çalışır -->
+      @for (field of dbFields(); track field.id) {
+        
+        <div class="col-md-4">
+          <!-- Shared componentini çağırıyoruz ve [field] inputu ile veriyi içine atıyoruz -->
+          <app-field-card [field]="field"></app-field-card>
+        </div>
+        
+      } @empty {
+        <!-- Eğer aranan ilçede saha yoksa -->
+        <div class="col-12 text-center my-5 py-5 bg-white rounded-4 shadow-sm">
+          <i class="ki-duotone ki-information-5 fs-1 text-warning mb-3"></i>
+          <h4 class="fw-bold">Halı Saha Bulunamadı</h4>
+          <p class="text-muted">Bu arama kriterlerine uygun bir saha henüz kayıtlı değil.</p>
+        </div>
+      }
+      
+    </div>
+  }
+
+</div>

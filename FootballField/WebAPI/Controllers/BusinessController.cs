@@ -32,5 +32,17 @@ namespace WebAPI.Controllers
 
             return Ok(result);
         }
+        [HttpGet("getall")]
+        public IActionResult GetAll([FromQuery] int? cityId, [FromQuery] int? districtId, [FromQuery] string? search)
+        {
+            var result = _businessService.GetFilteredBusinesses(cityId, districtId, search);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
     }
 }

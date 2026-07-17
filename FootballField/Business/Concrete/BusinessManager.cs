@@ -31,5 +31,30 @@ namespace Business.Concrete
             _businessDal.Add(business);
             return new SuccessResult("İşletme oluşturma talebiniz başarıyla iletildi.");
         }
+
+        public IDataResult<Entities.Concrete.Business> GetByUserId(int userId)
+        {
+            var business = _businessDal.Get(b => b.UserId == userId);
+            if (business == null)
+            {
+                return new ErrorDataResult<Entities.Concrete.Business>("İşletme bulunamadı.");
+            }
+            return new SuccessDataResult<Entities.Concrete.Business>(business);
+        }
+        public IDataResult<List<Entities.Concrete.Business>> GetFilteredBusinesses(int? cityId, int? districtId, string? search)
+        {
+            var result = _businessDal.GetAll(b =>
+                // 1. Durum: İlçe seçilmişse direkt ilçeye göre filtrele (Şehre bakmaya gerek yok)
+                (!districtId.HasValue || b.DistrictId == districtId.Value) &&
+
+                // 2. Durum: Sadece Şehir seçilmişse (İlçe boşsa), Navigation Property (District) üzerinden CityId'ye in!
+                (!cityId.HasValue || districtId.HasValue || b.District.CityId == cityId.Value) &&
+
+                // 3. Durum: Arama kutusunda metin varsa isme göre filtrele
+                (string.IsNullOrEmpty(search) || b.Name.ToLower().Contains(search.ToLower()))
+            );
+
+            return new SuccessDataResult<List<Entities.Concrete.Business>>(result, "Halı sahalar başarıyla listelendi.");
+        }
     }
 }

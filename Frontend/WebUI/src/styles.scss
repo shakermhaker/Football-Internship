@@ -1,7 +1,8 @@
 /* 🎨 LIGHT & SOFT STARTUP KONSEPTİ */
 :root {
   --accent-orange: #ff7d00;
-  --text-dark: #111827;     /* Başlıklar ve buton için siyah/koyu lacivert */
+  --text-dark: #111827; 
+  --text-light: #f3f4f6;    /* Başlıklar ve buton için siyah/koyu lacivert */
   --text-muted: #6b7280;    /* Açıklamalar için gri */
   --bg-input: #f3f4f6;      /* Input arka planı */
   --border-input: #e5e7eb;  /* Input çerçevesi */
@@ -119,4 +120,19 @@ body {
     transform: none;
     box-shadow: none;
   }
+  /* Arama barındaki input ve selectlerin yüksekliğini eşitle */
+.auth-select-modern .ng-select-container, 
+.auth-input-modern {
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 0 !important;
+}
+
+/* Dropdown listesi her zaman üstte açılsın */
+::ng-deep .ng-dropdown-panel {
+    z-index: 9999 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
 }
