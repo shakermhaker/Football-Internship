@@ -24,9 +24,6 @@ namespace WebAPI.Controllers
         [Authorize]
         public IActionResult Add([FromBody] BusinessForRegisterDTO businessDto)
         {
-            // KANKA İŞTE SİHİRLİ SATIR BURASI:
-            // Core.Extensions'u kullanarak doğrudan token'dan ID'yi alıyoruz.
-            // Hiçbir servise gerek yok!
             var userId = User.GetUserId();
 
             var result = _businessService.Add(businessDto, userId);
