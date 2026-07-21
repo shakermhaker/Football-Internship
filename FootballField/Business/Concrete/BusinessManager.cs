@@ -16,6 +16,7 @@ namespace Business.Concrete
         }
 
         // Metot imzası IBusinessService ile birebir aynı olmalı
+
         public IResult Add(BusinessForRegisterDTO businessDto, int userId)
         {
             // BusinessManager.cs dosyasındaki ilgili kısmı şöyle düzelt:
@@ -31,7 +32,7 @@ namespace Business.Concrete
             _businessDal.Add(business);
             return new SuccessResult("İşletme oluşturma talebiniz başarıyla iletildi.");
         }
-
+        
         public IDataResult<Entities.Concrete.Business> GetByUserId(int userId)
         {
             var business = _businessDal.Get(b => b.UserId == userId);

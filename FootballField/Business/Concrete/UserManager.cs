@@ -29,7 +29,7 @@ namespace Business.Concrete
         {
             return _userDal.GetClaims(user);
         }
-
+        [CacheAspect]
         public User Get(User user)
         {
             return _userDal.Get(u => u.Id == user.Id);
@@ -68,7 +68,8 @@ namespace Business.Concrete
                 // Başlangıçta işletme yokmuş gibi atıyoruz
                 HasBusiness = false,
                 IsBusinessApproved = false,
-                BusinessName = null
+                BusinessName = null,
+                BusinessId = 0
             };
 
             // DÜZELTME 2: Businesses tablosuna bakıyoruz
@@ -79,6 +80,7 @@ namespace Business.Concrete
                 userProfileDto.HasBusiness = true;
                 userProfileDto.IsBusinessApproved = business.IsApproved;
                 userProfileDto.BusinessName = business.Name;
+                userProfileDto.BusinessId = business.Id;
             }
 
             return new SuccessDataResult<UserProfileDto>(userProfileDto, "Kullanıcı profili getirildi.");

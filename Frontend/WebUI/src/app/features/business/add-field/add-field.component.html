@@ -1,0 +1,116 @@
+<div class="container-fluid p-4">
+  
+  <form [formGroup]="fieldForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Saha Adı -->
+    <div class="mb-4">
+      <input type="text" class="form-control form-control-lg custom-bg-light border-0 shadow-sm" 
+             placeholder="Halı sahanın adını giriniz..." formControlName="name">
+    </div>
+
+    <!-- Başlık -->
+    <div class="mb-4 bg-white p-3 rounded-pill shadow-sm" style="max-width: 300px;">
+      <h6 class="text-muted mb-0 fw-bold px-2">Rezervasyonlarınızı düzenleyin</h6>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- DIŞ KATMAN: GRUPLAR (Yeşil Alan)               -->
+    <!-- ============================================== -->
+    <div formArrayName="scheduleGroups">
+      <div *ngFor="let group of scheduleGroups.controls; let gIndex = index" [formGroupName]="gIndex" class="d-flex align-items-start gap-3 mb-4">
+        
+        <!-- Grup Silme Butonu (Yeşil Çarpı) -->
+        <button type="button" class="action-btn green-btn mt-2" (click)="removeScheduleGroup(gIndex)" *ngIf="scheduleGroups.length > 1" title="Bu grubu sil">
+          ✖
+        </button>
+        <!-- Eğer tek grupsa boşluk tutucu (hizalama bozulmasın diye) -->
+        <div *ngIf="scheduleGroups.length === 1" style="width: 30px;"></div>
+
+        <!-- GRUP İÇERİĞİ (Gri Kutu) -->
+        <div class="flex-grow-1 custom-bg-light rounded-4 p-4 shadow-sm row g-0">
+          
+          <!-- SOL: Günler -->
+          <div class="col-md-2 border-end border-secondary border-opacity-25 pe-3">
+            <div class="form-check mb-2 d-flex align-items-center gap-2" *ngFor="let day of days">
+              <!-- Gün Checkbox'ı -->
+              <input class="form-check-input custom-checkbox m-0" type="checkbox" 
+                     [id]="'day-' + gIndex + '-' + day.id"
+                     [disabled]="isDayDisabled(gIndex, day.id)"
+                     (change)="toggleDay(gIndex, day.id, $event)">
+              
+              <label class="form-check-label fw-bold mt-1" [for]="'day-' + gIndex + '-' + day.id" 
+                     [ngClass]="{'text-muted text-decoration-line-through': isDayDisabled(gIndex, day.id), 'text-dark': !isDayDisabled(gIndex, day.id)}">
+                {{ day.name }}
+              </label>
+            </div>
+          </div>
+
+          <!-- SAĞ: Periyotlar (Turuncu Alan) -->
+          <div class="col-md-10 ps-4" formArrayName="periods">
+            
+            <div *ngFor="let period of getPeriods(gIndex).controls; let pIndex = index" [formGroupName]="pIndex" class="d-flex align-items-center gap-3 mb-3">
+              
+              <!-- Periyot Silme (Turuncu Çarpı) -->
+              <button type="button" class="action-btn orange-btn" (click)="removePeriod(gIndex, pIndex)" *ngIf="getPeriods(gIndex).length > 1" title="Saati sil">
+                ✖
+              </button>
+              <div *ngIf="getPeriods(gIndex).length === 1" style="width: 25px;"></div>
+
+              <!-- Saat ve Fiyat Girdileri -->
+              <div class="d-flex flex-wrap gap-4 align-items-center">
+                
+                <!-- Başlangıç -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-dark small fw-bold">Periyot Başlangıç Zamanı:</span>
+                  <input type="time" class="form-control form-control-sm input-outline text-center" formControlName="startTime">
+                </div>
+
+                <!-- Bitiş -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-dark small fw-bold">Periyot Bitiş Zamanı:</span>
+                  <input type="time" class="form-control form-control-sm input-outline text-center" formControlName="endTime">
+                </div>
+
+                <!-- Süre -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-dark small fw-bold">Maç Süresi:</span>
+                  <div class="input-group input-group-sm" style="width: 100px;">
+                    <input type="number" class="form-control input-outline border-end-0 text-center" formControlName="duration">
+                    <span class="input-group-text bg-white input-outline border-start-0 text-dark fw-bold">dk</span>
+                  </div>
+                </div>
+
+                <!-- Fiyat -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-dark small fw-bold">Saha Ücreti:</span>
+                  <input type="number" class="form-control form-control-sm input-outline text-center" style="width: 90px;" formControlName="price">
+                </div>
+              </div>
+            </div>
+
+            <!-- Periyot Ekleme Butonu (Turuncu Artı) -->
+            <button type="button" class="action-btn orange-btn mt-1" (click)="addPeriod(gIndex)" title="Yeni saat aralığı ekle">
+              ➕
+            </button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yeni Grup Ekleme Butonu (Yeşil Artı) -->
+    <div class="ms-5 ps-2">
+      <button type="button" class="action-btn green-btn mt-2" (click)="addScheduleGroup()" title="Yeni grup ekle">
+        ➕
+      </button>
+    </div>
+
+    <!-- Sağ Alt Kaydet Butonu -->
+    <div class="d-flex justify-content-end mt-5 border-top pt-4">
+      <button type="submit" class="btn btn-primary px-5 py-3 fw-bolder fs-5 shadow-sm" style="background-color: #fd7e14; border: none; border-radius: 12px;">
+        Kaydet
+      </button>
+    </div>
+
+  </form>
+</div>

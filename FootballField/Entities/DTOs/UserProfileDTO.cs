@@ -15,5 +15,6 @@ namespace Entities.DTOs
         public bool HasBusiness { get; set; }
         public bool IsBusinessApproved { get; set; }
         public string BusinessName { get; set; }
+        public int BusinessId { get; set; }
     }
 }

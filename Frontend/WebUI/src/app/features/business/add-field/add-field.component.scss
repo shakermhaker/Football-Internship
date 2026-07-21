@@ -1,0 +1,81 @@
+/* Genel Gri Arka Plan */
+.custom-bg-light {
+  background-color: #e4e6ef;
+}
+
+/* Aksiyon İkonları (Artı ve Çarpılar) */
+.action-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: 900;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Renkler */
+.green-btn {
+  color: #50cd89; /* Metronic'in tatlı yeşili */
+}
+
+.orange-btn {
+  color: #fd7e14; /* Metronic'in tematik turuncusu */
+  font-size: 1.5rem; /* Turuncular biraz daha küçük duruyordu tasarımda */
+}
+
+/* Tasarımdaki siyah, yuvarlak köşeli inputlar */
+.input-outline {
+  border: 2px solid #2b3445;
+  border-radius: 6px;
+  font-weight: bold;
+  background-color: #ffffff;
+  
+  &:focus {
+    box-shadow: none;
+    border-color: #fd7e14;
+  }
+}
+
+/* Çapraz Çizgili Yuvarlak Checkbox Tasarımı */
+.custom-checkbox {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid #2b3445;
+  border-radius: 50% !important; /* Tasarımda yuvarlak görünüyordu */
+  cursor: pointer;
+  position: relative;
+
+  &:checked {
+    background-color: #ffffff;
+    border-color: #2b3445;
+  }
+
+  /* İşaretlendiğinde içine siyah çarpı atalım (görseldeki gibi) */
+  &:checked::after {
+    content: "✖";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    color: #2b3445;
+    font-weight: bold;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

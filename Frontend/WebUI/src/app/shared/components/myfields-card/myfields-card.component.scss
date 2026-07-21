@@ -1,0 +1,37 @@
+/* Kartın varsayılan silik turuncu hali */
+.custom-card-bg {   
+  background-color: #ffcf9f; /* Çok uçuk, silik bir turuncu */
+  border: 1px solid #ffe0c8; /* Arka plandan bir tık koyu turuncu çerçeve */
+  transition: all 0.3s ease; /* Animasyon yumuşaklığı */
+}
+
+/* Fareyle kartın üzerine gelince olacaklar */
+.field-card:hover {
+  transform: translateY(-5px); /* Kartı 5 piksel yukarı kaldır */
+  box-shadow: 0 10px 20px rgba(253, 126, 20, 0.15) !important; /* Turuncu tonlu bir gölge ver */
+  border-color: #fd7e14; /* Çerçeveyi asıl turuncuya boya */
+}
+
+/* Düzenle Butonu Soft Turuncu */
+.edit-btn {
+  background-color: #ffe8d6;
+  color: #d95d00;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.edit-btn:hover {
+  background-color: #fd7e14;
+  color: white;
+}
+
+/* Sil Butonu Soft Kırmızı */
+.delete-btn {
+  background-color: #ffe5e5;
+  color: #dc3545;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.delete-btn:hover {
+  background-color: #dc3545;
+  color: white;
+}

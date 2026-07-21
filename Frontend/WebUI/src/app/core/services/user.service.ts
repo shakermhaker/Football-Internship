@@ -13,6 +13,7 @@ export interface UserProfile {
   hasBusiness: boolean;
   isBusinessApproved: boolean;
   businessName: string;
+  businessId: number;
 }
 export interface DataResult<T> {
   data: T;
