@@ -16,26 +16,26 @@ namespace Business.Concrete
 {
     public class UserManager : IUserService
     {
-        IUserDal _userDal;
+        private readonly IUserDal _userDal;
+        private readonly IBusinessService _businessService;
 
-        public UserManager(IUserDal userDal)
+        // DÜZELTME 1: IBusinessService parametre olarak eklendi!
+        public UserManager(IUserDal userDal, IBusinessService businessService)
         {
             _userDal = userDal;
+            _businessService = businessService;
         }
 
         public List<OperationClaim> GetClaims(User user)
         {
             return _userDal.GetClaims(user);
         }
-        //örnek olarak kalsınlar commentte zaten
-        //[SecuredOperation("product.add,admin")]
-        //[ValidationAspect(typeof(SomethingValidator))]
-        //[CacheAspect]
-        
+
         public User Get(User user)
         {
-           return _userDal.Get(u => u.Id == user.Id);
+            return _userDal.Get(u => u.Id == user.Id);
         }
+
         public void Update(User user)
         {
             _userDal.Update(user);
@@ -52,6 +52,7 @@ namespace Business.Concrete
         {
             return _userDal.Get(u => u.Email == email);
         }
+
         public IDataResult<UserProfileDto> GetUserProfileByEmail(string email)
         {
             // 1. Veritabanından kullanıcıyı çek
@@ -62,7 +63,6 @@ namespace Business.Concrete
                 return new ErrorDataResult<UserProfileDto>("Kullanıcı veritabanında bulunamadı.");
             }
 
-            // 2. Entity'yi DTO'ya çevir (Hassas şifre verilerini burada eliyoruz!)
             var userProfileDto = new UserProfileDto
             {
                 RowGuid = user.RowGuid,
@@ -74,7 +74,21 @@ namespace Business.Concrete
                 AvatarPath = user.TeamAvatar != null
                      ? user.TeamAvatar.ImagePath
                      : ""
+                // Başlangıçta işletme yokmuş gibi atıyoruz
+                HasBusiness = false,
+                IsBusinessApproved = false,
+                BusinessName = null
             };
+
+            // DÜZELTME 2: Businesses tablosuna bakıyoruz
+            var businessResult = _businessService.GetByUserId(user.Id);
+            if (businessResult.Success && businessResult.Data != null)
+            {
+                var business = businessResult.Data;
+                userProfileDto.HasBusiness = true;
+                userProfileDto.IsBusinessApproved = business.IsApproved;
+                userProfileDto.BusinessName = business.Name;
+            }
 
             return new SuccessDataResult<UserProfileDto>(userProfileDto, "Kullanıcı profili getirildi.");
         }
@@ -89,12 +103,25 @@ namespace Business.Concrete
 
             var userProfileDto = new UserProfileDto
             {
-                RowGuid = user.RowGuid, // int Id yok, RowGuid var!
+                RowGuid = user.RowGuid,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Status = user.Status
+                Status = user.Status,
+                HasBusiness = false,
+                IsBusinessApproved = false,
+                BusinessName = null
             };
+
+            // DÜZELTME 2: Aynı kontrolü GUID ile gelen istek için de yapıyoruz
+            var businessResult = _businessService.GetByUserId(user.Id);
+            if (businessResult.Success && businessResult.Data != null)
+            {
+                var business = businessResult.Data;
+                userProfileDto.HasBusiness = true;
+                userProfileDto.IsBusinessApproved = business.IsApproved;
+                userProfileDto.BusinessName = business.Name;
+            }
 
             return new SuccessDataResult<UserProfileDto>(userProfileDto, "Kullanıcı profili getirildi.");
         }

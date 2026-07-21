@@ -1,5 +1,5 @@
-import { Component, inject ,OnInit} from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject, OnInit } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common'; 
 import { AuthService } from '../../core/services/auth.service'; 
 import { UserService } from '../../core/services/user.service';
@@ -25,16 +25,39 @@ import { UserService } from '../../core/services/user.service';
         
         <div class="d-flex align-items-center gap-3">
             
-            <a *ngIf="authService.isLoggedIn$ | async" 
-               routerLink="/business/business-register" 
-               class="text-white text-decoration-none fw-bold" 
-               style="background-color: #28a745; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);">
-              İşletme Hesabı Ol
-            </a>
+            <!-- GİRİŞ YAPMIŞ KULLANICILAR İÇİN İŞLETME BUTONLARI -->
+            <ng-container *ngIf="authService.isLoggedIn$ | async">
+                
+                <!-- DURUM 1: İşletmesi HİÇ YOK -->
+                <a *ngIf="!user()?.hasBusiness" 
+                   routerLink="/business/business-register" 
+                   class="text-white text-decoration-none fw-bold" 
+                   style="background-color: #28a745; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);">
+                  İşletme Hesabı Ol
+                </a>
 
+                <!-- DURUM 2: İşletme Talebi Gönderilmiş Ama ONAYLANMAMIŞ -->
+                <button *ngIf="user()?.hasBusiness && !user()?.isBusinessApproved" 
+                   class="text-white fw-bold border-0" 
+                   disabled
+                   style="background-color: #6c757d; padding: 10px 24px; border-radius: 12px; cursor: not-allowed; opacity: 0.8;">
+                  İşletme Talebiniz Gönderildi
+                </button>
+
+                <a *ngIf="user()?.hasBusiness && user()?.isBusinessApproved" 
+                    routerLink="/business-panel"
+                    class="btn text-white fw-bold border-0" 
+                    style="background-color: #007bff; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); cursor: pointer; text-decoration: none;">
+                    İşletme Hesabına Geç
+                  </a>
+
+            </ng-container>
+
+            <!-- KULLANICI PROFİL MENÜSÜ -->
             <div *ngIf="authService.isLoggedIn$ | async" class="position-relative d-flex align-items-center">
                 
                 <div (click)="isMenuOpen = !isMenuOpen" class="d-flex align-items-center" style="cursor: pointer;">
+                     
                      <div class="d-flex justify-content-center align-items-center bg-warning rounded-circle shadow-sm" style="width: 35px; height: 35px;">
                          @if (user()?.avatarPath) {
                               <img [src]="user()?.avatarPath" class="w-100 h-100 object-fit-cover" style="border-radius: 50%;" alt="User Avatar">
@@ -63,6 +86,7 @@ import { UserService } from '../../core/services/user.service';
                 </div>
             </div>
 
+            <!-- GİRİŞ YAPMAMIŞ KULLANICILAR İÇİN GİRİŞ BUTONU -->
             <a *ngIf="!(authService.isLoggedIn$ | async)" routerLink="/auth/login" class="text-white text-decoration-none fw-bold" 
                style="background-color: #ff7d00; padding: 10px 24px; border-radius: 12px; box-shadow: 0 4px 10px rgba(255, 125, 0, 0.2);">
               Giriş Yap
@@ -82,11 +106,11 @@ import { UserService } from '../../core/services/user.service';
     </div>
   `
 })
-export class MainLayoutComponent implements OnInit{
+export class MainLayoutComponent implements OnInit {
   authService = inject(AuthService);
   private userService = inject(UserService);
+  private router = inject(Router);
   
-  // Menünün açık/kapalı durumunu tutan Angular değişkeni
   isMenuOpen = false; 
   user = this.userService.currentUser;
 
@@ -94,12 +118,23 @@ export class MainLayoutComponent implements OnInit{
     this.authService.logout();
     this.isMenuOpen = false;
   }
-  ngOnInit() {
-    // F5 atıldığında sinyal boşalacağı için veriyi API'den geri çekme güvencemiz:
-    if (!this.user()) {
-      this.userService.fetchMyProfile().subscribe({
-        error: (err) => console.error('Layout profil verisini çekemedi:', err)
-      });
+
+  // MainLayoutComponent veya ilgili component içinde
+ngOnInit() {
+  // Profil verisini çekmeye çalış
+  this.userService.fetchMyProfile().subscribe({
+    next: (profile) => {
+      console.log('Profil başarıyla yüklendi:', profile);
+    },
+    error: (err) => {
+      // 400 hatası alındığında (kullanıcı veritabanında yoksa)[cite: 1]
+      if (err.status === 400) {
+        console.warn('Kullanıcı bulunamadı, oturum temizleniyor.');
+        this.userService.clearUser(); // Signal'i null yap
+        localStorage.removeItem('token'); // Çöp veriyi sil
+        this.router.navigate(['/login']);
+      }
     }
-  }
+  });
+}
 }

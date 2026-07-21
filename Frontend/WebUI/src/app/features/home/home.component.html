@@ -1,0 +1,35 @@
+<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+  
+  <div class="bg-white rounded-4 shadow px-4 py-5 text-center" style="width: 100%; max-width: 850px;">
+    <h2 class="fw-bolder mb-3" style="color: var(--text-dark);">Sporcularla Spor Merkezlerini Buluşturan Platform!</h2>
+    <p class="mb-5" style="color: var(--text-muted);">Hemen Halı Saha bul, rezervasyonunu yap.</p>
+
+    <!-- KESİN ÇÖZÜM: Global CSS değişkenleriyle tanımlanmış bar -->
+    <div class="d-flex bg-white rounded-pill shadow-sm align-items-center p-2" 
+         style="border: 2px solid var(--border-input);">
+      
+      <div style="flex: 1;" class="px-2">
+        <ng-select [items]="cities()" bindLabel="name" bindValue="id" placeholder="Tüm İller"
+                   [(ngModel)]="selectedCityId" (change)="onCityChange($event)"
+                   appendTo="body" class="auth-select-modern">
+        </ng-select>
+      </div>
+
+      <div style="flex: 1;" class="px-2">
+        <ng-select [items]="districts()" bindLabel="name" bindValue="id" placeholder="Tüm İlçeler"
+                   [(ngModel)]="selectedDistrictId" [disabled]="districts().length === 0"
+                   appendTo="body" class="auth-select-modern">
+        </ng-select>
+      </div>
+      
+      <div style="flex: 1.5;" class="px-2">
+        <input type="text" [(ngModel)]="searchText" class="auth-input-modern" placeholder="Saha Adı Ara..." style="margin-top: 0;">
+      </div>
+      
+      <button (click)="onSearch()" class="btn text-white fw-bold rounded-pill" 
+              style="background-color: var(--accent-green); height: 48px; width: 50px;">
+        <i class="ki-duotone ki-magnifier fs-2"></i>
+      </button>
+    </div>
+  </div>
+</div>

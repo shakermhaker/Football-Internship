@@ -12,6 +12,9 @@ export interface UserProfile {
   email: string;
   phone: string;
   status: boolean;
+  hasBusiness: boolean;
+  isBusinessApproved: boolean;
+  businessName: string;
   avatarPath?: string;
   teamAvatarId?: number;
   phoneNumber?: string;
@@ -21,6 +24,10 @@ export interface TeamAvatar {
   id: number;          // Veritabanındaki Id
   teamName: string;    // Örn: Galatasaray
   imagePath: string;   // Örn: /assets/images/avatars/gs.png
+
+  hasBusiness: boolean;
+  isBusinessApproved: boolean;
+  businessName: string;
 }
 
 export interface DataResult<T> {

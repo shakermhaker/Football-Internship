@@ -3,6 +3,9 @@ import { AuthLayoutComponent } from './shared/layouts/auth-layout.component';
 import { MainLayoutComponent } from './shared/layouts/main-layout.component';
 import { HowItWorksComponent } from './features/how-it-works/how-it-works'; // <-- Yeni import
 import { AboutComponent } from './features/about/about';           // <-- Yeni import
+import { BusinessLayoutComponent } from './shared/layouts/business-layout.component';
+import { HomeComponent } from './features/home/home.component';
+import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -20,6 +23,17 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'business-panel',
+    component: BusinessLayoutComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+    ]
+  },
 
   // 2. Ana Uygulama Sayfaları Grubu (MainLayout)
   {
@@ -33,7 +47,14 @@ export const routes: Routes = [
       { 
         path: 'about', 
         loadComponent: () => import('./features/about/about').then(m => m.AboutComponent) 
-      }
+      },
+      { 
+        path: '', // Boş path = Ana sayfa
+        component: HomeComponent 
+      },
+      { path: '', component: HomeComponent },
+      // Yeni rotamızı buraya ekledik:
+      { path: 'fields', component: FootballfieldsComponent },
     ]
   },
    {

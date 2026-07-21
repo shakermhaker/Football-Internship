@@ -1,0 +1,66 @@
+/* ANGULAR KALKANINI DELEN NG-SELECT DÜZELTMELERİ */
+::ng-deep {
+  
+  .auth-select-modern {
+    
+    /* 1. ANA KUTU */
+    .ng-select-container {
+      background-color: var(--bg-input) !important;
+      border: 1px solid var(--border-input) !important;
+      border-radius: 12px !important;
+      padding: 0.25rem 1rem 0.25rem 2.75rem !important;
+      min-height: 48px !important;
+      color: var(--text-dark) !important;
+      font-size: 0.95rem !important;
+      box-shadow: none !important;
+    }
+
+    /* 2. PLACEHOLDER VE ÜST ÜSTE BİNME SORUNU (İlinizi seçinAnkara) */
+    &.ng-select-single .ng-select-container .ng-value-container {
+      padding-left: 0 !important;
+    }
+    
+    /* Seçim yapıldığında placeholder'ı zorla gizle! */
+    &.ng-select .ng-has-value .ng-placeholder {
+      display: none !important;
+    }
+
+    .ng-value {
+      color: var(--text-dark) !important;
+      font-weight: 600 !important;
+    }
+
+    /* 3. AÇILAN MENÜ PANELI (Şeffaflığı ve taşmayı çözen kısım) */
+    .ng-dropdown-panel {
+      background-color: #ffffff !important;
+      border: 1px solid var(--border-input) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+      z-index: 9999 !important; /* Panel kesinlikle en üstte olacak */
+      margin-top: 5px !important;
+      overflow: hidden !important;
+      position: absolute !important; /* Tasarımı bozmaması için havaya kaldırıyoruz */
+    }
+
+    /* 4. AÇILAN MENÜ İÇİNDEKİ SEÇENEKLER */
+    .ng-dropdown-panel .ng-option {
+      padding: 10px 15px !important;
+      font-size: 0.95rem !important;
+      color: var(--text-dark) !important;
+      background-color: #ffffff !important;
+      border-bottom: 1px solid #f3f4f6 !important;
+    }
+
+    .ng-dropdown-panel .ng-option:last-child {
+      border-bottom: none !important;
+    }
+
+    /* 5. HOVER (ÜZERİNE GELİNCE) */
+    .ng-dropdown-panel .ng-option.ng-option-marked,
+    .ng-dropdown-panel .ng-option.ng-option-selected {
+      background-color: rgba(255, 125, 0, 0.1) !important;
+      color: var(--accent-orange) !important;
+      font-weight: 600 !important;
+    }
+  }
+}
