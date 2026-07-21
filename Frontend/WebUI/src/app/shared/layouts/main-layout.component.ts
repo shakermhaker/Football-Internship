@@ -59,15 +59,15 @@ import { UserService } from '../../core/services/user.service';
                 <div (click)="isMenuOpen = !isMenuOpen" class="d-flex align-items-center" style="cursor: pointer;">
                      
                      <div class="d-flex justify-content-center align-items-center bg-warning rounded-circle shadow-sm" style="width: 35px; height: 35px;">
-                    <span class="text-white fs-6 fw-bold">
-                      {{ user()?.firstName?.charAt(0) || 'O' }}
-                    </span>
-                </div>
-
-                    <!-- İSİM YAZISI -->
-                    <span class="ms-3 fw-bold text-dark">
-                      {{ user()?.firstName }} {{ user()?.lastName }}
-                    </span>
+                         @if (user()?.avatarPath) {
+                              <img [src]="user()?.avatarPath" class="w-100 h-100 object-fit-cover" style="border-radius: 50%;" alt="User Avatar">
+                          } @else {
+                              <span class="text-white fs-6 fw-bold">{{ user()?.firstName?.charAt(0) || 'U' }}</span>
+                          }
+                     </div>
+                     <span class="ms-3 fw-bold text-dark">
+                     {{ user()?.firstName }} {{ user()?.lastName }}
+                      </span>
                 </div>
 
                 <div *ngIf="isMenuOpen" 

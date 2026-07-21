@@ -16,12 +16,17 @@ namespace Entities.Concrete
         public byte[] PasswordHash { get; set; }
 
         public string Phone { get; set; } = string.Empty;
+        
         public bool Status { get; set; }
 
         public bool IsEmailConfirmed { get; set; }
         public string? EmailVerificationToken { get; set; }
         public DateTime? EmailVerificationTokenExpires { get; set; }
         public DateTime BirthDate { get; set; }
+        public int? TeamAvatarId { get; set; }
+
+        
+        public TeamAvatar? TeamAvatar { get; set; }
 
         // Navigation Properties
         //public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
