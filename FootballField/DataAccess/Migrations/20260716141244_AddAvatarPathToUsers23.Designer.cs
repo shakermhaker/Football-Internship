@@ -3,6 +3,7 @@ using System;
 using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    partial class FootballFieldContextModelSnapshot : ModelSnapshot
+    [Migration("20260716141244_AddAvatarPathToUsers23")]
+    partial class AddAvatarPathToUsers23
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -227,27 +230,6 @@ namespace DataAccess.Migrations
                     b.ToTable("Statuses");
                 });
 
-            modelBuilder.Entity("Entities.Concrete.TeamAvatar", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TeamName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TeamAvatars");
-                });
-
             modelBuilder.Entity("Entities.Concrete.TimeSlot", b =>
                 {
                     b.Property<int>("Id")
@@ -274,6 +256,9 @@ namespace DataAccess.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarPath")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("timestamp with time zone");
@@ -312,17 +297,17 @@ namespace DataAccess.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid>("RowGuid")
-                        .HasColumnType("uuid");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("Status")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("TeamAvatarId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamAvatarId");
+                    b.HasIndex("RowGuid")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -445,15 +430,6 @@ namespace DataAccess.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Entities.Concrete.User", b =>
-                {
-                    b.HasOne("Entities.Concrete.TeamAvatar", "TeamAvatar")
-                        .WithMany("TeamAvatarId")
-                        .HasForeignKey("TeamAvatarId");
-
-                    b.Navigation("TeamAvatar");
-                });
-
             modelBuilder.Entity("Entities.Concrete.UserOperationClaim", b =>
                 {
                     b.HasOne("Entities.Concrete.OperationClaim", "OperationClaim")
@@ -511,11 +487,6 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("Entities.Concrete.Status", b =>
                 {
                     b.Navigation("Reservations");
-                });
-
-            modelBuilder.Entity("Entities.Concrete.TeamAvatar", b =>
-                {
-                    b.Navigation("TeamAvatarId");
                 });
 
             modelBuilder.Entity("Entities.Concrete.TimeSlot", b =>

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace Core.DataAccess.EntityFramework
 {
@@ -33,11 +34,20 @@ namespace Core.DataAccess.EntityFramework
             }
         }
 
-        public TEntity Get(Expression<Func<TEntity, bool>> filter)
+        public TEntity Get(Expression<Func<TEntity, bool>> filter,
+                       Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null)
         {
-            using (TContext context = new TContext())
+            using (var context = new TContext())
             {
-                return context.Set<TEntity>().SingleOrDefault(filter);
+                IQueryable<TEntity> query = context.Set<TEntity>();
+
+                // 🎯 Eğer dışarıdan bir Include (JOIN) isteği gelmişse sorguya ekle:
+                if (include != null)
+                {
+                    query = include(query);
+                }
+
+                return query.SingleOrDefault(filter);
             }
         }
 

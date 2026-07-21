@@ -37,20 +37,9 @@ public class FootballFieldContext : DbContext
 
     // Ara tablo (Join Table)
     public DbSet<UserOperationClaim> UserOperationClaims{ get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    public DbSet<TeamAvatar> TeamAvatars { get; set; }
 
 
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.Property(e => e.RowGuid)
-                  .HasDefaultValueSql("gen_random_uuid()");
-
-            entity.HasIndex(e => e.RowGuid)
-                  .IsUnique();
-        });
-    }
 
 
 }
