@@ -137,12 +137,14 @@ export class ProfileComponent implements OnInit {
     
     this.userService.updateProfile(updatePayload).subscribe({
       next: (res) => {
+        
         this.isSubmitting = false;
         this.closeModal();
       },
       error: (err) => {
         this.isSubmitting = false;
         this.errorMessage = 'Güncelleme sırasında bir hata oluştu.';
+        console.log("saaa",updatePayload)
         console.error(err);
       }
     });
