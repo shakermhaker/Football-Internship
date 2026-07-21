@@ -25,5 +25,20 @@ namespace Core.Extensions
                 ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
                 ?? string.Empty;
         }
+        // 1. Integer ID'yi döndüren metod
+        public static int GetUserId(this ClaimsPrincipal claimsPrincipal)
+        {
+            var userId = claimsPrincipal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return userId != null ? int.Parse(userId) : 0;
+        }
+
+        // 2. Guid (RowGuid) değerini döndüren metod
+        public static Guid GetUserRowGuid(this ClaimsPrincipal claimsPrincipal)
+        {
+            var rowGuid = claimsPrincipal?.FindFirst("RowGuid")?.Value
+                          ?? claimsPrincipal?.FindFirst("rowguid")?.Value;
+
+            return rowGuid != null ? Guid.Parse(rowGuid) : Guid.Empty;
+        }
     }
 }

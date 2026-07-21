@@ -25,7 +25,7 @@ builder.Services.AddDbContext<FootballFieldContext>(options =>
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<AppUrlSettings>(builder.Configuration.GetSection("AppUrlSettings"));
 builder.Services.AddCors(options =>
-{
+{               
     options.AddPolicy("AllowAngularApp",    
         policy =>
         {
