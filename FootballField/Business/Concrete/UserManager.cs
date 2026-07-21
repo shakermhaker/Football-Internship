@@ -73,7 +73,7 @@ namespace Business.Concrete
                 TeamAvatarId = user.TeamAvatarId,
                 AvatarPath = user.TeamAvatar != null
                      ? user.TeamAvatar.ImagePath
-                     : ""
+                     : "",
                 // Başlangıçta işletme yokmuş gibi atıyoruz
                 HasBusiness = false,
                 IsBusinessApproved = false,
