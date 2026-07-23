@@ -20,7 +20,7 @@ public class FootballFieldContext : DbContext
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=emre0660");
+        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=omer123");
     }
     // --- DbSet Tanımlamaları ---
     public DbSet<Business> Businesses { get; set; }
@@ -39,7 +39,19 @@ public class FootballFieldContext : DbContext
     public DbSet<UserOperationClaim> UserOperationClaims{ get; set; }
     public DbSet<TeamAvatar> TeamAvatars { get; set; }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
+        // YÖNTEM: Ayrı dosya oluşturmadan doğrudan Context içine kuralı yazmak (Tek kuralımız olduğu için en pratik yol)
+        modelBuilder.Entity<FieldPriceSchedule>(entity =>
+        {
+            // İlgili 3 kolonu (Saha, Saat, Gün) birleştirip Unique (Benzersiz) yapıyoruz!
+            entity.HasIndex(f => new { f.FootballFieldId, f.TimeSlotId, f.DayId })
+                  .IsUnique()
+                  .HasDatabaseName("IX_Unique_Field_Time_Day");
+        });
+    }
 
 
 }
