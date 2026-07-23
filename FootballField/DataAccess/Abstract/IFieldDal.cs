@@ -7,6 +7,7 @@ namespace DataAccess.Abstract
 {
     public interface IFieldDal : IEntityRepository<Entities.Concrete.FootballField>
     {
+
     }
     
 }

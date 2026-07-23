@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormArray, Validators } fr
 import { FootballFieldService } from '../../../core/services/football-field.service';
 import { UserService } from '../../../core/services/user.service';
 import Swal from 'sweetalert2';
+import { ActivatedRoute, Router } from '@angular/router'; // Router eklendi
 
 @Component({
   selector: 'app-add-field',
@@ -16,7 +17,12 @@ export class AddFieldComponent implements OnInit {
   private fb = inject(FormBuilder);
   private fieldService = inject(FootballFieldService);
   private userService = inject(UserService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router); // İşlem bitince listeye dönmek için
 
+  isEditMode = false; 
+  editFieldId: number | null = null;
+  
   // Günlerin Listesi
   days = [
     { id: 1, name: 'Pazartesi' }, { id: 2, name: 'Salı' },
@@ -32,9 +38,77 @@ export class AddFieldComponent implements OnInit {
   });
 
   ngOnInit() {
-    // Sayfa açıldığında 1 tane boş grup gelsin
-    this.addScheduleGroup();
+    // 1. URL'in sonunda ID var mı diye bakıyoruz (Örn: /edit/2)
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      
+      if (id) {
+        // ID varsa, burası DÜZENLEME (Edit) sayfasıdır!
+        this.isEditMode = true;
+        this.editFieldId = +id; // Sayıya çevirdik
+        this.loadFieldData(this.editFieldId); // Backend'e koş ve veriyi getir
+      } else {
+        // ID yoksa, burası YENİ EKLEME sayfasıdır!
+        this.isEditMode = false;
+        this.addScheduleGroup(); // 1 tane boş grup ekle
+      }
+    });
   }
+
+  // ==========================================
+  // DÜZENLEME MODU: VERİYİ FORMA DOLDURMA
+  // ==========================================
+  loadFieldData(id: number) {
+  this.fieldService.getFieldById(id).subscribe({
+    next: (response: any) => {
+      const fieldData = response.data;
+      console.log("🔥 Düzenlenecek Saha Backend'den Geldi:", fieldData);
+
+      // 1. Saha adını form kutucuğuna basıyoruz
+      this.fieldForm.patchValue({
+        name: fieldData.name // veya fieldData.Name (JSON'da küçük harf 'name' görünüyor)
+      });
+
+      // 2. Formdaki boş grupları temizliyoruz
+      this.scheduleGroups.clear();
+
+      // 3. Backend'den gelen grupları tek tek form array'ine ekliyoruz
+      if (fieldData.scheduleGroups && fieldData.scheduleGroups.length > 0) {
+        fieldData.scheduleGroups.forEach((group: any) => {
+          
+          // DİKKAT: fb.control ekledik ve camelCase/PascalCase hatasına karşı garantiye aldık!
+          const groupForm = this.fb.group({
+            // Backend'den gelen diziyi (array) güvenli bir şekilde FormControl içine atıyoruz:
+            selectedDayIds: this.fb.control(group.selectedDayIds || group.SelectedDayIds || [], Validators.required),
+            periods: this.fb.array([])
+          });
+
+          // Grubun içindeki periyotları ekliyoruz
+          const periodsArray = groupForm.get('periods') as FormArray;
+          const rawPeriods = group.periods || group.Periods || [];
+
+          rawPeriods.forEach((period: any) => {
+            const periodForm = this.fb.group({
+              startTime: [period.startTime || period.StartTime, Validators.required],
+              endTime: [period.endTime || period.EndTime, Validators.required],
+              duration: [period.duration || period.Duration, Validators.required],
+              price: [period.price || period.Price, Validators.required]
+            });
+            periodsArray.push(periodForm);
+          });
+
+          this.scheduleGroups.push(groupForm);
+        });
+      } else {
+        this.addScheduleGroup();
+      }
+    },
+    error: (err) => {
+      console.error("Veri çekilirken hata:", err);
+    }
+  });
+}
+  
 
   // --- GETTER METOTLARI (HTML'de form elemanlarına rahat ulaşmak için) ---
   get scheduleGroups() {
@@ -48,7 +122,6 @@ export class AddFieldComponent implements OnInit {
   // ==========================================
   // 1. KATMAN: GRUP İŞLEMLERİ (Yeşil İkonlar)
   // ==========================================
-  
   addScheduleGroup() {
     const group = this.fb.group({
       selectedDayIds: [[], Validators.required], // Bu gruba ait seçili günler
@@ -64,7 +137,6 @@ export class AddFieldComponent implements OnInit {
   // ==========================================
   // 2. KATMAN: PERİYOT İŞLEMLERİ (Turuncu İkonlar)
   // ==========================================
-  
   createPeriod() {
     return this.fb.group({
       startTime: ['09:00', Validators.required],
@@ -85,7 +157,6 @@ export class AddFieldComponent implements OnInit {
   // ==========================================
   // GÜN SEÇİMİ VE KONTROL MANTIĞI
   // ==========================================
-
   toggleDay(groupIndex: number, dayId: number, event: any) {
     const group = this.scheduleGroups.at(groupIndex);
     let selectedDays = group.get('selectedDayIds')?.value as number[];
@@ -99,11 +170,9 @@ export class AddFieldComponent implements OnInit {
     group.get('selectedDayIds')?.setValue(selectedDays);
   }
 
-  // KURAL: Eğer bir gün başka bir grupta seçildiyse, bu grupta disabled (pasif) olsun
   isDayDisabled(currentGroupIndex: number, dayId: number): boolean {
     const allGroups = this.scheduleGroups.value;
     return allGroups.some((group: any, index: number) => {
-      // Kendi grubu dışındaki diğer gruplara bak, bu dayId orada var mı?
       return index !== currentGroupIndex && group.selectedDayIds.includes(dayId);
     });
   }
@@ -111,14 +180,11 @@ export class AddFieldComponent implements OnInit {
   // ==========================================
   // ZAMAN PARÇALAMA YARDIMCI METOTLARI
   // ==========================================
-  
-  // "09:30" stringini alıp matematikle hesaplanabilir dakikaya (570) çevirir
   private timeToMinutes(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   }
 
-  // 570 dakikayı alıp tekrar "09:30" string formatına çevirir
   private minutesToTime(minutes: number): string {
     const h = Math.floor(minutes / 60).toString().padStart(2, '0');
     const m = (minutes % 60).toString().padStart(2, '0');
@@ -126,21 +192,16 @@ export class AddFieldComponent implements OnInit {
   }
 
   // ==========================================
-  // FORMU KAYDET VE PARÇALA
+  // FORMU KAYDET VE PARÇALA (EKLEME & GÜNCELLEME)
   // ==========================================
-
   onSubmit() {
     if (this.fieldForm.valid) {
       const rawData = this.fieldForm.value;
-
-      // 1. SIGNAL'DEN KULLANICI ID'SİNİ ÇEKİYORUZ
-      // (Signal değişkeninin adı senin servisinde neyse onu yaz, örn: this.userService.businessId() veya currentUser().id )
       const currentBusinessId = this.userService.currentUser()?.businessId;
 
-      // 2. BACKEND'E GİDECEK KUSURSUZ JSON'I İNŞA EDİYORUZ
-      const payload = {
+      const payload: any = {
         name: rawData.name, 
-        businessId: currentBusinessId, // Signal'den aldığımız ID'yi buraya çaktık
+        businessId: currentBusinessId, 
         scheduleGroups: rawData.scheduleGroups.map((group: any) => {
           
           let splitPeriods: any[] = []; 
@@ -150,7 +211,6 @@ export class AddFieldComponent implements OnInit {
             const endMin = this.timeToMinutes(period.endTime);
             const duration = period.duration;
 
-            // Saati maç süresine göre parçala
             while (currentMin + duration <= endMin) {
               splitPeriods.push({
                 startTime: this.minutesToTime(currentMin),
@@ -170,56 +230,55 @@ export class AddFieldComponent implements OnInit {
         })
       };
 
-      console.log("🚀 BACKEND'E GİDECEK DATA:", payload);
+      // 🔥 EĞER DÜZENLEME MODUNDAYSAK PAYLOAD'A ID EKLİYORUZ
+      if (this.isEditMode) {
+        payload.id = this.editFieldId;
+      }
 
-      // 3. SERVİSE İSTEK AT VE SWEETALERT İLE SONUCU GÖSTER
-      this.fieldService.addWithSchedules(payload).subscribe({
+      console.log(this.isEditMode ? "🚀 GÜNCELLEME İÇİN GİDEN DATA:" : "🚀 YENİ KAYIT İÇİN GİDEN DATA:", payload);
+
+      
+      const request$ = this.isEditMode 
+      ? this.fieldService.updateField(this.editFieldId!, payload) // Hem ID'yi hem payload'ı verdik!
+      : this.fieldService.addWithSchedules(payload);
+
+      request$.subscribe({
         next: (response) => {
           Swal.fire({
             title: 'Harika!',
-            text: 'Halı saha ve tüm rezervasyon periyotları başarıyla eklendi.',
+            text: this.isEditMode ? 'Halı saha başarıyla güncellendi.' : 'Halı saha başarıyla eklendi.',
             icon: 'success',
             confirmButtonText: 'Tamam',
-            confirmButtonColor: '#50cd89' // Metronic yeşili
+            confirmButtonColor: '#50cd89'
           }).then((result) => {
             if (result.isConfirmed) {
-              // İsteğe bağlı: Başarılı olunca formu sıfırla veya başka sayfaya yönlendir
-              // this.fieldForm.reset();
-              // this.addScheduleGroup(); // Sıfırlandıktan sonra 1 tane boş grup eklemek için
+              // İşlem bitince listeye geri dön
+              this.router.navigate(['/business-panel/my-fields']);
             }
           });
         },
         error: (err) => {
           Swal.fire({
             title: 'Eyvah!',
-            text: err.error?.message || 'Kayıt sırasında beklenmeyen bir hata oluştu.',
+            text: err.error?.message || 'İşlem sırasında beklenmeyen bir hata oluştu.',
             icon: 'error',
             confirmButtonText: 'Kapat',
-            confirmButtonColor: '#f1416c' // Metronic kırmızısı
+            confirmButtonColor: '#f1416c'
           });
           console.error("❌ HATA:", err);
         }
       });
 
     } else {
-      // FORM GEÇERSİZSE UYARI VER
       Swal.fire({
         title: 'Eksik Bilgi!',
         text: 'Lütfen saha adını ve tüm rezervasyon alanlarını eksiksiz doldurun.',
         icon: 'warning',
         confirmButtonText: 'Anladım',
-        confirmButtonColor: '#fd7e14' // Metronic turuncusu
+        confirmButtonColor: '#fd7e14' 
       });
 
       this.fieldForm.markAllAsTouched();
-
-      // Hangi alanın boş olduğunu konsola yazdır (Senin geliştirme yaparken görmen için)
-      Object.keys(this.fieldForm.controls).forEach(key => {
-        const control = this.fieldForm.get(key);
-        if (control?.invalid) {
-          console.error(`DİKKAT: '${key}' alanı hatalı veya boş! Durum:`, control.errors);
-        }
-      });
     }
   }
 }

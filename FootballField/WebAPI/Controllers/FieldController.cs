@@ -39,5 +39,49 @@ namespace WebAPI.Controllers
 
             return BadRequest(result);
         }
+        [HttpDelete("deletefield")]
+        [Authorize]
+        public IActionResult DeleteField([FromQuery] int fieldId)
+        {
+            var result = _fieldService.DeleteField(fieldId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+       
+
+        [HttpPost("updatefieldwithschedules")]
+        [Authorize]
+        public IActionResult UpdateWithSchedules([FromQuery] int fieldId, [FromBody] FootballFieldAddDTO fieldDto)
+        {
+            var result = _fieldService.UpdateWithSchedules(fieldDto, fieldId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+        
+        [HttpGet("getfieldforedit")]
+        [Authorize]
+        public IActionResult GetFieldForEdit([FromQuery] int fieldId)
+        {
+            var result = _fieldService.GetFieldForEdit(fieldId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
     }
 }

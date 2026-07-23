@@ -44,5 +44,24 @@ namespace WebAPI.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("getallfields")]
+        public IActionResult GetAllFields([FromQuery] int businessId) // Metot ismini de URL'e uygun yapabilirsin
+        {
+            // 1. Token'dan giriş yapan kişinin UserId'sini al
+            
+
+            // 2. Servise BusinessId değil, UserId gönderiyoruz
+            var result = _businessService.GetFieldsByUserId(businessId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+
     }
 }

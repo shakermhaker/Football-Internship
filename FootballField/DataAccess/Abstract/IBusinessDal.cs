@@ -6,5 +6,7 @@ using Entities.Concrete;
 
 namespace DataAccess.Abstract
 {
-    public interface IBusinessDal : IEntityRepository<Business> { }
+    public interface IBusinessDal : IEntityRepository<Business> {
+        List<Entities.Concrete.FootballField> GetFieldsByUserId(int businessId);
+    }
 }

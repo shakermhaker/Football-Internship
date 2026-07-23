@@ -1,6 +1,7 @@
 ﻿using Core.Entities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace Entities.Concrete
@@ -12,7 +13,10 @@ namespace Entities.Concrete
 
         // Foreign Keys
         public int FootballFieldId { get; set; }
+        [ForeignKey("FootballFieldId")]
+        [NotMapped]
         public FootballField FootballField { get; set; } = null!;
+
 
         public int TimeSlotId { get; set; }
         public TimeSlot TimeSlot { get; set; } = null!;

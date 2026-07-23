@@ -52,14 +52,6 @@ import { UserService } from '../../core/services/user.service';
               Rezervasyonlar
             </a>
           </li>
-          <li class="nav-item">
-            <a routerLink="/business-panel/settings" 
-               routerLinkActive="active fw-bold" 
-               class="nav-link" 
-               style="color: var(--text-light);">
-              Saha Ayarları
-            </a>
-          </li>
         </ul>
       </div>
 

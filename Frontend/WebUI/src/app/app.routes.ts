@@ -41,7 +41,11 @@ export const routes: Routes = [
       {
         path: 'my-fields/add',
         component: AddFieldComponent
-}
+      },
+      {
+        path: 'my-fields/edit/:id', 
+        component: AddFieldComponent // DİKKAT: Yeni sayfa yapmadık, yine aynı sayfaya yolladık!
+      }
     ]
   },
 
