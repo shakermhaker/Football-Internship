@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    [Migration("20260716071631_rowguid3")]
-    partial class rowguid3
+    [Migration("20260716140656_AddAvatarPathToUsers2")]
+    partial class AddAvatarPathToUsers2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -257,6 +257,9 @@ namespace DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AvatarPath")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -296,7 +299,7 @@ namespace DataAccess.Migrations
                     b.Property<Guid>("RowGuid")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasDefaultValueSql("NEWID()");
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<bool>("Status")
                         .HasColumnType("boolean");

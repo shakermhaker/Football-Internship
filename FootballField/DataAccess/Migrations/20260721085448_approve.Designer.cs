@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    [Migration("20260716070815_rowguid2")]
-    partial class rowguid2
+    [Migration("20260721085448_approve")]
+    partial class approve
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("FullAddress")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -230,6 +233,27 @@ namespace DataAccess.Migrations
                     b.ToTable("Statuses");
                 });
 
+            modelBuilder.Entity("Entities.Concrete.TeamAvatar", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TeamAvatars");
+                });
+
             modelBuilder.Entity("Entities.Concrete.TimeSlot", b =>
                 {
                     b.Property<int>("Id")
@@ -299,7 +323,12 @@ namespace DataAccess.Migrations
                     b.Property<bool>("Status")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("TeamAvatarId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TeamAvatarId");
 
                     b.ToTable("Users");
                 });
@@ -422,6 +451,15 @@ namespace DataAccess.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Entities.Concrete.User", b =>
+                {
+                    b.HasOne("Entities.Concrete.TeamAvatar", "TeamAvatar")
+                        .WithMany("TeamAvatarId")
+                        .HasForeignKey("TeamAvatarId");
+
+                    b.Navigation("TeamAvatar");
+                });
+
             modelBuilder.Entity("Entities.Concrete.UserOperationClaim", b =>
                 {
                     b.HasOne("Entities.Concrete.OperationClaim", "OperationClaim")
@@ -479,6 +517,11 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("Entities.Concrete.Status", b =>
                 {
                     b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("Entities.Concrete.TeamAvatar", b =>
+                {
+                    b.Navigation("TeamAvatarId");
                 });
 
             modelBuilder.Entity("Entities.Concrete.TimeSlot", b =>

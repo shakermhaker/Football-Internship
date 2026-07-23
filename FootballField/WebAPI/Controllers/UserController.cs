@@ -1,7 +1,9 @@
 ﻿using Business.Abstract;
 using Core.Extensions;
+using Entities.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Controllers
 {
@@ -37,6 +39,30 @@ namespace WebAPI.Controllers
             var result = _userService.GetUserProfileByGuid(rowGuid);
             if (!result.Success) return NotFound(result);
             return Ok(result);
+        }
+
+        [HttpGet("TeamAvatars")]
+        public async Task<IActionResult> GetAvatars()
+        {
+            
+            var avatars = _userService.GetAvatars();
+            return Ok(new { success = true, data = avatars, message = "Takım listesi başarıyla getirildi." });
+        }
+
+        [HttpPut("updateProfile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UserProfileDto updateDto)
+        {
+            var userEmail = User.GetUserEmail();
+
+            // Tüm iş kuralı ve güncelleme mantığı Business katmanına devredildi
+            var result = await _userService.UpdateProfileAsync(userEmail, updateDto);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
     }
 }

@@ -33,37 +33,45 @@ export class HomeComponent implements OnInit {
   }
 
   onCityChange(event: any) {
-  // ... diğer kodların (varsa) ...
-
-  this.locationService.getDistrictsByCityId(this.selectedCityId).subscribe({
-    next: (res) => { 
-      // Hatanın çözümü burada: res.data YERİNE direkt res yazıyoruz!
-      this.districts.set(res); 
-    },
-    error: (err) => { 
-      console.warn('Bu ilin ilçesi yok veya çekilemedi, sorun değil.');
-      this.districts.set([]); // Hata alırsak listeyi boşaltıyoruz
+    // 1. KONTROL: Kullanıcı çarpıya basıp ili silerse veya seçmezse:
+    if (!this.selectedCityId) {
+      this.districts.set([]); // İlçeleri boşalt
+      this.selectedDistrictId = null; // Seçili ilçeyi sıfırla
+      return; // Backend'e boşuna istek atma
     }
-  });
-}
+
+    this.locationService.getDistrictsByCityId(this.selectedCityId).subscribe({
+      next: (res) => { 
+        this.districts.set(res); 
+      },
+      error: (err) => { 
+        console.warn('Bu ilin ilçesi yok veya çekilemedi, sorun değil.');
+        this.districts.set([]); 
+      }
+    });
+  }
+
   onSearch() {
-  console.log("BUTONA BASILDI, cityId:", this.selectedCityId); // Çalışıp çalışmadığını konsoldan anlarız
+    console.log("BUTONA BASILDI, cityId:", this.selectedCityId); 
 
-  this.router.navigate(['/fields'], {  // DİKKAT: /footballfields DEĞİL, /fields YAZIYORUZ
-    queryParams: {
-      cityId: this.selectedCityId,         
-      districtId: this.selectedDistrictId,
-      search: this.searchText
-    }
-  });
+    // 2. KONTROL: Sadece dolu olanları eklemek için boş bir obje oluşturuyoruz!
+    // Böylece URL'de "?cityId=null" gibi saçmalıklar olmaz, backend rahat eder.
+    const params: any = {};
 
-  
-  // Listeleme sayfasına (örneğin /fields) yönlendirirken filtreleri URL'ye iliştiriyoruz
-  this.router.navigate(['/fields'], {
-    queryParams: {
-      districtId: this.selectedDistrictId, // Sadece ilçe ID'si yeterli
-      search: this.searchText
+    if (this.selectedCityId) {
+      params.cityId = this.selectedCityId;
     }
-  });
+
+    if (this.selectedDistrictId) {
+      params.districtId = this.selectedDistrictId;
+    }
+
+    if (this.searchText && this.searchText.trim() !== '') {
+      params.search = this.searchText.trim();
+    }
+
+    this.router.navigate(['/fields'], { 
+      queryParams: params
+    });
   }
 }

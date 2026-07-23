@@ -12,6 +12,14 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfUserDal : EfEntityRepositoryBase<User, FootballFieldContext>, IUserDal
     {
+        public List<TeamAvatar> GetAvatars()
+        {
+            using (var context = new FootballFieldContext())
+            {
+                return context.TeamAvatars.ToList();
+            }
+        }
+
         public List<OperationClaim> GetClaims(ICoreUser user)
         {
             using (var context = new FootballFieldContext())

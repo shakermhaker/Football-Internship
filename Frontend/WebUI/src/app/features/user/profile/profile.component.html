@@ -1,49 +1,73 @@
-<div class="d-flex flex-column gap-7 gap-lg-10 d-flex align-items-center">
+<div class="d-flex flex-column gap-7 gap-lg-10 d-flex align-items-center mt-5">
   
-
-  <div class="card shadow-sm border-0 " style="width: 60rem;">
+  <!-- ========================================== -->
+  <!-- 1. ANA PROFİL KARTI (SENİN ŞIK TASARIMIN)  -->
+  <!-- ========================================== -->
+  <div class="card shadow-sm border-0" style="margin-top:100px;   width: 60rem; max-width: 100%;">
     <div class="card-body p-9">
       <div class="d-flex flex-wrap flex-sm-nowrap align-items-center">
         
+        <!-- PROFİL FOTOĞRAFI / AVATAR -->
         <div class="me-7 mb-4 mb-sm-0">
           <div class="symbol symbol-120px symbol-lg-160px symbol-fixed position-relative">
-            <div class="symbol-label fs-1 fw-bolder bg-primary text-white d-flex align-items-center justify-content-center shadow" 
-                 style="width: 130px; height: 130px; font-size: 3.5rem !important; border-radius: 20px; border: 4px solid white;">
-              {{ user()?.firstName?.charAt(0) || 'O' }}
-            </div>
             
+            @if (user()?.avatarPath) {
+              <!-- Eğer takım maskotu seçmişse -->
+              <img [src]="user()?.avatarPath" class="symbol-label shadow" 
+                   style="width: 130px; height: 130px; object-fit: cover; border-radius: 20px; border: 4px solid white;" alt="Avatar">
+            } @else {
+              <!-- Seçmemişse Baş Harf -->
+              <div class="symbol-label fs-1 fw-bolder bg-primary text-white d-flex align-items-center justify-content-center shadow" 
+                   style="width: 130px; height: 130px; font-size: 3.5rem !important; border-radius: 20px; border: 4px solid white;">
+                {{ user()?.firstName?.charAt(0) || 'O' }}
+              </div>
+            }
+
           </div>
         </div>
 
+        <!-- BİLGİLER VE İSTATİSTİKLER -->
         <div class="flex-grow-1">
+          
           <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+            
+            <!-- İsim ve Mail -->
             <div class="d-flex flex-column">
               <div class="d-flex align-items-center mb-2">
                 <span class="text-gray-900 fs-1 fw-bolder me-3">
                   {{ user()?.firstName }} {{ user()?.lastName }}
                 </span>
-                
               </div>
-
               <div class="d-flex flex-wrap fw-semibold fs-6 mb-4 pe-2">
                 <span class="d-flex align-items-center text-gray-600 me-5 mb-2">
                   <i class="ki-duotone ki-sms fs-4 me-2 text-primary"></i> 
                   {{ user()?.email }}
                 </span>
-                
               </div>
             </div>
+
+            <!-- 🚀 DÜZENLE BUTONU (Sağ Üst Köşeye Oturtuldu) -->
+            <div>
+              <button (click)="openProfileModal()" class="btn btn-sm btn-light-primary d-flex align-items-center gap-2 font-weight-bold">
+                <i class="ki-duotone ki-pencil fs-4"><span class="path1"></span><span class="path2"></span></i>
+                Profili Düzenle
+              </button>
+            </div>
+
           </div>
 
+          <!-- ALT BİLGİ KARTLARI (Senin border-dashed yapın) -->
           <div class="d-flex flex-wrap justify-content-start gap-5 pt-3 border-top border-gray-300">
-            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 bg-white shadow-sm">
+            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 bg-white shadow-sm">
               <div class="d-flex align-items-center">
-                <div class="fs-4 fw-bold text-success">Aktif</div>
+                <div class="fs-4 fw-bold text-success">
+                  @if (user()?.status) { Aktif } @else { Pasif }
+                </div>
               </div>
               <div class="fw-semibold fs-7 text-gray-400">Hesap Durumu</div>
             </div>
-
             
+            <!-- İleride buraya başka istatistikler de eklenebilir (Örn: Oynanan Maç: 15) -->
           </div>
 
         </div>
@@ -52,6 +76,122 @@
     </div>
   </div>
 
-  
-
 </div>
+
+
+<!-- ================================================================= -->
+<!-- 🚀 TEK VE ANA MODAL (Form & Avatar Seçim Ekranlarını Barındırır)  -->
+<!-- ================================================================= -->
+@if (isProfileModalOpen) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.6); z-index: 1055;">
+    
+    <div class="modal-dialog modal-dialog-centered" [class.modal-lg]="isAvatarSelectionView">
+      <div class="modal-content shadow-lg border-0 rounded-4">
+        
+        <!-- ===================================================== -->
+        <!-- GÖRÜNÜM A: PROFİL BİLGİLERİ DÜZENLEME FORMU           -->
+        <!-- ===================================================== -->
+        @if (!isAvatarSelectionView) {
+          <div class="modal-header border-bottom p-6">
+            <h3 class="modal-title fw-bold text-dark m-0">Profil Bilgilerini Düzenle</h3>
+            <button type="button" (click)="closeModal()" class="btn-close"></button>
+          </div>
+
+          <!-- Reactive Form -->
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+            <div class="modal-body p-6">
+              
+              <!-- 🎨 ORTADAKİ AVATAR DEĞİŞTİRME BUTONU -->
+              <div class="d-flex flex-column align-items-center mb-8">
+                <label class="form-label fw-semibold text-dark fs-6 mb-3">Takım Maskotu</label>
+                
+                <div (click)="openAvatarSelection()" class="position-relative" style="cursor: pointer; width: 110px; height: 110px;" title="Maskotu değiştirmek için tıklayın">
+                  @if (tempAvatarPath) {
+                    <img [src]="tempAvatarPath" class="w-100 h-100 object-fit-cover rounded-circle shadow-sm border border-3 border-white" alt="Seçili Avatar">
+                  } @else {
+                    <div class="w-100 h-100 bg-light-primary text-primary d-flex align-items-center justify-content-center rounded-circle shadow-sm border border-3 border-white" style="font-size: 2.5rem; font-weight: bold;">
+                      {{ profileForm.get('firstName')?.value?.charAt(0) || 'O' }}
+                    </div>
+                  }
+                  <div class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center border border-light" style="width: 36px; height: 36px; transform: translate(15%, 15%);">
+                    <i class="ki-duotone ki-pencil fs-4 text-primary"><span class="path1"></span><span class="path2"></span></i>
+                  </div>
+                </div>
+                <span class="text-muted fs-8 mt-2">Değiştirmek için resme tıklayın</span>
+              </div>
+
+              <!-- Metin Alanları -->
+              <div class="row g-4 mb-4">
+                <div class="col-sm-6">
+                  <label class="form-label fw-semibold text-dark fs-6 required">Ad</label>
+                  <input type="text" class="form-control form-control-solid" formControlName="firstName">
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label fw-semibold text-dark fs-6 required">Soyad</label>
+                  <input type="text" class="form-control form-control-solid" formControlName="lastName">
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label fw-semibold text-dark fs-6 required">E-Posta Adresi</label>
+                <input type="email" class="form-control form-control-solid bg-secondary" formControlName="email">
+                <div class="form-text fs-8 text-muted">Güvenlik gereği e-posta adresi değiştirilemez.</div>
+              </div>
+
+            </div>
+
+            @if (errorMessage) {
+              <div class="px-6 mb-2"><div class="alert alert-danger py-2 fs-7">{{ errorMessage }}</div></div>
+            }
+
+            <div class="modal-footer border-top p-6 d-flex justify-content-end gap-2">
+              <button type="button" (click)="closeModal()" class="btn btn-light" [disabled]="isSubmitting">Vazgeç</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || profileForm.invalid">
+                @if (isSubmitting) {
+                  <span class="spinner-border spinner-border-sm me-2"></span> Kaydediliyor...
+                } @else {
+                  Değişiklikleri Kaydet
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- ===================================================== -->
+        <!-- GÖRÜNÜM B: AVATAR SEÇİM GRID EKRANI                   -->
+        <!-- ===================================================== -->
+        @if (isAvatarSelectionView) {
+          <div class="modal-header border-bottom p-6 bg-light">
+            <div class="d-flex align-items-center gap-3">
+              <button (click)="cancelAvatarSelection()" class="btn btn-icon btn-sm btn-active-light-primary">
+                <i class="ki-duotone ki-arrow-left fs-2"><span class="path1"></span><span class="path2"></span></i>
+              </button>
+              <h3 class="modal-title fw-bold text-dark m-0">🎨 Maskotunu Seç</h3>
+            </div>
+          </div>
+
+          <div class="modal-body p-6">
+            <div class="row g-4">
+              @for (avatar of avatars(); track avatar.id) {
+                <div class="col-6 col-sm-4 col-md-3 text-center">
+                  <div (click)="confirmAvatarSelection(avatar)" 
+                       class="avatar-option p-3 d-flex flex-column align-items-center justify-content-center h-100 rounded-4"
+                       style="cursor: pointer; transition: all 0.2s; border: 3px solid transparent;"
+                       [class.bg-light-primary]="profileForm.get('teamAvatarId')?.value === avatar.id"
+                       [class.border-primary]="profileForm.get('teamAvatarId')?.value === avatar.id">
+                    
+                    <img [src]="avatar.imagePath" class="rounded-3 mb-2 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                    <span class="fw-bold fs-6 text-dark d-block lh-1">{{ avatar.teamName }}</span>
+                    
+
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}
