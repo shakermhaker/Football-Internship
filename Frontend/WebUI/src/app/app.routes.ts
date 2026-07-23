@@ -6,6 +6,8 @@ import { AboutComponent } from './features/about/about';           // <-- Yeni i
 import { BusinessLayoutComponent } from './shared/layouts/business-layout.component';
 import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
+import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
+import { AddFieldComponent } from './features/business/add-field/add-field.component';
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -32,6 +34,14 @@ export const routes: Routes = [
         redirectTo: 'dashboard',
         pathMatch: 'full'
       },
+      {
+        path: 'my-fields',
+        loadComponent: () => import('./features/business/my-fields/my-fields.component').then(m => m.MyFieldsComponent)
+      },
+      {
+        path: 'my-fields/add',
+        component: AddFieldComponent
+}
     ]
   },
 

@@ -6,6 +6,7 @@ using Castle.DynamicProxy;
 using Core.Utilities.Interceptors;
 using Core.Utilities.Security.JWT;
 using DataAccess.Abstract;
+using DataAccess.Concrete;
 using DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
@@ -29,9 +30,20 @@ namespace Business.DependencyResolvers.Autofac
             builder.RegisterType<UserManager>().As<IUserService>();
             builder.RegisterType<EfUserDal>().As<IUserDal>();
 
+            builder.RegisterType<EfFieldDal>().As<IFieldDal>();
+            builder.RegisterType<EfFieldPriceSheduleDal>().As<IFieldPriceSheduleDal>();
+
+            builder.RegisterType<FieldManager>().As<IFieldService>();
+            builder.RegisterType<FieldPriceScheduleManager>().As<IFieldPriceScheduleService>();
+
 
             builder.RegisterType<AuthManager>().As<IAuthService>();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>();
+
+            builder.RegisterType<EfTimeSlotDal>().As<ITimeSlotDal>();
+
+
+
 
             builder.RegisterType<HttpContextAccessor>().As<HttpContextAccessor>();
 

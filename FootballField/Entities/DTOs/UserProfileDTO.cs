@@ -17,5 +17,6 @@ namespace Entities.DTOs
             public string? BusinessName { get; set; }
             public string? AvatarPath { get; set; }
             public int? TeamAvatarId { get; set; }
+            public int BusinessId { get; set; }
         }
 }

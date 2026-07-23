@@ -15,11 +15,14 @@ export interface UserProfile {
   hasBusiness?: boolean;
   isBusinessApproved?: boolean;
   businessName?: string;
+  businessId: number;
   avatarPath?: string;
   teamAvatarId?: number;
   phoneNumber?: string;
 }
 
+
+ 
 export interface TeamAvatar {
   id: number;          // Veritabanındaki Id
   teamName: string;    // Örn: Galatasaray

@@ -13,7 +13,7 @@ import { UserService } from '../../core/services/user.service';
       <!-- SOL MENÜ (SIDEBAR) -->
       <div class="bg-dark p-4 shadow-sm" style="width: 280px; z-index: 10;">
         
-        <!-- MARKA YAZISI (Senin temanla turuncu ve beyaz oldu) -->
+        <!-- MARKA YAZISI -->
         <a routerLink="/business-panel" class="d-flex align-items-center mb-4 text-decoration-none">
           <span class="fs-4 fw-bolder" style="color: var(--accent-orange);">
             FootballField <span class="fs-6 fw-normal ms-1" style="color: var(--text-light);">İşletme</span>
@@ -22,7 +22,7 @@ import { UserService } from '../../core/services/user.service';
         
         <hr style="border-color: var(--text-muted);">
         
-        <!-- MENÜ LİNKLERİ (Senin temanın text-light rengi kullanıldı) -->
+        <!-- MENÜ LİNKLERİ -->
         <ul class="nav nav-pills flex-column mb-auto mt-4 gap-2">
           <li class="nav-item">
             <a routerLink="/business-panel/dashboard" 
@@ -33,6 +33,17 @@ import { UserService } from '../../core/services/user.service';
               Ana Panel
             </a>
           </li>
+          
+          <!-- YENİ EKLENEN: HALISAHALARIM -->
+          <li class="nav-item">
+            <a routerLink="/business-panel/my-fields" 
+               routerLinkActive="active fw-bold" 
+               class="nav-link" 
+               style="color: var(--text-light);">
+              Halısahalarım
+            </a>
+          </li>
+
           <li class="nav-item">
             <a routerLink="/business-panel/reservations" 
                routerLinkActive="active fw-bold" 

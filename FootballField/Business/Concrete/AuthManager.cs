@@ -27,6 +27,7 @@ namespace Business.Concrete
             _emailService = emailService;
 
         }
+        
         public User Get(User user)
         {
             var s_user = new User

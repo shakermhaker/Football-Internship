@@ -1,0 +1,35 @@
+<div class="card h-100 shadow-sm rounded-4 field-card custom-card-bg">
+  <div class="card-body p-4 d-flex flex-column">
+    
+    <!-- BAŞLIK VE DURUM -->
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <h4 class="card-title fw-bold mb-0" style="color: #2b3445;">{{ field.name }}</h4>
+      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 shadow-sm">
+        {{ field.status }}
+      </span>
+    </div>
+    
+    <!-- SAHA BİLGİLERİ -->
+    <div class="d-flex flex-column gap-2 mb-4">
+      <div class="text-muted d-flex align-items-center gap-2">
+        <i class="fs-5">🏟️</i>
+        <div><span class="fw-bold" style="color: #495057;">Saha Tipi:</span> {{ field.type }}</div>
+      </div>
+      <div class="text-muted d-flex align-items-center gap-2">
+        <i class="fs-5">👥</i>
+        <div><span class="fw-bold" style="color: #495057;">Kapasite:</span> {{ field.capacity }} Kişilik</div>
+      </div>
+    </div>
+    
+    <!-- AKSİYON BUTONLARI -->
+    <div class="d-flex gap-2 mt-auto pt-2">
+      <button class="btn flex-grow-1 fw-bold edit-btn">
+        <i class="me-1">✏️</i> Düzenle
+      </button>
+      <button class="btn fw-bold delete-btn">
+        <i class="me-1">🗑️</i> Sil
+      </button>
+    </div>
+
+  </div>
+</div>
