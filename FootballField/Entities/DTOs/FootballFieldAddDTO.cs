@@ -12,17 +12,5 @@ namespace Entities.DTOs
         public string Name { get; set; }
         public List<ScheduleGroupDto> ScheduleGroups { get; set; }
     }
-
-    public class ScheduleGroupDto
-    {
-        public List<int> SelectedDayIds { get; set; }
-        public List<PeriodDto> Periods { get; set; }
-    }
-    public class PeriodDto
-    {
-        public string StartTime { get; set; }
-        public string EndTime { get; set; }
-        public int Duration { get; set; }
-        public decimal Price { get; set; }
-    }
+    
 }

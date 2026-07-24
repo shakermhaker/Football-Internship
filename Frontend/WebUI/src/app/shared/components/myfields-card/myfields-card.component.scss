@@ -7,7 +7,7 @@
 
 /* Fareyle kartın üzerine gelince olacaklar */
 .field-card:hover {
-  transform: translateY(-5px); /* Kartı 5 piksel yukarı kaldır */
+  transform: translateY(0px); /* Kartı 5 piksel yukarı kaldır */
   box-shadow: 0 10px 20px rgba(253, 126, 20, 0.15) !important; /* Turuncu tonlu bir gölge ver */
   border-color: #fd7e14; /* Çerçeveyi asıl turuncuya boya */
 }

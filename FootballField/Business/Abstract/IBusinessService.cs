@@ -12,5 +12,6 @@ namespace Business.Abstract
         IResult Add(BusinessForRegisterDTO businessDto, int userId);
         IDataResult<Entities.Concrete.Business> GetByUserId(int userId);
         IDataResult<List<Entities.Concrete.Business>> GetFilteredBusinesses(int? cityId, int? districtId, string? search);
+        IDataResult<List<Entities.Concrete.FootballField>> GetFieldsByUserId(int businessId);
     }
 }

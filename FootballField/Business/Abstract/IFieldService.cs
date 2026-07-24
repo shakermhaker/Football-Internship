@@ -9,5 +9,8 @@ namespace Business.Abstract
     public interface IFieldService
     {
         IResult AddWithDetails(FootballFieldAddDTO fieldDto);
+        IResult DeleteField(int fieldId);
+        IResult UpdateWithSchedules(FootballFieldAddDTO fieldDto, int fieldId);
+        IDataResult<FootballFieldAddDTO> GetFieldForEdit(int fieldId);
     }
 }

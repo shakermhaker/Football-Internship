@@ -57,5 +57,10 @@ namespace Business.Concrete
 
             return new SuccessDataResult<List<Entities.Concrete.Business>>(result, "Halı sahalar başarıyla listelendi.");
         }
+        public IDataResult<List<Entities.Concrete.FootballField>> GetFieldsByUserId(int businessId)
+        {
+            var fields = _businessDal.GetFieldsByUserId(businessId);
+            return new SuccessDataResult<List<Entities.Concrete.FootballField>>(fields, "İşletmenin sahaları başarıyla getirildi.");
+        }
     }
 }

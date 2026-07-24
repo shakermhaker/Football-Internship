@@ -3,30 +3,18 @@
     
     <!-- BAŞLIK VE DURUM -->
     <div class="d-flex justify-content-between align-items-start mb-3">
-      <h4 class="card-title fw-bold mb-0" style="color: #2b3445;">{{ field.name }}</h4>
-      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 shadow-sm">
-        {{ field.status }}
-      </span>
+      <!-- DİKKAT: field.name yerine field.fieldName yazdık! -->
+      <h4 class="card-title fw-bold mb-0" style="color: #2b3445;">{{ field.fieldName }}</h4>
     </div>
     
-    <!-- SAHA BİLGİLERİ -->
-    <div class="d-flex flex-column gap-2 mb-4">
-      <div class="text-muted d-flex align-items-center gap-2">
-        <i class="fs-5">🏟️</i>
-        <div><span class="fw-bold" style="color: #495057;">Saha Tipi:</span> {{ field.type }}</div>
-      </div>
-      <div class="text-muted d-flex align-items-center gap-2">
-        <i class="fs-5">👥</i>
-        <div><span class="fw-bold" style="color: #495057;">Kapasite:</span> {{ field.capacity }} Kişilik</div>
-      </div>
-    </div>
-    
-    <!-- AKSİYON BUTONLARI -->
-    <div class="d-flex gap-2 mt-auto pt-2">
-      <button class="btn flex-grow-1 fw-bold edit-btn">
+    <!-- DÜZENLE BUTONU -->
+    <div class="d-flex gap-3 mt-auto">
+      <!-- flex-grow-1: İki butonun da alanı eşit paylaşmasını sağlar -->
+      <button class="btn flex-grow-1 fw-bold edit-btn" (click)="editClick()">
         <i class="me-1">✏️</i> Düzenle
       </button>
-      <button class="btn fw-bold delete-btn">
+
+      <button class="btn flex-grow-1 fw-bold delete-btn" (click)="deleteClick()">
         <i class="me-1">🗑️</i> Sil
       </button>
     </div>

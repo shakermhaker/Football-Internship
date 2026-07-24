@@ -2,12 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpParams } from '@angular/common/http';
-import { DataResult } from './user.service';
+import { DataResult, UserService } from './user.service';
+
 
 @Injectable({ providedIn: 'root' })
 export class BusinessService {
   private http = inject(HttpClient);
   private apiUrl = 'https://localhost:7074/api/Business';
+
+
+   userService = inject(UserService); // 🎯 Kullanıcı sinyalini tetiklemek için ekledik
+    user = this.userService.currentUser(); // 🎯 Kullanıcı sinyalini tetiklemek için ekledik
 
   // İşletme kaydetme isteği
   addBusiness(businessData: any): Observable<any> {
@@ -33,4 +38,11 @@ export class BusinessService {
 
   return this.http.get<DataResult<any[]>>(`${this.apiUrl}/getall`, { params });
 }
+
+getBusinessesFields(businessId: number): Observable<any> {
+    // URL'in sonuna ?businessId= parametresini dinamik olarak ekliyoruz
+    return this.http.get(`${this.apiUrl}/getallfields?businessId=${businessId}`, {
+      withCredentials: true 
+    });
+  }
 }

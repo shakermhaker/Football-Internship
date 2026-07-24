@@ -19,7 +19,11 @@
     <div class="col-12 col-md-6 col-lg-4" *ngFor="let fieldItem of myFields">
       
       <!-- İŞTE BURASI! Çiçek gibi tertemiz HTML -->
-      <app-myfield-card [field]="fieldItem"></app-myfield-card> 
+      <app-myfield-card 
+          [field]="fieldItem" 
+          (onEdit)="goToEdit($event)" 
+          (onDelete)="deleteField($event)">
+      </app-myfield-card>
 
     </div>
 
