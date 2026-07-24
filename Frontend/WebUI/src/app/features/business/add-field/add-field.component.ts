@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
 import { FootballFieldService } from '../../../core/services/football-field.service';
 import { UserService } from '../../../core/services/user.service';
-import { Router, RouterLink } from '@angular/router'; 
 import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router'; // Router eklendi
 
