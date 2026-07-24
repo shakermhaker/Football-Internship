@@ -78,5 +78,40 @@ namespace Business.Concrete
                 return new SuccessResult("Rezervasyon başarıyla oluşturuldu.");
             }
         }
+
+        public IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId)
+        {
+            var data = _reservationDal.GetUserReservations(userId);
+            return new SuccessDataResult<List<UserReservationDetailDto>>(data, "Rezervasyon geçmişiniz başarıyla getirildi.");
+        }
+
+        public IResult CancelReservation(int reservationId, int userId)
+        {
+            
+            var reservation = _reservationDal.Get(r => r.Id == reservationId);
+
+            if (reservation == null)
+            {
+                return new ErrorResult("Böyle bir rezervasyon bulunamadı.");
+            }
+
+            
+            if (reservation.UserId != userId)
+            {
+                return new ErrorResult("Bu rezervasyonu iptal etme yetkiniz bulunmamaktadır.");
+            }
+
+            // 3. Durum Kontrolü: Sadece "Onaylandı" (StatusId = 1) olanlar iptal edilebilir
+            if (reservation.StatusId != 1)
+            {
+                return new ErrorResult("Bu rezervasyon zaten iptal edilmiş veya süresi dolmuş.");
+            }
+
+            // 4. İptal İşlemi: StatusId'yi 2 (İptal Edildi) olarak güncelle ve kaydet
+            reservation.StatusId = 2; // Eğer senin DB'de 3 ise burayı 3 yapabilirsin
+            _reservationDal.Update(reservation);
+
+            return new SuccessResult("Rezervasyonunuz başarıyla iptal edildi.");
+        }
     }
 }

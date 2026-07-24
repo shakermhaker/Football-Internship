@@ -137,6 +137,12 @@ import { UserService } from '../../core/services/user.service';
                           Profilim
                         </a>
                     </div>
+                      <div class="menu-item px-5">
+                        <a (click)="isMenuOpen = false" routerLink="/user/my-reservations" class="menu-link px-5 text-dark text-hover-success text-decoration-none d-flex align-items-center gap-2 py-2">
+                          <i class="ki-duotone ki-calendar-tick fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
+                          Rezervasyonlarım
+                        </a>
+                    </div>
                     
                     <div class="separator my-2 border-gray-200"></div>
 

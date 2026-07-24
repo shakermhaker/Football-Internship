@@ -14,6 +14,8 @@ namespace DataAccess.Abstract
         List<int> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
         bool IsSlotBooked(int fieldPriceScheduleId, DateOnly date);
         int GetDayIdByScheduleId(int scheduleId);
+        List<UserReservationDetailDto> GetUserReservations(int userId);
+
 
 
 
