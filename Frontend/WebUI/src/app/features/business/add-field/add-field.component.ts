@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
 import { FootballFieldService } from '../../../core/services/football-field.service';
 import { UserService } from '../../../core/services/user.service';
+import { Router, RouterLink } from '@angular/router'; 
 import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router'; // Router eklendi
 
@@ -252,8 +253,10 @@ export class AddFieldComponent implements OnInit {
             confirmButtonColor: '#50cd89'
           }).then((result) => {
             if (result.isConfirmed) {
-              // İşlem bitince listeye geri dön
+              // İsteğe bağlı: Başarılı olunca formu sıfırla veya başka sayfaya yönlendir
+              this.fieldForm.reset();
               this.router.navigate(['/business-panel/my-fields']);
+              // this.addScheduleGroup(); // Sıfırlandıktan sonra 1 tane boş grup eklemek için
             }
           });
         },
