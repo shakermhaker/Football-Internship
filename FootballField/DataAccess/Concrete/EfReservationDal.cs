@@ -87,7 +87,6 @@ namespace DataAccess.Concrete
             using (var context = new FootballFieldContext())
             {
                 var result = context.Reservations
-                    // 1. İlişkili Tabloları Include ile Dahil Ediyoruz
                     .Include(r => r.Status)
                     .Include(r => r.FieldPriceSchedule)
                         .ThenInclude(fps => fps.TimeSlot)
@@ -95,24 +94,24 @@ namespace DataAccess.Concrete
                         .ThenInclude(fps => fps.FootballField)
                             .ThenInclude(ff => ff.Business)
                                 .ThenInclude(b => b.District)
-                                    .ThenInclude(c => c.City)
+                                    .ThenInclude(d => d.City)
                     .Include(r => r.FieldPriceSchedule)
                         .ThenInclude(fps => fps.FootballField)
                             .ThenInclude(ff => ff.Business)
                                 .ThenInclude(b => b.District)
-
-                    // 2. Kullanıcıya Göre Filtreliyoruz
                     .Where(r => r.UserId == userId)
 
-                    // 3. En yeniler en üstte gelsin
+                    // 🚀 SIRALAMA BURADA: Önce Tarihe göre, tarih aynıysa Saate göre
                     .OrderByDescending(r => r.ReservationDate)
+                    .ThenByDescending(r => r.FieldPriceSchedule.TimeSlot.StartTime)
 
+                    // 4. Verileri Önce Ara Nesneye Çekiyoruz (Süslü parantez eklendi!)
                     .Select(r => new
                     {
                         ReservationId = r.Id,
                         ReservationDate = r.ReservationDate,
-                        StartTime = r.FieldPriceSchedule.TimeSlot.StartTime, // TimeSpan olarak gelir
-                        EndTime = r.FieldPriceSchedule.TimeSlot.EndTime,     // TimeSpan olarak gelir
+                        StartTime = r.FieldPriceSchedule.TimeSlot.StartTime,
+                        EndTime = r.FieldPriceSchedule.TimeSlot.EndTime,
                         FootballFieldName = r.FieldPriceSchedule.FootballField.FieldName,
                         BusinessId = r.FieldPriceSchedule.FootballField.BusinessId,
                         BusinessName = r.FieldPriceSchedule.FootballField.Business.Name,
@@ -121,15 +120,15 @@ namespace DataAccess.Concrete
                         FinalPrice = r.FinalPrice,
                         StatusName = r.Status.Name
                     })
-                    .ToList() // 🚀 SQL SORGUSU BURADA ÇALIŞIR VE BİTER, VERİ RAM'E GELİR
+                    .ToList()
 
-                    // 5. C# Tarafında DTO'ya Çeviriyoruz (TimeSpan -> TimeOnly Dönüşümü Burada Yapılır)
+                    // 5. TimeSpan'i TimeOnly'ye çevirip DTO'ya aktarıyoruz
                     .Select(x => new UserReservationDetailDto
                     {
                         ReservationId = x.ReservationId,
                         ReservationDate = x.ReservationDate,
-                        StartTime = TimeOnly.FromTimeSpan(x.StartTime), // 🚀 Dönüşüm yapıldı!
-                        EndTime = TimeOnly.FromTimeSpan(x.EndTime),     // 🚀 Dönüşüm yapıldı!
+                        StartTime = TimeOnly.FromTimeSpan(x.StartTime),
+                        EndTime = TimeOnly.FromTimeSpan(x.EndTime),
                         FootballFieldName = x.FootballFieldName,
                         BusinessId = x.BusinessId,
                         BusinessName = x.BusinessName,
