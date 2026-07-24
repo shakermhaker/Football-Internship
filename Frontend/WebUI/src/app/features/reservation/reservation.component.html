@@ -1,0 +1,248 @@
+<div class="container" style="max-width: 1350px; padding-left: 2rem; padding-right: 9rem; margin-left: 100px; margin-top: 50px;">
+  <div class="text-center mb-10">
+    <h1 class="fw-bolder fs-2tx text-dark">Saha ve Rezervasyon Takvimi</h1>
+    <p class="text-muted fs-5">Müsait saatleri inceleyin ve rezervasyonunuzu yapın.</p>
+  </div>
+
+ <div class="d-flex justify-content-center mb-8">
+
+      <!-- 📅 TARİH SEÇİM ALANI -->
+
+      <div class="d-flex justify-content-center mb-8">
+      
+      <!-- 🚀 ÇÖZÜM: Tüm kutuya cursor: pointer ve (click) eventi eklendi -->
+      <div class="card shadow-xs border-0 px-6 py-4 rounded-4 bg-white d-flex flex-row align-items-center gap-4" 
+          style="border: 1px solid #e4e6ef !important; cursor: pointer;"
+          (click)="datePicker.showPicker()">
+        
+        <div class="d-flex align-items-center gap-2">
+          <i class="ki-duotone ki-calendar fs-2 text-emerald"><span class="path1"></span><span class="path2"></span></i>
+          <span class="fw-bold text-dark fs-6">Rezervasyon Tarihi:</span>
+          
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm text-emerald ms-2" role="status"></span>
+          }
+        </div>
+        
+        <!-- 🚀 ÇÖZÜM: input'un kendisine de tıklandığında takvimi zorla açması için (click)="datePicker.showPicker()" eklendi -->
+        <input #datePicker
+              type="date" 
+              [(ngModel)]="selectedDate" 
+              (change)="onDateChange($event)"
+              [min]="minDate" 
+              class="form-control form-control-solid fw-bold text-dark" 
+              style="width: 200px; border-radius: 10px; cursor: pointer;"
+              (click)="datePicker.showPicker()">
+      </div>
+
+    </div>
+  </div>
+
+  
+    
+    <ul class="nav nav-pills flex-row border-0 gap-4 mb-10 fs-6 overflow-auto flex-nowrap pt-4 pb-4 pr-4 rounded-4" style="padding-bottom: 15px;">
+      
+      @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+        <li class="nav-item">
+          <a class="nav-link btn btn-outline btn-flex h-100 bg-white ff-custom-tab" 
+             [class.active]="isFirstField"
+             data-bs-toggle="tab" 
+             [attr.href]="'#kt_tab_pane_' + field.fieldId"
+             style="border-radius: 12px; padding: 1rem 1.5rem; border-width: 2px; min-width: 200px; border-color: #e4e6ef;">
+            
+            <i class="ki-duotone ki-map fs-2x me-3 text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+            
+            <span class="d-flex flex-column align-items-start">
+              <span class="fs-4 fw-bold text-dark mb-1">{{ field.fieldName }}</span>
+              <span class="fs-7 text-muted fw-semibold">Takvimi İncele</span>
+            </span>
+          </a>
+        </li>
+      }
+
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+      
+      @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+        
+        <div class="tab-pane fade" 
+             [class.show]="isFirstField" 
+             [class.active]="isFirstField" 
+             [id]="'kt_tab_pane_' + field.fieldId" 
+             role="tabpanel">
+          
+          <div class="card shadow-sm border-0 mb-10 bg-white" style="border-radius: 12px;">
+            <div class="card-body p-8">
+              
+              <div class="accordion accordion-icon-collapse" [id]="'kt_accordion_' + field.fieldId">
+                
+                @for (day of field.days; track day.dayId; let isFirstDay = $first) {
+                  
+                  <div class="mb-5 border-bottom border-gray-200 pb-2">
+                    <div class="accordion-header py-3 d-flex align-items-center" 
+                         [class.collapsed]="!isFirstDay"
+                         data-bs-toggle="collapse" 
+                         [attr.data-bs-target]="'#kt_acc_item_' + field.fieldId + '_' + day.dayId"
+                         style="cursor: pointer;">
+                      
+                      <span class="accordion-icon">
+                        <i class="ki-duotone ki-plus-square fs-3 accordion-icon-off text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                        <i class="ki-duotone ki-minus-square fs-3 accordion-icon-on text-emerald"><span class="path1"></span><span class="path2"></span></i>
+                      </span>
+                      
+                      <h3 class="fs-4 fw-bold mb-0 ms-4 text-dark">{{ day.dayName }}</h3>
+                      
+                   
+                    </div>
+
+                    <div [id]="'kt_acc_item_' + field.fieldId + '_' + day.dayId" 
+                         class="collapse fs-6 ps-10 mt-4" 
+                         [class.show]="isFirstDay"
+                         [attr.data-bs-parent]="'#kt_accordion_' + field.fieldId">
+                      
+                      <div class="d-flex flex-wrap gap-4 pb-4">
+                        @for (slot of day.slots; track slot.fieldPriceScheduleId) {
+                          
+                          @let booked = isSlotBooked(slot.fieldPriceScheduleId);
+
+                          <button (click)="onSlotSelected(slot, field.fieldName)" 
+                                  [disabled]="booked"
+                                  class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
+                                  [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
+                                  style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
+                            
+                            <!-- Saat Bilgisi ve İkon -->
+                            <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
+                                 [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
+                              <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
+                              <span class="fw-bold fs-6 transition-all" [ngClass]="booked ? 'text-danger fw-bolder' : 'text-dark'">
+                                {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+                              </span>
+                            </div>
+                            
+                            <!-- Fiyat Bilgisi veya Dolu Etiketi -->
+                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
+                                 [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
+                              @if (booked) {
+                                <span class="fw-bolder fs-7 text-white">DOLU</span>
+                              } @else {
+                                <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
+                                <span class="fw-bolder fs-5 text-dark">
+                                  {{ slot.price }} ₺
+                                </span>
+                              }
+                            </div>
+                            
+                          </button>
+                        }
+                      </div>
+
+                    </div>
+                  </div>
+
+                }
+                
+                @if (field.days.length === 0) {
+                   <div class="text-center text-muted py-5 fw-medium">
+                     Bu saha için henüz bir fiyatlandırma/takvim girilmemiş.
+                   </div>
+                }
+
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  
+</div>
+
+<!-- 🚀 İKİ MODAL İÇİN DE PARANTEZ EKLENDİ () -->
+@if (isModalOpen()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.6); z-index: 1055;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg border-0 rounded-4 p-4">
+        
+        <div class="modal-header border-bottom pb-4">
+          <h3 class="modal-title fw-bold text-dark m-0">⚽ Rezervasyonu Onayla</h3>
+          <button type="button" (click)="closeModal()" class="btn-close"></button>
+        </div>
+
+        <div class="modal-body py-6">
+          
+          <!-- Seçilen Özet Bilgiler -->
+          <div class="bg-light-success p-4 rounded-3 mb-6 border border-success border-dashed">
+            <div class="fw-bold text-dark fs-5 mb-1">{{ selectedFieldName }}</div>
+            <div class="text-muted fs-6 mb-2">Tarih: <span class="fw-bold text-dark">{{ selectedDate }}</span></div>
+            <div class="text-muted fs-6 mb-2">Saat: <span class="fw-bold text-dark">{{ formatTime(selectedSlot?.startTime || '') }} - {{ formatTime(selectedSlot?.endTime || '') }}</span></div>
+            <div class="text-muted fs-6">Tutar: <span class="fw-bold text-success fs-4">{{ selectedSlot?.price }} ₺</span></div>
+          </div>
+
+          <!-- Kredi Kartı (Temsili) -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark fs-6 required">Temsili Kart Numarası</label>
+            <input type="text" [(ngModel)]="cardNumber" class="form-control form-control-solid" placeholder="4111 2222 3333 4444" maxlength="19">
+            <div class="form-text fs-8 text-muted mt-2">Bu proje bir bitirme projesi olduğu için şimdilik temsili ödeme alınmaktadır.</div>
+          </div>
+
+          @if (errorMessage) {
+            <div class="alert alert-danger py-2 fs-7 mt-3">{{ errorMessage }}</div>
+          }
+        </div>
+
+        <div class="modal-footer border-top pt-4 d-flex justify-content-end gap-2">
+          <button type="button" (click)="closeModal()" class="btn btn-light rounded-pill px-5" [disabled]="isSubmitting">Vazgeç</button>
+          
+          <button type="button" (click)="confirmReservation()" class="btn btn-success rounded-pill px-6" [disabled]="isSubmitting">
+            @if (isSubmitting) {
+              <span class="spinner-border spinner-border-sm me-2"></span> İşleniyor...
+            } @else {
+              Tamamla ve Rezerve Et
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 🚀 YENİ: GİRİŞ YAP UYARISI MODALI -->
+@if (isLoginModalOpen()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.6); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content shadow-lg border-0 rounded-4 text-center p-4">
+        
+        <div class="modal-body py-8">
+          <i class="ki-duotone ki-shield-cross fs-5x text-warning mb-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+          <h3 class="fw-bold text-dark mb-3">Giriş Yapmanız Gerekiyor</h3>
+          <p class="text-muted fs-6 mb-0">Rezervasyon işlemi yapabilmek için lütfen hesabınıza giriş yapın veya kayıt olun.</p>
+        </div>
+
+        <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+          <!-- Vazgeç butonunda da signal değerini değiştiriyoruz -->
+          <button type="button" (click)="isLoginModalOpen.set(false)" class="btn btn-light rounded-pill px-5">Vazgeç</button>
+          <button type="button" (click)="redirectToLogin()" class="btn btn-warning rounded-pill px-6 text-dark fw-bold">
+            Giriş Yap
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<style>
+ /* Zümrüt Renk Paleti ve Sekme Ayarları */
+  .text-emerald { color: #059669 !important; }
+  .badge-light-emerald { background-color: #ecfdf5 !important; color: #047857 !important; }
+  .ff-custom-tab { background-color: #ffffff !important; color: #3f4254 !important; }
+  .ff-custom-tab:hover { background-color: #f9fafb !important; border-color: #059669 !important; }
+  .ff-custom-tab.active { background-color: #f0fdf4 !important; border-color: #059669 !important; color: #059669 !important; }
+  .hover-text-gray:hover { border-color: #059669 !important; }
+  .hover-text-gray:hover span.fw-bold { color: #059669 !important; }
+  .transition-all { transition: all 0.2s ease-in-out; }
+</style>

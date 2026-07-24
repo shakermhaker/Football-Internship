@@ -25,6 +25,9 @@ namespace Business.DependencyResolvers.Autofac
         protected override void Load(ContainerBuilder builder)
         {
 
+            builder.RegisterType<ReservationManager>().As<IReservationService>();
+            builder.RegisterType<EfReservationDal>().As<IReservationDal>();
+
             builder.RegisterType<EmailManager>().As<IEmailService>();
 
             builder.RegisterType<UserManager>().As<IUserService>();

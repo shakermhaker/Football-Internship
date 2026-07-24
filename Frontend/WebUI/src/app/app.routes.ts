@@ -8,6 +8,7 @@ import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
 import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
 import { AddFieldComponent } from './features/business/add-field/add-field.component';
+import { ReservationComponent } from './features/reservation/reservation.component'; // Yolu kendi projene göre düzelt
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -90,6 +91,10 @@ export const routes: Routes = [
       {
         path: 'business-register',
         loadComponent: () => import('./features/business/business-register/business-register.component').then(m => m.BusinessRegisterComponent)
+      },
+      {
+        path: ':id/schedules',
+        loadComponent: () => import('./features/reservation/reservation.component').then(m => m.ReservationComponent)
       }
 
       
@@ -97,9 +102,5 @@ export const routes: Routes = [
   },
   // 3. Fallback/Catch-All Rota
   // 3. Fallback: Bilinmeyen yolda login'e değil, ana sayfaya atalım
-  {
-    path: '**',
-    redirectTo: '',
-    pathMatch: 'full'
-  }
+ 
 ];
