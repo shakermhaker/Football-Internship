@@ -23,5 +23,6 @@ namespace Entities.Concrete
 
         public int FieldPriceScheduleId { get; set; }
         public FieldPriceSchedule FieldPriceSchedule { get; set; } = null!;
+        public DateOnly ReservationDate { get; set; }
     }
 }
