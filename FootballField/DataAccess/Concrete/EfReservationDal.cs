@@ -3,6 +3,7 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
 using FootballField.DataAccess.Concrete.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -78,6 +79,67 @@ namespace DataAccess.Concrete
             {
                 var schedule = context.Set<FieldPriceSchedule>().FirstOrDefault(s => s.Id == scheduleId);
                 return schedule != null ? schedule.DayId : 0;
+            }
+        }
+
+        public List<UserReservationDetailDto> GetUserReservations(int userId)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                var result = context.Reservations
+                    // 1. İlişkili Tabloları Include ile Dahil Ediyoruz
+                    .Include(r => r.Status)
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.TimeSlot)
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.FootballField)
+                            .ThenInclude(ff => ff.Business)
+                                .ThenInclude(b => b.District)
+                                    .ThenInclude(c => c.City)
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.FootballField)
+                            .ThenInclude(ff => ff.Business)
+                                .ThenInclude(b => b.District)
+
+                    // 2. Kullanıcıya Göre Filtreliyoruz
+                    .Where(r => r.UserId == userId)
+
+                    // 3. En yeniler en üstte gelsin
+                    .OrderByDescending(r => r.ReservationDate)
+
+                    .Select(r => new
+                    {
+                        ReservationId = r.Id,
+                        ReservationDate = r.ReservationDate,
+                        StartTime = r.FieldPriceSchedule.TimeSlot.StartTime, // TimeSpan olarak gelir
+                        EndTime = r.FieldPriceSchedule.TimeSlot.EndTime,     // TimeSpan olarak gelir
+                        FootballFieldName = r.FieldPriceSchedule.FootballField.FieldName,
+                        BusinessId = r.FieldPriceSchedule.FootballField.BusinessId,
+                        BusinessName = r.FieldPriceSchedule.FootballField.Business.Name,
+                        CityName = r.FieldPriceSchedule.FootballField.Business.District.City.Name,
+                        DistrictName = r.FieldPriceSchedule.FootballField.Business.District.Name,
+                        FinalPrice = r.FinalPrice,
+                        StatusName = r.Status.Name
+                    })
+                    .ToList() // 🚀 SQL SORGUSU BURADA ÇALIŞIR VE BİTER, VERİ RAM'E GELİR
+
+                    // 5. C# Tarafında DTO'ya Çeviriyoruz (TimeSpan -> TimeOnly Dönüşümü Burada Yapılır)
+                    .Select(x => new UserReservationDetailDto
+                    {
+                        ReservationId = x.ReservationId,
+                        ReservationDate = x.ReservationDate,
+                        StartTime = TimeOnly.FromTimeSpan(x.StartTime), // 🚀 Dönüşüm yapıldı!
+                        EndTime = TimeOnly.FromTimeSpan(x.EndTime),     // 🚀 Dönüşüm yapıldı!
+                        FootballFieldName = x.FootballFieldName,
+                        BusinessId = x.BusinessId,
+                        BusinessName = x.BusinessName,
+                        CityName = x.CityName,
+                        DistrictName = x.DistrictName,
+                        FinalPrice = x.FinalPrice,
+                        StatusName = x.StatusName
+                    }).ToList();
+
+                return result;
             }
         }
     }

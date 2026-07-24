@@ -14,6 +14,11 @@ namespace Business.Abstract
 
         IResult CreateReservation(CreateReservationDto createDto, int userId);
 
+        IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId);
+
+        IResult CancelReservation(int reservationId, int userId);
+
+
 
 
     }

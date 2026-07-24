@@ -26,6 +26,20 @@ export interface CreateReservationDto {
   cardNumber: string; // Şimdilik temsili ödeme için
 }
 
+export interface UserReservationDetailDto {
+  reservationId: number;
+  reservationDate: string;
+  startTime: string;
+  endTime: string;
+  footballFieldName: string;
+  businessId: number;
+  businessName: string;
+  cityName: string;
+  districtName: string;
+  finalPrice: number;
+  statusName: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -46,5 +60,13 @@ export class ReservationService {
     // withCredentials: true ekliyoruz ki eğer token cookie'deyse güvenle backend'e gitsin.
     // Interceptor kullanıyorsan buna gerek kalmayabilir ama zarar vermez.
     return this.http.post(`${this.apiUrl}/create`, dto, { withCredentials: true });
+  }
+
+  getUserReservations(): Observable<DataResult<UserReservationDetailDto[]>> {
+    // Token ile (Cookie) güvenli bir şekilde gidiyoruz
+    return this.http.get<DataResult<UserReservationDetailDto[]>>(`${this.apiUrl}/my-reservations`, { withCredentials: true });
+  }
+  cancelReservation(reservationId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/cancel/${reservationId}`, {}, { withCredentials: true });
   }
 }
