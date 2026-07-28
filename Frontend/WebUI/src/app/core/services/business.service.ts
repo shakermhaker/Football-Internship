@@ -69,6 +69,37 @@ getBusinessesFields(businessId: number): Observable<any> {
       withCredentials: true 
     });
   }
+getBusinessDetails(businessId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/getdetailsbyid?businessId=${businessId}`, {
+      withCredentials: true
+    });
+  }
+
+  // 2. Kapak veya galeri resmi yükleyen metot (FormData ile)
+  addBusinessImage(businessId: number, file: File, isCover: boolean): Observable<any> {
+    const formData: FormData = new FormData();
+    formData.append('businessId', businessId.toString());
+    formData.append('file', file, file.name);
+    formData.append('isCover', isCover.toString());
+
+    return this.http.post<any>(`${this.apiUrl}/addimage`, formData, {
+      withCredentials: true
+    });
+  }
+
+  updateBusinessDetails(updateData: any): Observable<any> {
+    // API URL'in ve controller ismin projedeki yapıya göre (örneğin /Business/update) olmalı
+    return this.http.put(`${this.apiUrl}/update`, updateData, {
+      withCredentials: true
+    });
+  }
+  
+  deleteBusinessImage(imageId: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/deleteimage?imageId=${imageId}`, {
+    withCredentials: true
+  });
+}
+  
 
   getDashboardSummary(businessId: number, year: number): Observable<DataResult<BusinessDashboardDto>> {
     return this.http.get<DataResult<BusinessDashboardDto>>(

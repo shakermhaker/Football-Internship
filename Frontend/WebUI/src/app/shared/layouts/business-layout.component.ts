@@ -25,14 +25,14 @@ import { UserService } from '../../core/services/user.service';
         <!-- MENÜ LİNKLERİ -->
         <ul class="nav nav-pills flex-column mb-auto mt-4 gap-2">
           <li class="nav-item">
-            <a routerLink="/business-panel/dashboard" 
-               routerLinkActive="active fw-bold" 
-               [routerLinkActiveOptions]="{exact: true}"
-               class="nav-link" 
-               style="color: var(--text-light);">
-              Ana Panel
-            </a>
-          </li>
+                <a routerLink="/business-panel/mainpanel" 
+                  routerLinkActive="active fw-bold" 
+                  [routerLinkActiveOptions]="{exact: true}"
+                  class="nav-link" 
+                  style="color: var(--text-light);">
+                    Ana Panel
+                </a>
+            </li>
           
           <!-- YENİ EKLENEN: HALISAHALARIM -->
           <li class="nav-item">
@@ -72,7 +72,7 @@ import { UserService } from '../../core/services/user.service';
         <header class="d-flex justify-content-between align-items-center p-4 bg-white shadow-sm" style="height: 80px;">
           <!-- SOL TARAF: İŞLETME ADI -->
           <div class="fs-4 fw-bold text-primary">
-            {{ user()?.businessName || 'İşletme Bilgisi Yükleniyor...' }}
+            {{ displayBusinessName }}
           </div>
           
           <!-- SAĞ TARAF: KULLANICIYA DÖNÜŞ BUTONU -->
@@ -97,4 +97,9 @@ import { UserService } from '../../core/services/user.service';
 export class BusinessLayoutComponent {
   private userService = inject(UserService);
   user = this.userService.currentUser;
+  
+  // 🎯 YENİ EKLENEN GETTER: Önce Sinyal'e bakar, boşsa LocalStorage'a bakar.
+  get displayBusinessName(): string {
+    return this.user()?.businessName || localStorage.getItem('businessName') || 'İşletme Bilgisi Yükleniyor...';
+  }
 }

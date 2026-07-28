@@ -1,9 +1,10 @@
-﻿using Entities.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Business.Abstract;
+﻿using Business.Abstract;
 using Core.Extensions; // User.GetUserId() için gerekli
+using Core.Utilities.Results;
+using Entities.DTOs;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -13,11 +14,13 @@ namespace WebAPI.Controllers
     public class BusinessController : ControllerBase
     {
         private readonly IBusinessService _businessService;
-
+        private readonly IBusinessImageService _businessImageService;
         // Sadece BusinessService'i enjekte etmemiz yeterli
-        public BusinessController(IBusinessService businessService)
+        public BusinessController(IBusinessService businessService, IBusinessImageService businessImageService)
         {
             _businessService = businessService;
+            _businessImageService = businessImageService;
+
         }
 
         [HttpPost("add")]
@@ -61,7 +64,61 @@ namespace WebAPI.Controllers
 
             return Ok(result);
         }
+        [HttpGet("getdetailsbyid")]
+        public IActionResult GetDetailsById([FromQuery] int businessId)
+        {
+            // BusinessManager içindeki GetBusinessDetails metodunu çağırıyoruz
+            var result = _businessService.GetBusinessDetails(businessId);
 
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+
+        // Dosya yükleme olduğu için FromBody değil FromForm kullanıyoruz!
+        [HttpPost("addimage")]
+        public async Task<IActionResult> AddImage([FromForm] int businessId, IFormFile file, [FromForm] bool isCover)
+        {
+            var result = await _businessImageService.AddImageAsync(businessId, file, isCover);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut("update")]
+        [Authorize] // Sadece giriş yapmış yetkili kullanıcılar güncelleyebilsin
+        public IActionResult Update([FromBody] BusinessUpdateDto businessUpdateDto)
+        {
+            var result = _businessService.Update(businessUpdateDto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        [HttpDelete("deleteimage")]
+        [Authorize]
+        public async Task<IActionResult> DeleteImage([FromQuery] int imageId)
+        {
+            var result = await _businessImageService.DeleteImageAsync(imageId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
         [HttpGet("dashboard-summary")]
         public IActionResult GetDashboardSummary([FromQuery] int businessId, [FromQuery] int? year)
         {

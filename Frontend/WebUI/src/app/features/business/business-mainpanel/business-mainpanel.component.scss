@@ -1,0 +1,80 @@
+/* =========================================
+   İŞLETME ANA PANEL ÖZEL STİLLERİ
+   ========================================= */
+
+// 1. Form Elemanları (Input & Select)
+.form-control, .form-select {
+  border-radius: 0.75rem;       // Hafif daha yuvarlak köşeler
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+
+  // Input'a tıklandığında (Focus) çıkan mavi varsayılan çerçeveyi tatlı bir yeşil yapıyoruz
+  &:focus {
+    background-color: #fff !important;
+    border-color: #00c853 !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 200, 83, 0.15) !important;
+    outline: none;
+  }
+}
+
+// 2. Kartlar (Hover Efekti)
+.card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  
+  // Farenin ucuyla karta gelince çok hafif yukarı kalkıp gölgesi belirginleşir (Premium hissiyat)
+  &:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+  }
+}
+
+// 3. Yeni Görsel Ekle (Kesik Çizgili Alan)
+.border-dashed {
+  border-style: dashed !important;
+  border-width: 2px !important;
+  transition: all 0.3s ease;
+  background-color: transparent;
+
+  // Üzerine gelince tıklanabilir hissi vermek için arka planı hafif koyulaştırıyoruz
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd !important;
+    transform: scale(1.01);
+  }
+}
+
+// 4. Genel Buton Animasyonları
+.btn {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+
+  &-success {
+    &:hover {
+      background-color: #00b248 !important; // Üzerine gelince yeşili bir tık koyulaştır
+      transform: translateY(-1px);
+    }
+  }
+
+  &-light {
+    &:hover {
+      background-color: #e2e6ea !important;
+    }
+  }
+}
+
+// 5. Galeri Resimlerinin Üzerindeki Çarpı Butonları
+// 5. Galeri Resimlerinin Üzerindeki Çarpı Butonları
+.position-absolute.btn-light {
+  opacity: 0.85; // Normalde hafif saydam
+  
+  &:hover {
+    opacity: 1; // Üzerine gelince tam netleşir
+    background-color: #f8d7da !important; // HATA BURADAYDI, DÜZELTİLDİ (Uçuk kırmızı)
+    color: #dc3545 !important;           // Çarpı işareti kırmızı olur
+  }
+}
+// Fare imlecini el işaretine çeviren yardımcı class
+.cursor-pointer {
+  cursor: pointer;
+}

@@ -8,6 +8,7 @@ import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
 import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
 import { AddFieldComponent } from './features/business/add-field/add-field.component';
+import { BusinessMainpanelComponent } from './features/business/business-mainpanel/business-mainpanel.component';
 import { ReservationComponent } from './features/reservation/reservation.component'; 
 import { MyReservationsComponent } from './features/user/user-reservation/my-reservations.component'; 
 import {BusinessAnalyticsComponent} from './features/business/business-analytics/business-analytics.component'
@@ -50,6 +51,9 @@ export const routes: Routes = [
         component: AddFieldComponent // DİKKAT: Yeni sayfa yapmadık, yine aynı sayfaya yolladık!
       },
       {
+        path: 'mainpanel', // DİKKAT: Sadece mainpanel bıraktık
+        loadComponent: () => import('./features/business/business-mainpanel/business-mainpanel.component').then(m => m.BusinessMainpanelComponent)
+      },
         path: 'analytics',
         component: BusinessAnalyticsComponent
       }

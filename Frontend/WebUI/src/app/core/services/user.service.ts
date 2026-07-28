@@ -79,15 +79,24 @@ export class UserService {
 
  
   fetchMyProfile(): Observable<UserProfile> {
-    
     return this.http.get<DataResult<UserProfile>>(`${this.apiUrl}/myProfile`, { 
       withCredentials: true 
     }).pipe(
       map((response) => response.data),
       
+      // user.service.ts içindeki o tap bloğunu şu şekilde güncelle:
       tap((profile) => {
         console.log('Paketten çıkarılan saf profil verisi:', profile);
         this.currentUser.set(profile); 
+        
+        if (profile && profile.businessId) {
+          localStorage.setItem('businessId', profile.businessId.toString());
+          
+          // 🎯 YENİ EKLENEN SATIR: İşletme adını da kaydediyoruz ki Layout F5'te okuyabilsin!
+          if (profile.businessName) {
+            localStorage.setItem('businessName', profile.businessName);
+          }
+        }
       })
     );
   }

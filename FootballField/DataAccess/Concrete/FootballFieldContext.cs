@@ -20,10 +20,11 @@ public class FootballFieldContext : DbContext
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=omer123");
+        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=FootballFieldDB;Username=postgres;Password=emre0660");
     }
     // --- DbSet Tanımlamaları ---
     public DbSet<Business> Businesses { get; set; }
+    public DbSet<BusinessImage> BusinessImages { get; set; }
     public DbSet<City> Cities { get; set; }
     public DbSet<Day> Days { get; set; }
     public DbSet<District> Districts { get; set; }
