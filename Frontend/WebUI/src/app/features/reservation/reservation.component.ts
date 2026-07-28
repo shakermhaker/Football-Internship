@@ -113,6 +113,31 @@ export class ReservationComponent implements OnInit {
     }
   }
 
+  isSlotInPast(slotStartTime: string): boolean {
+    if (!slotStartTime || !this.selectedDate) return false;
+
+    const now = new Date();
+    // Saat dilimi kaymalarını önleyerek bugünün tarihini YYYY-MM-DD formatında alıyoruz
+    const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+    // Sadece "Bugün" seçiliyse saat kontrolü yap
+    if (this.selectedDate === todayStr) {
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      const [slotHourStr, slotMinuteStr] = slotStartTime.split(':');
+      const slotHour = parseInt(slotHourStr, 10);
+      const slotMinute = parseInt(slotMinuteStr, 10);
+
+      // Eğer slotun saati şu anki saatten küçükse (veya aynı saat ama dakika geçmişse)
+      if (slotHour < currentHour) return true;
+      if (slotHour === currentHour && slotMinute <= currentMinute) return true;
+    }
+
+    // Yarın veya sonraki günlerde ise tüm saatler uygundur
+    return false;
+  }
+
   // Verilen slot ID'sinin dolu olup olmadığını kontrol eder
   isSlotBooked(scheduleId: number): boolean {
     return this.bookedScheduleIds().includes(scheduleId);

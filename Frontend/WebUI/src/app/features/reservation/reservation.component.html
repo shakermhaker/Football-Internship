@@ -104,37 +104,42 @@
                       <div class="d-flex flex-wrap gap-4 pb-4">
                         @for (slot of day.slots; track slot.fieldPriceScheduleId) {
                           
-                          @let booked = isSlotBooked(slot.fieldPriceScheduleId);
+                          <!-- 🚀 YENİ: EĞER SAAT GEÇMEMİŞSE EKRANA BAS! -->
+                          @if (!isSlotInPast(slot.startTime)) {
+                            
+                            @let booked = isSlotBooked(slot.fieldPriceScheduleId);
 
-                          <button (click)="onSlotSelected(slot, field.fieldName)" 
-                                  [disabled]="booked"
-                                  class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
-                                  [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
-                                  style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
-                            
-                            <!-- Saat Bilgisi ve İkon -->
-                            <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
-                                 [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
-                              <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
-                              <span class="fw-bold fs-6 transition-all" [ngClass]="booked ? 'text-danger fw-bolder' : 'text-dark'">
-                                {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
-                              </span>
-                            </div>
-                            
-                            <!-- Fiyat Bilgisi veya Dolu Etiketi -->
-                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
-                                 [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
-                              @if (booked) {
-                                <span class="fw-bolder fs-7 text-white">DOLU</span>
-                              } @else {
-                                <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
-                                <span class="fw-bolder fs-5 text-dark">
-                                  {{ slot.price }} ₺
+                            <button (click)="onSlotSelected(slot, field.fieldName)" 
+                                    [disabled]="booked"
+                                    class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
+                                    [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
+                                    style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
+                              
+                              <!-- Saat Bilgisi ve İkon -->
+                              <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
+                                   [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
+                                <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
+                                <span class="fw-bold fs-6 transition-all" [ngClass]="booked ? 'text-danger fw-bolder' : 'text-dark'">
+                                  {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
                                 </span>
-                              }
-                            </div>
-                            
-                          </button>
+                              </div>
+                              
+                              <!-- Fiyat Bilgisi veya Dolu Etiketi -->
+                              <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
+                                   [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
+                                @if (booked) {
+                                  <span class="fw-bolder fs-7 text-white">DOLU</span>
+                                } @else {
+                                  <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
+                                  <span class="fw-bolder fs-5 text-dark">
+                                    {{ slot.price }} ₺
+                                  </span>
+                                }
+                              </div>
+                              
+                            </button>
+
+                          } <!-- /@if (!isSlotInPast) -->
                         }
                       </div>
 
