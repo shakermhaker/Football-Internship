@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WebAPI.Controllers
 {
@@ -39,6 +40,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("create")]
+        [EnableRateLimiting("ReservationLimit")]
         public IActionResult CreateReservation([FromBody] CreateReservationDto reservationDto)
         {
             var userId = User.GetUserId(); // Kullanıcı kimliğini almak içi

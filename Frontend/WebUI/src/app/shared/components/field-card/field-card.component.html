@@ -1,35 +1,81 @@
 <div class="d-flex bg-white rounded-4 shadow-sm overflow-hidden h-100 transition-hover" 
      style="border: 1px solid var(--border-input);">
   
-  <!-- Sol: Resim (Şimdilik Gri Kutu veya Placeholder) -->
-  <div style="width: 220px; min-width: 220px; background-color: #e5e7eb; display: flex; align-items: center; justify-content: center;">
-    <i *ngIf="!field.imageUrl" class="ki-duotone ki-picture text-muted" style="font-size: 3rem;"></i>
-    <img *ngIf="field.imageUrl" [src]="field.imageUrl" class="w-100 h-100" style="object-fit: cover;" alt="Saha Resmi">
+  <!-- 🚀 Sol: Resim Slider (Bootstrap Carousel) -->
+  <div style="width: 220px; min-width: 220px; background-color: #e5e7eb; position: relative;">
+    
+    <!-- İşletmenin resimleri varsa Slider'ı çalıştır -->
+    @if (field.images && field.images.length > 0) {
+      
+      <!-- DİKKAT: id alanı benzersiz olmalı, yoksa oklar tüm kartlardaki resimleri aynı anda değiştirir -->
+      <div [id]="'carousel_' + field.businessId" class="carousel slide h-100" data-bs-ride="carousel">
+        <div class="carousel-inner h-100">
+          
+          <!-- Resimleri döngüye alıyoruz -->
+          @for (img of field.images; track img.id; let i = $index) {
+            
+            <!-- TS'te cover olanı başa aldığımız için her zaman i === 0 olanı active yapıyoruz -->
+            <div class="carousel-item h-100" [class.active]="i === 0">
+              <img [src]="getFullImagePath(img.imagePath)" class="d-block w-100 h-100" style="object-fit: cover;" alt="Saha Resmi">
+            </div>
+            
+          }
+        </div>
+        
+        <!-- Eğer 1'den fazla resim varsa Sağ/Sol oklarını göster -->
+        @if (field.images.length > 1) {
+          <button class="carousel-control-prev" type="button" [attr.data-bs-target]="'#carousel_' + field.businessId" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.7; transform: scale(0.8);"></span>
+            <span class="visually-hidden">Önceki</span>
+          </button>
+          <button class="carousel-control-next" type="button" [attr.data-bs-target]="'#carousel_' + field.businessId" data-bs-slide="next">
+            <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.7; transform: scale(0.8);"></span>
+            <span class="visually-hidden">Sonraki</span>
+          </button>
+        }
+      </div>
+
+    } @else {
+      <!-- Hiç resim yoksa boş placeholder (Gri kutu ve ikon) -->
+      <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+        <i class="ki-duotone ki-picture text-muted" style="font-size: 3rem;"><span class="path1"></span><span class="path2"></span></i>
+      </div>
+    }
+
   </div>
   
   <!-- Sağ: Bilgiler -->
   <div class="p-4 d-flex flex-column flex-grow-1 position-relative">
-    
-    <!-- <div class="position-absolute top-0 end-0 p-3">
-       <i class="ki-duotone ki-star text-success fs-5"></i>
-    </div> -->
 
     <!-- DB'den gelen gerçek veriler -->
-    <h5 class="fw-bold mb-2 pe-4" style="color: var(--text-dark);">{{ field.name }}</h5>
-    <div class="small mb-4 d-flex align-items-center fw-medium" style="color: var(--text-muted);">
+    <h5 class="fw-bold mb-3 pe-4" style="color: var(--text-dark);">{{ field.name }}</h5>
     
-</div>
+    <div class="d-flex flex-column gap-2 mb-4">
+      <!-- 📍 Şehir / İlçe -->
+      <div class="small d-flex align-items-center fw-medium" style="color: var(--text-muted);">
+         <i class="ki-duotone ki-geolocation fs-5 me-2 text-primary"><span class="path1"></span><span class="path2"></span></i>
+         {{ field.city }}, {{ field.district }}
+      </div>
+      
+      <!-- 📍 Tam Adres -->
+      <div class="small d-flex align-items-start fw-medium text-gray-600">
+         <i class="ki-duotone ki-map fs-5 me-2 text-info mt-1"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+         <!-- Adres çok uzunsa 2 satırda kessin ve sonuna ... koysun diye CSS eklendi -->
+         <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
+           {{ field.fullAddress }}
+         </span>
+      </div>
+    </div>
     
     <div class="mt-auto">
+      <!-- 🚀 Yönlendirme ID'si artık field.businessId oldu -->
       <button
-    [routerLink]="['/business', field.id, 'schedules']"
-    class="btn rounded-pill fw-semibold px-4 py-2"
-    style="background:#000;color:#fff;">
-
-    Hemen İncele
-    <i class="bi bi-arrow-right ms-2"></i>
-
-</button>
+        [routerLink]="['/business', field.businessId, 'schedules']"
+        class="btn rounded-pill fw-semibold px-4 py-2"
+        style="background:#000;color:#fff;">
+        Hemen İncele
+        <i class="bi bi-arrow-right ms-2"></i>
+      </button>
     </div>
   </div>
 </div>

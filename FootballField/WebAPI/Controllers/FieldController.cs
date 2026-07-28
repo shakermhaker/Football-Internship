@@ -27,7 +27,7 @@ namespace WebAPI.Controllers
 
             // 2. ADIM: Angular'dan gelen DTO'nun boş olan BusinessId kısmını dolduruyoruz.
             // (Eğer senin GetUserId() metodu string dönüyorsa burayı int.Parse(userId) yaparsın)
-            fieldDto.BusinessId = userId;
+            fieldDto.BusinessId = fieldDto.BusinessId;
 
             // 3. ADIM: Güvenli ve dolgun veriyi Manager'ın şefkatli kollarına bırakıyoruz
             var result = _fieldService.AddWithDetails(fieldDto);

@@ -432,7 +432,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Entities.Concrete.FootballField", null)
+                    b.HasOne("Entities.Concrete.FootballField", "FootballField")
                         .WithMany("PriceSchedules")
                         .HasForeignKey("FootballFieldId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -445,6 +445,8 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Day");
+
+                    b.Navigation("FootballField");
 
                     b.Navigation("TimeSlot");
                 });

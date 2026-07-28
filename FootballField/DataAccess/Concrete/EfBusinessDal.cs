@@ -39,6 +39,55 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
+        public List<BusinessDetailDto> GetFilteredBusinessList(int? cityId, int? districtId, string search)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                var query = context.Businesses.AsQueryable();
+
+                // 1. Durum: İlçe seçilmişse
+                if (districtId.HasValue)
+                {
+                    query = query.Where(b => b.DistrictId == districtId.Value);
+                }
+                // 2. Durum: Sadece Şehir seçilmişse
+                else if (cityId.HasValue)
+                {
+                    query = query.Where(b => b.District.CityId == cityId.Value);
+                }
+
+                // 3. Durum: Arama metni
+                if (!string.IsNullOrEmpty(search))
+                {
+                    var lowerSearch = search.ToLower();
+                    query = query.Where(b => b.Name.ToLower().Contains(lowerSearch));
+                }
+
+                // 🚀 BÜYÜ BURADA: EF Core ile veritabanından okurken SENİN DTO'na eşleştiriyoruz
+                var result = query.Select(b => new BusinessDetailDto
+                {
+                    BusinessId = b.Id,
+                    Name = b.Name,
+                    City = b.District.City.Name,      // Senin DTO'nda "City"
+                    District = b.District.Name,       // Senin DTO'nda "District"
+                    FullAddress = b.FullAddress,      // Veritabanında adres alanı olduğunu varsayıyorum
+
+                    // İşletmenin resimlerini senin BusinessImageDto listene dolduruyoruz
+                    Images = b.BusinessImages.Select(img => new BusinessImageDto
+                    {
+                        Id = img.Id,
+                        ImagePath = img.ImagePath,
+                        IsCover = img.IsCover
+                    }).ToList()
+                }).ToList();
+
+                return result;
+            }
+        }
+
+
+
+
         public List<Entities.Concrete.FootballField> GetFieldsByUserId(int businessId)
         {
             using (var context = new FootballFieldContext())

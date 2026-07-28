@@ -45,20 +45,11 @@ namespace Business.Concrete
             }
             return new SuccessDataResult<Entities.Concrete.Business>(business);
         }
-        public IDataResult<List<Entities.Concrete.Business>> GetFilteredBusinesses(int? cityId, int? districtId, string? search)
+        public IDataResult<List<BusinessDetailDto>> GetFilteredBusinesses(int? cityId, int? districtId, string search)
         {
-            var result = _businessDal.GetAll(b =>
-                // 1. Durum: İlçe seçilmişse direkt ilçeye göre filtrele (Şehre bakmaya gerek yok)
-                (!districtId.HasValue || b.DistrictId == districtId.Value) &&
+            var result = _businessDal.GetFilteredBusinessList(cityId, districtId, search);
 
-                // 2. Durum: Sadece Şehir seçilmişse (İlçe boşsa), Navigation Property (District) üzerinden CityId'ye in!
-                (!cityId.HasValue || districtId.HasValue || b.District.CityId == cityId.Value) &&
-
-                // 3. Durum: Arama kutusunda metin varsa isme göre filtrele
-                (string.IsNullOrEmpty(search) || b.Name.ToLower().Contains(search.ToLower()))
-            );
-
-            return new SuccessDataResult<List<Entities.Concrete.Business>>(result, "Halı sahalar başarıyla listelendi.");
+            return new SuccessDataResult<List<BusinessDetailDto>>(result, "Halı sahalar başarıyla listelendi.");
         }
         public IDataResult<List<Entities.Concrete.FootballField>> GetFieldsByUserId(int businessId)
         {

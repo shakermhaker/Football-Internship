@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ReservationService, FootballFieldScheduleDto, PriceScheduleDto, CreateReservationDto } from '../../core/services/reservation.service';
 import { UserService } from '../../core/services/user.service';
+import { BusinessService, BusinessDetailDto } from '../../core/services/business.service';
 
 // Accordion için Frontend'e özel gruplanmış yapı
 export interface GroupedDaySchedule {
@@ -30,9 +31,10 @@ export class ReservationComponent implements OnInit {
 
   private reservationService = inject(ReservationService);
   private userService = inject(UserService); // 🚀 Kullanıcı durumu için eklendi
+  private businessService = inject(BusinessService);
 
   
-
+  businessDetail = signal<BusinessDetailDto | null>(null);
 
   // İşlenmiş, arayüze basılmaya hazır veriler
   groupedFields = signal<FieldWithGroupedSchedules[]>([]);
@@ -62,10 +64,35 @@ export class ReservationComponent implements OnInit {
     this.minDate = this.selectedDate;
 
     if (this.businessId) {
+      // 🚀 YENİ: Sayfa ilk açıldığında işletme detaylarını (Resimler, Adres) çekiyoruz
+      this.fetchBusinessDetails(this.businessId);
+
       // 🚀 DİKKAT: Sayfa ilk açıldığında da sadece bugünün gününe ait (Örn: Cuma) saatleri çekiyoruz
       this.fetchSchedules(this.businessId, this.selectedDate);
       this.fetchBookedSlots(this.businessId, this.selectedDate);
     }
+  }
+
+  fetchBusinessDetails(id: number) {
+    // 🚀 Servisteki yeni ismiyle (getBusinessDetails) çağırıyoruz
+    this.businessService.getBusinessDetails(id).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          // Resimleri isCover = true olan başa gelecek şekilde sırala
+          if (res.data.images && res.data.images.length > 0) {
+            res.data.images.sort((a, b) => (a.isCover === b.isCover) ? 0 : a.isCover ? -1 : 1);
+          }
+          this.businessDetail.set(res.data);
+        }
+      },
+      error: (err) => console.error('İşletme detayı çekilemedi', err)
+    });
+  }
+
+  getFullImagePath(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `https://localhost:7074${path}`; // Kendi portuna göre kontrol et!
   }
 
   fetchSchedules(businessId: number, dateStr: string) {
@@ -111,6 +138,31 @@ export class ReservationComponent implements OnInit {
       this.fetchSchedules(this.businessId, newDate);
       this.fetchBookedSlots(this.businessId, newDate);
     }
+  }
+
+  isSlotInPast(slotStartTime: string): boolean {
+    if (!slotStartTime || !this.selectedDate) return false;
+
+    const now = new Date();
+    // Saat dilimi kaymalarını önleyerek bugünün tarihini YYYY-MM-DD formatında alıyoruz
+    const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+    // Sadece "Bugün" seçiliyse saat kontrolü yap
+    if (this.selectedDate === todayStr) {
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      const [slotHourStr, slotMinuteStr] = slotStartTime.split(':');
+      const slotHour = parseInt(slotHourStr, 10);
+      const slotMinute = parseInt(slotMinuteStr, 10);
+
+      // Eğer slotun saati şu anki saatten küçükse (veya aynı saat ama dakika geçmişse)
+      if (slotHour < currentHour) return true;
+      if (slotHour === currentHour && slotMinute <= currentMinute) return true;
+    }
+
+    // Yarın veya sonraki günlerde ise tüm saatler uygundur
+    return false;
   }
 
   // Verilen slot ID'sinin dolu olup olmadığını kontrol eder

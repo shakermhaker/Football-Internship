@@ -3,6 +3,7 @@ using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WebAPI.Controllers
 {
@@ -64,6 +65,7 @@ namespace WebAPI.Controllers
 
 
         [HttpPost("login")]
+        [EnableRateLimiting("AuthLimit")]
         public ActionResult Login(UserForLoginDto userForLoginDto)
         {
             var userToLogin = _authService.Login(userForLoginDto);

@@ -1,109 +1,167 @@
 <div class="container" style="max-width: 1350px; padding-left: 2rem; padding-right: 9rem; margin-left: 100px; margin-top: 50px;">
-  <div class="text-center mb-10">
-    <h1 class="fw-bolder fs-2tx text-dark">Saha ve Rezervasyon Takvimi</h1>
-    <p class="text-muted fs-5">Müsait saatleri inceleyin ve rezervasyonunuzu yapın.</p>
-  </div>
-
- <div class="d-flex justify-content-center mb-8">
-
-      <!-- 📅 TARİH SEÇİM ALANI -->
-
-        <div class="d-flex justify-content-center mb-8">
+  <!-- 🚀 YENİ EKLENEN İŞLETME VİTRİN KARTI (HERO SECTION) -->
+  @if (businessDetail()) {
+    <div class="card shadow-sm border-0 rounded-4 mb-12 overflow-hidden" style="border: 1px solid #e4e6ef !important;">
+      <div class="row g-0 p-2">
         
-        <!-- 🚀 ÇÖZÜM: Tüm kutuya cursor: pointer ve (click) eventi eklendi -->
-        <div class="card shadow-xs border-0 px-6 py-4 rounded-4 bg-white d-flex flex-row align-items-center gap-4" 
-            style="border: 1px solid #e4e6ef !important; cursor: pointer;"
-            (click)="datePicker.showPicker()">
+        <!-- Sol/Üst Taraf: Resim Slider -->
+        <div class="col-12 col-lg-5 position-relative bg-light">
           
-          <div class="d-flex align-items-center gap-2">
-            <i class="ki-duotone ki-calendar fs-2 text-emerald"><span class="path1"></span><span class="path2"></span></i>
-            <span class="fw-bold text-dark fs-6">Rezervasyon Tarihi:</span>
-            
-            @if (isLoading()) {
-              <span class="spinner-border spinner-border-sm text-emerald ms-2" role="status"></span>
-            }
+          @if (businessDetail()?.images && businessDetail()!.images.length > 0) {
+            <div [id]="'carousel_business_' + businessDetail()?.businessId" class="carousel slide h-100" data-bs-ride="carousel">
+              <div class="carousel-inner h-100">
+                @for (img of businessDetail()!.images; track img.id; let i = $index) {
+                  <div class="carousel-item h-100" [class.active]="i === 0">
+                    <img [src]="getFullImagePath(img.imagePath)" class="d-block w-100 h-100 object-fit-cover" style="min-height: 280px; max-height: 380px;" alt="İşletme Görseli">
+                  </div>
+                }
+              </div>
+              
+              <!-- Eğer birden fazla resim varsa sağ/sol okları çıkar -->
+              @if (businessDetail()!.images.length > 1) {
+                <button class="carousel-control-prev" type="button" [attr.data-bs-target]="'#carousel_business_' + businessDetail()?.businessId" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.7;"></span>
+                  <span class="visually-hidden">Önceki</span>
+                </button>
+                <button class="carousel-control-next" type="button" [attr.data-bs-target]="'#carousel_business_' + businessDetail()?.businessId" data-bs-slide="next">
+                  <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.7;"></span>
+                  <span class="visually-hidden">Sonraki</span>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="d-flex align-items-center justify-content-center h-100 w-100" style="min-height: 280px;">
+              <i class="ki-duotone ki-picture text-muted" style="font-size: 5rem;"><span class="path1"></span><span class="path2"></span></i>
+            </div>
+          }
+        </div>
+
+        <!-- Sağ/Alt Taraf: İşletme Bilgileri -->
+       <!-- Sağ/Alt Taraf: İşletme Bilgileri -->
+        <div class="col-12 col-lg-7 p-8 d-flex flex-column justify-content-center bg-white">
+          <div class="d-flex align-items-center mb-3">
+            <span class="badge badge-light-success fw-bold px-3 py-2 text-uppercase rounded-pill letter-spacing-1">Spor Tesisi</span>
           </div>
           
-          <!-- 🚀 ÇÖZÜM: input'un kendisine de tıklandığında takvimi zorla açması için (click)="datePicker.showPicker()" eklendi -->
-          <input #datePicker
-                type="date" 
-                [(ngModel)]="selectedDate" 
-                (change)="onDateChange($event)"
-                [min]="minDate" 
-                class="form-control form-control-solid fw-bold text-dark" 
-                style="width: 200px; border-radius: 10px; cursor: pointer;"
-                (click)="datePicker.showPicker()">
+          <h1 class="fw-bolder text-dark mb-4" style="font-size: 2.5rem; letter-spacing: -1px;">
+            {{ businessDetail()?.name }}
+          </h1>
+          
+          <div class="d-flex flex-wrap gap-4 mb-6">
+            <div class="d-flex align-items-center text-gray-600 fw-medium fs-5">
+              <i class="ki-duotone ki-geolocation fs-2 text-success me-2"><span class="path1"></span><span class="path2"></span></i>
+              {{ businessDetail()?.city }}, {{ businessDetail()?.district }}
+            </div>
+          </div>
+          
+          <div class="d-flex align-items-start text-gray-700 bg-light p-5 rounded-3 border border-dashed border-gray-300">
+            <i class="ki-duotone ki-map fs-2 text-primary me-3 mt-1"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+            <span class="fs-6 lh-lg fw-medium">{{ businessDetail()?.fullAddress }}</span>
+          </div>
         </div>
 
       </div>
-  </div>
+    </div>
+  }
 
-  
+  <!-- 🚀 TEK VE BÜTÜNLEŞİK REZERVASYON KARTI -->
+  <div class="card shadow-sm border-0 rounded-4 bg-white mb-10" style="border: 1px solid #e4e6ef !important;">
     
-    <ul class="nav nav-pills flex-row border-0 gap-4 mb-10 fs-6 overflow-auto flex-nowrap pt-4 pb-4 pr-4 rounded-4" style="padding-bottom: 15px;">
+    <!-- KART ÜST KISMI (Header & Sekmeler) -->
+    <div class="card-header border-bottom border-gray-200 pt-6 px-8 pb-0 flex-column align-items-stretch">
       
-      @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
-        <li class="nav-item">
-          <a class="nav-link btn btn-outline btn-flex h-100 bg-white ff-custom-tab" 
-             [class.active]="isFirstField"
-             data-bs-toggle="tab" 
-             [attr.href]="'#kt_tab_pane_' + field.fieldId"
-             style="border-radius: 12px; padding: 1rem 1.5rem; border-width: 2px; min-width: 200px; border-color: #e4e6ef;">
-            
-            <i class="ki-duotone ki-map fs-2x me-3 text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-            
-            <span class="d-flex flex-column align-items-start">
-              <span class="fs-4 fw-bold text-dark mb-1">{{ field.fieldName }}</span>
-              <span class="fs-7 text-muted fw-semibold">Takvimi İncele</span>
-            </span>
-          </a>
-        </li>
-      }
-
-    </ul>
-
-    <div class="tab-content" id="myTabContent">
-      
-      @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+      <!-- Başlık ve Tarih Seçici Satırı -->
+      <div class="d-flex justify-content-between align-items-center mb-6 flex-wrap gap-4">
         
-        <div class="tab-pane fade" 
-             [class.show]="isFirstField" 
-             [class.active]="isFirstField" 
-             [id]="'kt_tab_pane_' + field.fieldId" 
-             role="tabpanel">
-          
-          <div class="card shadow-sm border-0 mb-10 bg-white" style="border-radius: 12px;">
-            <div class="card-body p-8">
-              
-              <div class="accordion accordion-icon-collapse" [id]="'kt_accordion_' + field.fieldId">
-                
-                @for (day of field.days; track day.dayId; let isFirstDay = $first) {
-                  
-                  <div class="mb-5 border-bottom border-gray-200 pb-2">
-                    <div class="accordion-header py-3 d-flex align-items-center" 
-                         [class.collapsed]="!isFirstDay"
-                         data-bs-toggle="collapse" 
-                         [attr.data-bs-target]="'#kt_acc_item_' + field.fieldId + '_' + day.dayId"
-                         style="cursor: pointer;">
-                      
-                      <span class="accordion-icon">
-                        <i class="ki-duotone ki-plus-square fs-3 accordion-icon-off text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-                        <i class="ki-duotone ki-minus-square fs-3 accordion-icon-on text-emerald"><span class="path1"></span><span class="path2"></span></i>
-                      </span>
-                      
-                      <h3 class="fs-4 fw-bold mb-0 ms-4 text-dark">{{ day.dayName }}</h3>
-                      
-                   
-                    </div>
+        <h3 class="card-title fw-bolder text-dark m-0 fs-2 d-flex align-items-center gap-3">
+          <i class="ki-duotone ki-calendar-tick fs-1 text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
+          Rezervasyon Takvimi
+        </h3>
 
-                    <div [id]="'kt_acc_item_' + field.fieldId + '_' + day.dayId" 
-                         class="collapse fs-6 ps-10 mt-4" 
-                         [class.show]="isFirstDay"
-                         [attr.data-bs-parent]="'#kt_accordion_' + field.fieldId">
-                      
-                      <div class="d-flex flex-wrap gap-4 pb-4">
-                        @for (slot of day.slots; track slot.fieldPriceScheduleId) {
-                          
+        <!-- Tarih Seçici -->
+        <div class="position-relative d-flex align-items-center" style="cursor: pointer;" (click)="datePicker.showPicker()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm text-emerald position-absolute" style="left: -25px;" role="status"></span>
+          }
+
+          <div class="d-flex align-items-center bg-light-success rounded-pill px-4 py-2 border border-success border-opacity-25 transition-all hover-elevate-up">
+            <i class="ki-duotone ki-calendar fs-2 text-success me-2"><span class="path1"></span><span class="path2"></span></i>
+            <span class="fw-bold text-success fs-6 me-2">Tarih:</span>
+            
+            <input #datePicker
+                   type="date" 
+                   [(ngModel)]="selectedDate" 
+                   (change)="onDateChange($event)"
+                   [min]="minDate" 
+                   class="form-control form-control-solid fw-bold text-dark bg-transparent border-0 p-0 m-0 text-center" 
+                   style="width: 120px; cursor: pointer; box-shadow: none;"
+                   (click)="datePicker.showPicker()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Saha Sekmeleri (Pills) -->
+      <ul class="nav nav-pills flex-row border-0 gap-4 fs-6 overflow-auto flex-nowrap pb-6 hide-scrollbar">
+        @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+          <li class="nav-item">
+            <a class="nav-link btn btn-outline btn-flex h-100 bg-white ff-custom-tab" 
+               [class.active]="isFirstField"
+               data-bs-toggle="tab" 
+               [attr.href]="'#kt_tab_pane_' + field.fieldId"
+               style="border-radius: 12px; padding: 1rem 1.5rem; border-width: 2px; min-width: 180px; border-color: #e4e6ef;">
+              
+              <i class="ki-duotone ki-map fs-2x me-3 text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+              
+              <span class="d-flex flex-column align-items-start">
+                <span class="fs-5 fw-bold text-dark mb-1">{{ field.fieldName }}</span>
+                <span class="fs-8 text-muted fw-semibold">Takvimi İncele</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- KART İÇERİĞİ (Saatler) -->
+    <div class="card-body p-8 bg-gray-50 rounded-bottom-4">
+      <div class="tab-content" id="myTabContent">
+        
+        @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+          <div class="tab-pane fade" 
+               [class.show]="isFirstField" 
+               [class.active]="isFirstField" 
+               [id]="'kt_tab_pane_' + field.fieldId" 
+               role="tabpanel">
+            
+            <div class="accordion accordion-icon-collapse" [id]="'kt_accordion_' + field.fieldId">
+              
+              @for (day of field.days; track day.dayId; let isFirstDay = $first) {
+                <!-- Gün Satırı -->
+                <div class="mb-5 border-bottom border-gray-200 pb-2">
+                  <div class="accordion-header py-3 d-flex align-items-center" 
+                       [class.collapsed]="!isFirstDay"
+                       data-bs-toggle="collapse" 
+                       [attr.data-bs-target]="'#kt_acc_item_' + field.fieldId + '_' + day.dayId"
+                       style="cursor: pointer;">
+                    
+                    <span class="accordion-icon">
+                      <i class="ki-duotone ki-plus-square fs-3 accordion-icon-off text-emerald"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                      <i class="ki-duotone ki-minus-square fs-3 accordion-icon-on text-emerald"><span class="path1"></span><span class="path2"></span></i>
+                    </span>
+                    
+                    <h3 class="fs-4 fw-bold mb-0 ms-4 text-dark">{{ day.dayName }}</h3>
+                  </div>
+
+                  <!-- Saat Butonları -->
+                  <div [id]="'kt_acc_item_' + field.fieldId + '_' + day.dayId" 
+                       class="collapse fs-6 ps-10 mt-4" 
+                       [class.show]="isFirstDay"
+                       [attr.data-bs-parent]="'#kt_accordion_' + field.fieldId">
+                    
+                    <div class="d-flex flex-wrap gap-4 pb-4">
+                      @for (slot of day.slots; track slot.fieldPriceScheduleId) {
+                        
+                        @if (!isSlotInPast(slot.startTime)) {
                           @let booked = isSlotBooked(slot.fieldPriceScheduleId);
 
                           <button (click)="onSlotSelected(slot, field.fieldName)" 
@@ -112,7 +170,6 @@
                                   [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
                                   style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
                             
-                            <!-- Saat Bilgisi ve İkon -->
                             <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
                                  [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
                               <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
@@ -121,7 +178,6 @@
                               </span>
                             </div>
                             
-                            <!-- Fiyat Bilgisi veya Dolu Etiketi -->
                             <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
                                  [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
                               @if (booked) {
@@ -136,28 +192,24 @@
                             
                           </button>
                         }
-                      </div>
-
+                      }
                     </div>
                   </div>
-
-                }
-                
-                @if (field.days.length === 0) {
-                   <div class="text-center text-muted py-5 fw-medium">
-                     Bu saha için henüz bir fiyatlandırma/takvim girilmemiş.
-                   </div>
-                }
-
-              </div>
-
+                </div>
+              }
+              
+              @if (field.days.length === 0) {
+                 <div class="text-center text-muted py-8 fw-medium bg-white rounded-3 border border-dashed border-gray-300">
+                   Bu saha için henüz bir fiyatlandırma/takvim girilmemiş.
+                 </div>
+              }
             </div>
+            
           </div>
-
-        </div>
-      }
+        }
+      </div>
     </div>
-  
+  </div>
 </div>
 
 <!-- 🚀 İKİ MODAL İÇİN DE PARANTEZ EKLENDİ () -->

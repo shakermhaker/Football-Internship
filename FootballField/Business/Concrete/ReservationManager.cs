@@ -57,6 +57,25 @@ namespace Business.Concrete
             // LOCK Mekanizması: Aynı anda birden fazla kişi istek atarsa, biri bitene kadar bekler.
             lock (_reservationLock)
             {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+
+                // 1. Gün geçmiş mi? (Dün veya öncesi mi?)
+                if (createDto.ReservationDate < today)
+                {
+                    return new ErrorResult("Geçmiş tarihlere rezervasyon yapılamaz!");
+                }
+
+                // 2. Bugün seçilmişse, saat geçmiş mi?
+                if (createDto.ReservationDate == today)
+                {
+                    var slotStartTime = _reservationDal.GetStartTimeByScheduleId(createDto.FieldPriceScheduleId);
+                    var currentTime = TimeOnly.FromDateTime(DateTime.Now);
+
+                    if (slotStartTime <= currentTime)
+                    {
+                        return new ErrorResult("Geçmiş saatlere rezervasyon yapılamaz!");
+                    }
+                }
 
                 int requestedDayOfWeek = (int)createDto.ReservationDate.DayOfWeek;
                 int requestedDbDayId = requestedDayOfWeek == 0 ? 7 : requestedDayOfWeek;
