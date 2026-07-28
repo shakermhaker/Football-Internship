@@ -8,8 +8,9 @@ import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
 import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
 import { AddFieldComponent } from './features/business/add-field/add-field.component';
-import { ReservationComponent } from './features/reservation/reservation.component'; // Yolu kendi projene göre düzelt
-import { MyReservationsComponent } from './features/user/user-reservation/my-reservations.component'; // Yolu kendi projene göre düzelt
+import { ReservationComponent } from './features/reservation/reservation.component'; 
+import { MyReservationsComponent } from './features/user/user-reservation/my-reservations.component'; 
+import {BusinessAnalyticsComponent} from './features/business/business-analytics/business-analytics.component'
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -47,6 +48,10 @@ export const routes: Routes = [
       {
         path: 'my-fields/edit/:id', 
         component: AddFieldComponent // DİKKAT: Yeni sayfa yapmadık, yine aynı sayfaya yolladık!
+      },
+      {
+        path: 'analytics',
+        component: BusinessAnalyticsComponent
       }
     ]
   },

@@ -62,6 +62,22 @@ namespace WebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("dashboard-summary")]
+        public IActionResult GetDashboardSummary([FromQuery] int businessId, [FromQuery] int? year)
+        {
+            int targetYear = year ?? DateTime.Now.Year;
+
+            // BusinessService üzerinden (içine bağladığın ReservationDal sayesinde) verileri çekiyoruz
+            var result = _businessService.GetBusinessDashboardStats(businessId, targetYear);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
 
     }
 }

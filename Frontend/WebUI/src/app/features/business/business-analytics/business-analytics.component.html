@@ -1,0 +1,167 @@
+<div class="container-fluid mt-8 px-6">
+  
+  <div class="d-flex justify-content-between align-items-center mb-8">
+    <div class="d-flex flex-column">
+      <h1 class="fw-bolder fs-2tx text-dark d-flex align-items-center gap-3 m-0">
+        <i class="ki-duotone ki-chart-simple fs-1 text-primary"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+        İşletme İstatistikleri
+      </h1>
+      <span class="text-muted fs-6 fw-semibold mt-1">İşletmenizin finansal ve operasyonel verilerini inceleyin.</span>
+    </div>
+
+    <!-- Yıl Seçici -->
+    <div class="d-flex align-items-center gap-3">
+      <span class="fw-bold text-gray-700">Rapor Yılı:</span>
+      <select class="form-select form-select-solid fw-bolder bg-white shadow-sm border-0 w-125px" 
+              [(ngModel)]="selectedYear" 
+              (change)="onYearChange()"
+              [disabled]="isLoading()">
+        @for (year of availableYears; track year) {
+          <option [value]="year">{{ year }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="d-flex justify-content-center align-items-center" style="height: 40vh;">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    </div>
+  } @else {
+    
+    <!-- 4'LÜ ÖZET KARTLARI -->
+    <div class="row g-6 mb-10">
+      
+      <!-- Bu Yılki Toplam -->
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-light-primary border-0 shadow-sm h-100 hover-elevate-up">
+          <div class="card-body d-flex flex-column justify-content-center">
+            <span class="text-primary fw-bold fs-6 mb-2 text-uppercase">Bu Yılki Toplam Gelir</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-1 fw-bolder text-dark">{{ dashboardData()?.totalRevenueThisYear }} ₺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bu Ayki Toplam -->
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-light-success border-0 shadow-sm h-100 hover-elevate-up">
+          <div class="card-body d-flex flex-column justify-content-center">
+            <span class="text-success fw-bold fs-6 mb-2 text-uppercase">Bu Ayki Gelir</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-1 fw-bolder text-dark">{{ dashboardData()?.totalRevenueThisMonth }} ₺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bu Haftaki Toplam -->
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-light-warning border-0 shadow-sm h-100 hover-elevate-up">
+          <div class="card-body d-flex flex-column justify-content-center">
+            <span class="text-warning fw-bold fs-6 mb-2 text-uppercase">Bu Haftaki Gelir</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-1 fw-bolder text-dark">{{ dashboardData()?.totalRevenueThisWeek }} ₺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bu Ayki Rezervasyon Sayısı -->
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-light-info border-0 shadow-sm h-100 hover-elevate-up">
+          <div class="card-body d-flex flex-column justify-content-center">
+            <span class="text-info fw-bold fs-6 mb-2 text-uppercase">Bu Ayki Rezervasyon</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-1 fw-bolder text-dark">{{ dashboardData()?.totalReservationsThisMonth }} Maç</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALT BÖLÜM: AYLIK DETAYLAR (TABLAR) -->
+    <div class="card shadow-sm border-0 rounded-4 bg-white">
+      <div class="card-header border-bottom-0 pt-6 px-8">
+        <h3 class="card-title align-items-start flex-column">
+          <span class="fw-bolder text-dark fs-3 mb-2">Aylık Saha Performansı</span>
+          <span class="text-muted fw-semibold fs-7">Hangi ay, hangi sahadan ne kadar kazandığınızı inceleyin.</span>
+        </h3>
+      </div>
+      
+      <div class="card-body px-8 pb-8 pt-2">
+        
+        <!-- YATAY AY SEKMELERİ -->
+        <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold mb-8 flex-nowrap overflow-auto hide-scrollbar" style="border-bottom: 1px solid #e4e6ef;">
+          @for (month of months; track month.id) {
+            <li class="nav-item">
+              <a class="nav-link text-active-primary cursor-pointer pb-4 px-4" 
+                 [class.active]="selectedMonth() === month.id"
+                 (click)="selectMonth(month.id)">
+                {{ month.name }}
+              </a>
+            </li>
+          }
+        </ul>
+
+        <!-- SEÇİLİ AYIN İÇERİĞİ -->
+        <div class="row g-5">
+          
+          @for (stat of selectedMonthFieldStats(); track stat.fieldName) {
+            <div class="col-12 col-md-6 col-xl-4">
+              
+              <!-- 🚀 Sahanın O Ayki Kazanç Kartı -->
+              <div class="border border-dashed border-gray-300 rounded-3 p-5 d-flex flex-column transition-all hover-elevate-up bg-hover-light h-100">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="symbol symbol-40px me-3">
+                    <div class="symbol-label bg-light-primary">
+                      <i class="ki-duotone ki-flag fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-5">{{ stat.fieldName }}</span>
+                    <span class="text-muted fw-semibold fs-8 text-uppercase">Aylık Performans</span>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end mt-auto">
+                  <div class="d-flex flex-column">
+                    <span class="text-muted fw-semibold fs-7 mb-1">Toplam Ciro</span>
+                    <span class="text-dark fw-bolder fs-3">{{ stat.revenue }} ₺</span>
+                  </div>
+                  <div class="d-flex flex-column text-end">
+                    <span class="text-muted fw-semibold fs-7 mb-1">Oynanan Maç</span>
+                    <span class="badge badge-light-primary fw-bolder px-3 py-1 fs-6">{{ stat.reservationCount }}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          }
+          
+          <!-- Eğer hiç saha yoksa veya o ay hiç işlem olmamışsa (Görsel Zenginlik) -->
+          @if (selectedMonthFieldStats().length === 0) {
+            <div class="col-12 text-center py-10">
+              <i class="ki-duotone ki-abstract-11 fs-4x text-gray-400 mb-4"><span class="path1"></span><span class="path2"></span></i>
+              <h4 class="text-gray-600 fw-bold">Bu aya ait saha verisi bulunamadı.</h4>
+              <span class="text-muted fs-6">Seçilen ayda henüz herhangi bir rezervasyon veya kazanç kaydedilmemiş.</span>
+            </div>
+          }
+
+        </div>
+
+      </div>
+    </div>
+  }
+</div>
+
+<style>
+  .hover-elevate-up { transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
+  .hover-elevate-up:hover { transform: translateY(-1px); border-color: #009ef7 !important; }
+  .bg-hover-light:hover { background-color: #f9f9f9; }
+  
+  /* Mobilde kaydırma çubuğunu gizlemek için */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
