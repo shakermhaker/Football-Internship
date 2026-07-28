@@ -82,6 +82,18 @@ namespace DataAccess.Concrete
             }
         }
 
+        public TimeOnly GetStartTimeByScheduleId(int scheduleId)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                var schedule = context.FieldPriceSchedules
+                                      .Include(f => f.TimeSlot)
+                                      .FirstOrDefault(f => f.Id == scheduleId);
+
+                return schedule != null ? TimeOnly.FromTimeSpan(schedule.TimeSlot.StartTime) : TimeOnly.MinValue;
+            }
+        }
+
         public List<UserReservationDetailDto> GetUserReservations(int userId)
         {
             using (var context = new FootballFieldContext())
