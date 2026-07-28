@@ -165,7 +165,7 @@ import { UserService } from '../../core/services/user.service';
   </nav>
 </div>
 
-      <div class="d-flex flex-column flex-grow-1 px-5 pb-5 pt-20 pl-10"  style="margin-top: 80px;">
+      <div class="d-flex flex-column flex-grow-1 px-5 pb-5 pt-20 pl-10"  style="margin-top: 40px;">
         <router-outlet></router-outlet>
       </div>
 
