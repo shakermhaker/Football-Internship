@@ -28,6 +28,21 @@ export interface BusinessDashboardDto {
   monthlyRevenues: MonthlyRevenueDto[];
 }
 
+export interface BusinessImageDto {
+  id: number;
+  imagePath: string;
+  isCover: boolean;
+}
+
+export interface BusinessDetailDto {
+  businessId: number;
+  name: string;
+  city: string;
+  district: string;
+  fullAddress: string;
+  images: BusinessImageDto[];
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class BusinessService {
@@ -43,6 +58,8 @@ export class BusinessService {
     // Token ile işlem yaptığımız için withCredentials veya interceptor ayarlarına dikkat
     return this.http.post<any>(`${this.apiUrl}/add`, businessData, { withCredentials: true });
   }
+
+  
   
   getFilteredBusinesses(cityId: number | null, districtId: number | null, search: string): Observable<DataResult<any[]>> {
   let params = new HttpParams();
