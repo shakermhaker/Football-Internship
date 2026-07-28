@@ -8,34 +8,34 @@
 
       <!-- 📅 TARİH SEÇİM ALANI -->
 
-      <div class="d-flex justify-content-center mb-8">
-      
-      <!-- 🚀 ÇÖZÜM: Tüm kutuya cursor: pointer ve (click) eventi eklendi -->
-      <div class="card shadow-xs border-0 px-6 py-4 rounded-4 bg-white d-flex flex-row align-items-center gap-4" 
-          style="border: 1px solid #e4e6ef !important; cursor: pointer;"
-          (click)="datePicker.showPicker()">
+        <div class="d-flex justify-content-center mb-8">
         
-        <div class="d-flex align-items-center gap-2">
-          <i class="ki-duotone ki-calendar fs-2 text-emerald"><span class="path1"></span><span class="path2"></span></i>
-          <span class="fw-bold text-dark fs-6">Rezervasyon Tarihi:</span>
+        <!-- 🚀 ÇÖZÜM: Tüm kutuya cursor: pointer ve (click) eventi eklendi -->
+        <div class="card shadow-xs border-0 px-6 py-4 rounded-4 bg-white d-flex flex-row align-items-center gap-4" 
+            style="border: 1px solid #e4e6ef !important; cursor: pointer;"
+            (click)="datePicker.showPicker()">
           
-          @if (isLoading()) {
-            <span class="spinner-border spinner-border-sm text-emerald ms-2" role="status"></span>
-          }
+          <div class="d-flex align-items-center gap-2">
+            <i class="ki-duotone ki-calendar fs-2 text-emerald"><span class="path1"></span><span class="path2"></span></i>
+            <span class="fw-bold text-dark fs-6">Rezervasyon Tarihi:</span>
+            
+            @if (isLoading()) {
+              <span class="spinner-border spinner-border-sm text-emerald ms-2" role="status"></span>
+            }
+          </div>
+          
+          <!-- 🚀 ÇÖZÜM: input'un kendisine de tıklandığında takvimi zorla açması için (click)="datePicker.showPicker()" eklendi -->
+          <input #datePicker
+                type="date" 
+                [(ngModel)]="selectedDate" 
+                (change)="onDateChange($event)"
+                [min]="minDate" 
+                class="form-control form-control-solid fw-bold text-dark" 
+                style="width: 200px; border-radius: 10px; cursor: pointer;"
+                (click)="datePicker.showPicker()">
         </div>
-        
-        <!-- 🚀 ÇÖZÜM: input'un kendisine de tıklandığında takvimi zorla açması için (click)="datePicker.showPicker()" eklendi -->
-        <input #datePicker
-              type="date" 
-              [(ngModel)]="selectedDate" 
-              (change)="onDateChange($event)"
-              [min]="minDate" 
-              class="form-control form-control-solid fw-bold text-dark" 
-              style="width: 200px; border-radius: 10px; cursor: pointer;"
-              (click)="datePicker.showPicker()">
-      </div>
 
-    </div>
+      </div>
   </div>
 
   

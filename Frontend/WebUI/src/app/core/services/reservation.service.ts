@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DataResult } from './user.service';
 
@@ -68,5 +68,15 @@ export class ReservationService {
   }
   cancelReservation(reservationId: number): Observable<any> {
     return this.http.put(`${this.apiUrl}/cancel/${reservationId}`, {}, { withCredentials: true });
+  }
+  getDailyReservations(businessId: number, date: string): Observable<any> {
+    let params = new HttpParams()
+      .set('businessId', businessId.toString())
+      .set('date', date);
+
+    return this.http.get<any>(`${this.apiUrl}/getdailyreservations`, {
+      params,
+      withCredentials: true
+    });
   }
 }

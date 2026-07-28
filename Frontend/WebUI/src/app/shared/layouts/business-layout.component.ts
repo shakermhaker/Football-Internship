@@ -25,43 +25,46 @@ import { UserService } from '../../core/services/user.service';
         <!-- MENÜ LİNKLERİ -->
         <ul class="nav nav-pills flex-column mb-auto mt-4 gap-2">
           <li class="nav-item">
-                <a routerLink="/business-panel/mainpanel" 
-                  routerLinkActive="active fw-bold" 
-                  [routerLinkActiveOptions]="{exact: true}"
-                  class="nav-link" 
-                  style="color: var(--text-light);">
-                    Ana Panel
-                </a>
-            </li>
-          
-          <!-- YENİ EKLENEN: HALISAHALARIM -->
-          <li class="nav-item">
-            <a routerLink="/business-panel/my-fields" 
-               routerLinkActive="active fw-bold" 
-               class="nav-link" 
-               style="color: var(--text-light);">
-              Halısahalarım
-            </a>
-          </li>
+  <a routerLink="/business-panel/mainpanel" 
+     routerLinkActive="active active-menu-item" 
+     [routerLinkActiveOptions]="{exact: true}"
+     class="nav-link custom-nav-link" 
+     style="color: var(--text-light);">
+    <i class="ki-duotone ki-element-11 fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+    <span class="menu-text" data-text="Ana Panel">Ana Panel</span>
+  </a>
+</li>
 
-          <li class="nav-item">
-            <a routerLink="/business-panel/reservations" 
-               routerLinkActive="active fw-bold" 
-               class="nav-link" 
-               style="color: var(--text-light);">
-              Rezervasyonlar
-            </a>
-          </li>
-          
-          <li class="nav-item">
-            <a routerLink="/business-panel/analytics" 
-               routerLinkActive="active fw-bold" 
-               class="nav-link d-flex align-items-center gap-2" 
-               style="color: var(--text-light);">
-              <i class="ki-duotone ki-chart-simple fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
-              İstatistikler
-            </a>
-          </li>
+<!-- YENİ EKLENEN: HALISAHALARIM -->
+<li class="nav-item">
+  <a routerLink="/business-panel/my-fields" 
+     routerLinkActive="active active-menu-item" 
+     class="nav-link custom-nav-link" 
+     style="color: var(--text-light);">
+    <i class="ki-duotone ki-map fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+    <span class="menu-text" data-text="Halısahalarım">Halısahalarım</span>
+  </a>
+</li>
+
+<li class="nav-item">
+  <a routerLink="/business-panel/reservations" 
+     routerLinkActive="active active-menu-item" 
+     class="nav-link custom-nav-link" 
+     style="color: var(--text-light);">
+    <i class="ki-duotone ki-calendar-8 fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
+    <span class="menu-text" data-text="Rezervasyonlar">Rezervasyonlar</span>
+  </a>
+</li>
+
+<li class="nav-item">
+  <a routerLink="/business-panel/analytics" 
+     routerLinkActive="active active-menu-item" 
+     class="nav-link custom-nav-link" 
+     style="color: var(--text-light);">
+    <i class="ki-duotone ki-chart-simple fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+    <span class="menu-text" data-text="İstatistikler">İstatistikler</span>
+  </a>
+</li>
         </ul>
       </div>
 

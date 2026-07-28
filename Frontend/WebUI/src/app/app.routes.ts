@@ -57,7 +57,11 @@ export const routes: Routes = [
       {
         path: 'analytics',
         component: BusinessAnalyticsComponent
-      }
+      },
+      {
+        path: 'reservations', // DİKKAT: Sadece mainpanel bıraktık
+        loadComponent: () => import('./features/business/business-reservations/business-reservations.component').then(m => m.BusinessReservationsComponent)
+      },
     ]
   },
 

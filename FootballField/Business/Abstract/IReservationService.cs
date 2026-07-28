@@ -18,7 +18,7 @@ namespace Business.Abstract
 
         IResult CancelReservation(int reservationId, int userId);
 
-
+        IDataResult<DailyReservationSummaryDto> GetDailyReservations(int businessId, DateTime date);
 
 
     }
