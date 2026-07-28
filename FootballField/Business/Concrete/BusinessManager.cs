@@ -96,6 +96,7 @@ namespace Business.Concrete
             _businessDal.Update(business);
 
             return new SuccessResult("İşletme bilgileri başarıyla güncellendi.");
+        }
 
         public IDataResult<BusinessDashboardDto> GetBusinessDashboardStats(int businessId, int year)
         {

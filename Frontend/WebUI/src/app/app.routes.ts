@@ -54,6 +54,7 @@ export const routes: Routes = [
         path: 'mainpanel', // DİKKAT: Sadece mainpanel bıraktık
         loadComponent: () => import('./features/business/business-mainpanel/business-mainpanel.component').then(m => m.BusinessMainpanelComponent)
       },
+      {
         path: 'analytics',
         component: BusinessAnalyticsComponent
       }
