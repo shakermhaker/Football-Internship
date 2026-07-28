@@ -16,6 +16,8 @@ namespace DataAccess.Abstract
         int GetDayIdByScheduleId(int scheduleId);
         List<UserReservationDetailDto> GetUserReservations(int userId);
 
+        BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
+
 
 
 

@@ -1,6 +1,7 @@
 ﻿using Business.Abstract;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
+using DataAccess.Concrete;
 using Entities.Concrete;
 using Entities.DTOs;
 
@@ -9,10 +10,12 @@ namespace Business.Concrete
     public class BusinessManager : IBusinessService
     {
         private readonly IBusinessDal _businessDal;
+        private readonly IReservationDal _reservationDal;
 
-        public BusinessManager(IBusinessDal businessDal)
+        public BusinessManager(IBusinessDal businessDal, IReservationDal reservationDal)
         {
             _businessDal = businessDal;
+            _reservationDal = reservationDal;
         }
 
         // Metot imzası IBusinessService ile birebir aynı olmalı
@@ -61,6 +64,13 @@ namespace Business.Concrete
         {
             var fields = _businessDal.GetFieldsByUserId(businessId);
             return new SuccessDataResult<List<Entities.Concrete.FootballField>>(fields, "İşletmenin sahaları başarıyla getirildi.");
+        }
+
+        public IDataResult<BusinessDashboardDto> GetBusinessDashboardStats(int businessId, int year)
+        {
+            // İleride burada "Sisteme giriş yapan kişi gerçekten bu işletmenin sahibi mi?" güvenlik kontrolü eklenecek.
+            var data = _reservationDal.GetBusinessDashboardStats(businessId, year);
+            return new SuccessDataResult<BusinessDashboardDto>(data, "Dashboard istatistikleri başarıyla yüklendi.");
         }
     }
 }

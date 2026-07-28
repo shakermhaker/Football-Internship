@@ -141,5 +141,103 @@ namespace DataAccess.Concrete
                 return result;
             }
         }
+
+        public BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                
+                var today = DateOnly.FromDateTime(DateTime.Now);
+
+                
+                int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+                var startOfWeek = today.AddDays(-diff);
+
+                
+                var rawData = context.Reservations
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.FootballField)
+                    .Where(r => r.FieldPriceSchedule.FootballField.BusinessId == businessId
+                             && r.ReservationDate.Year == year
+                             && (r.StatusId == 1 || r.StatusId == 3))
+                    .Select(r => new
+                    {
+                        Date = r.ReservationDate,
+                        Price = r.FinalPrice,
+                        FieldId = r.FieldPriceSchedule.FootballFieldId,
+                        FieldName = r.FieldPriceSchedule.FootballField.FieldName
+                    })
+                    .ToList(); 
+                var dashboardDto = new BusinessDashboardDto();
+
+                dashboardDto.TotalRevenueThisYear = rawData.Sum(r => r.Price);
+
+                dashboardDto.TotalRevenueThisMonth = rawData
+                    .Where(r => r.Date.Month == today.Month)
+                    .Sum(r => r.Price);
+
+                dashboardDto.TotalRevenueThisWeek = rawData
+                    .Where(r => r.Date >= startOfWeek && r.Date <= today)
+                    .Sum(r => r.Price);
+
+                dashboardDto.TotalReservationsThisMonth = rawData
+                    .Count(r => r.Date.Month == today.Month);
+
+                dashboardDto.FieldRevenues = rawData
+                    .GroupBy(r => new { r.FieldId, r.FieldName })
+                    .Select(g => new FieldRevenueDto
+                    {
+                        FieldId = g.Key.FieldId,
+                        FieldName = g.Key.FieldName,
+                        TotalRevenue = g.Sum(x => x.Price),
+                        ReservationCount = g.Count()
+                    })
+                    .OrderByDescending(f => f.TotalRevenue)
+                    .ToList();
+
+                // 4. ADIM: Aylık Gelir Hesaplama (Çubuk Grafik İçin)
+                var monthNames = new[] { "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık" };
+
+                dashboardDto.FieldRevenues = rawData
+                    .GroupBy(r => new { r.FieldId, r.FieldName })
+                    .Select(g => new FieldRevenueDto
+                    {
+                        FieldId = g.Key.FieldId,
+                        FieldName = g.Key.FieldName,
+                        TotalRevenue = g.Sum(x => x.Price), // O sahanın yıllık toplamı
+                        ReservationCount = g.Count(),       // O sahanın yıllık rezervasyon sayısı
+
+                        // 🚀 YENİ: O sahanın kendi içindeki aylık gruplaması
+                        MonthlyRevenues = g.GroupBy(x => x.Date.Month)
+                            .Select(mg => new MonthlyRevenueDto
+                            {
+                                Month = mg.Key,
+                                MonthName = monthNames[mg.Key],
+                                Revenue = mg.Sum(m => m.Price),
+                                ReservationCount = mg.Count()
+                            })
+                            .OrderBy(m => m.Month)
+                            .ToList()
+                    })
+                    .OrderByDescending(f => f.TotalRevenue)
+                    .ToList();
+
+                dashboardDto.MonthlyRevenues = rawData
+                    .GroupBy(r => r.Date.Month)
+                    .Select(g => new MonthlyRevenueDto
+                    {
+                        Month = g.Key,
+                        MonthName = monthNames[g.Key],
+                        Revenue = g.Sum(x => x.Price),
+                        ReservationCount = g.Count()
+                    })
+                    .OrderBy(m => m.Month)
+                    .ToList();
+
+                // Eğer hiç rezervasyon olmayan aylar varsa onları da sıfır olarak eklemek istersen burada küçük bir for döngüsü yapılabilir (Şimdilik olanları listeler).
+
+                return dashboardDto;
+            }
+        }
     }
 }

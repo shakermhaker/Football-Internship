@@ -52,6 +52,16 @@ import { UserService } from '../../core/services/user.service';
               Rezervasyonlar
             </a>
           </li>
+          
+          <li class="nav-item">
+            <a routerLink="/business-panel/analytics" 
+               routerLinkActive="active fw-bold" 
+               class="nav-link d-flex align-items-center gap-2" 
+               style="color: var(--text-light);">
+              <i class="ki-duotone ki-chart-simple fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+              İstatistikler
+            </a>
+          </li>
         </ul>
       </div>
 
