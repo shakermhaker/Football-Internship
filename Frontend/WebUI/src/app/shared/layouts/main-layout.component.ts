@@ -34,7 +34,7 @@ import { UserService } from '../../core/services/user.service';
   `],
   template: `
     <div class="d-flex flex-column min-vh-100" 
-         style="background-image: url('/assets/images/ff-background-img.png'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
+         style="background-image: url('/assets/images/backgrounds/bg-light-ball.png'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
       
       <div class="fixed-top d-flex justify-content-center w-100" style="padding-top: 1.5rem; z-index: 1040; pointer-events: none;">
   

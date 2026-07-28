@@ -28,7 +28,6 @@ export class LoginComponent {
   });
 
   onSubmit() {
-
     if (this.loginForm.valid) {
       // Servisi çağırıp veriyi C# backend'e yolluyoruz
       this.authService.login(this.loginForm.value).subscribe({
@@ -41,6 +40,14 @@ export class LoginComponent {
             showConfirmButton: false
           });
           console.log('Giriş Başarılı, .NET Cevabı:', response);
+          
+          // 🎯 BURAYI EKLEDİK: Sayfa yenilendiğinde verilerin uçmaması için ID'yi tarayıcıya kaydediyoruz!
+          // (Backend'in dönüş tipine göre response.businessId veya response.data.businessId olabilir)
+          const currentBusinessId = response.businessId || response.data?.businessId; 
+          
+          if (currentBusinessId) {
+            localStorage.setItem('businessId', currentBusinessId.toString());
+          }
           
           // Eğer API'den bir JWT Token dönüyorsa, bunu tarayıcıya kaydedebiliriz:
           // localStorage.setItem('token', response.token); 
@@ -59,12 +66,11 @@ export class LoginComponent {
               text: `${this.loginForm.value.email} adresine gönderdiğimiz linke tıklayarak hesabınızı aktifleştirmeniz gerekiyor.`,
               icon: 'warning',
               showCancelButton: true,
-              confirmButtonColor: '#ffc107', // Metronic warning (Sarı)
-              cancelButtonColor: '#d33',     // Kırmızı
+              confirmButtonColor: '#ffc107', 
+              cancelButtonColor: '#d33',     
               confirmButtonText: '📧 Linki Tekrar Gönder',
               cancelButtonText: 'Kapat'
             }).then((result) => {
-              
               if (result.isConfirmed) {
                 this.resendVerificationEmail(this.loginForm.value.email);
               }
@@ -76,7 +82,7 @@ export class LoginComponent {
               title: 'Giriş Başarılı Olmadı',
               text: msg || 'E-posta adresiniz veya şifreniz hatalı.',
               icon: 'error',
-              confirmButtonColor: '#f1416c', // Metronic danger (Kırmızı)
+              confirmButtonColor: '#f1416c', 
               confirmButtonText: 'Tekrar Dene'
             });
           }

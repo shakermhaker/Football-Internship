@@ -10,8 +10,6 @@ namespace Entities.Concrete
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string FullAddress { get; set; } = string.Empty;
-
-        // Foreign Key
         public int DistrictId { get; set; }
         public District District { get; set; } = null!;
 
@@ -21,5 +19,6 @@ namespace Entities.Concrete
 
         // Navigation Properties
         public ICollection<FootballField> FootballFields { get; set; } = new List<FootballField>();
+        public ICollection<BusinessImage> BusinessImages { get; set; } = new List<BusinessImage>();
     }
 }

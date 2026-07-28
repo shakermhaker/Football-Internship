@@ -62,5 +62,37 @@ namespace Business.Concrete
             var fields = _businessDal.GetFieldsByUserId(businessId);
             return new SuccessDataResult<List<Entities.Concrete.FootballField>>(fields, "İşletmenin sahaları başarıyla getirildi.");
         }
+        public IDataResult<BusinessDetailDto> GetBusinessDetails(int businessId)
+        {
+            var result = _businessDal.GetBusinessDetails(businessId);
+
+            if (result == null)
+            {
+                return new ErrorDataResult<BusinessDetailDto>("İşletme bulunamadı!");
+            }
+
+            return new SuccessDataResult<BusinessDetailDto>(result, "İşletme detayları getirildi.");
+        }
+        public IResult Update(BusinessUpdateDto businessUpdateDto)
+        {
+            // 1. Güncellenecek işletmeyi veritabanından bul
+            var business = _businessDal.Get(b => b.Id == businessUpdateDto.BusinessId);
+
+            if (business == null)
+            {
+                return new ErrorResult("Güncellenmek istenen işletme bulunamadı.");
+            }
+
+            // 2. Yeni bilgileri mevcut işletmenin üzerine yaz
+            business.Name = businessUpdateDto.Name;
+            business.FullAddress = businessUpdateDto.FullAddress;
+            business.DistrictId = businessUpdateDto.DistrictId;
+            // (Şehir ID'sini güncellemeye gerek yok çünkü DistrictId zaten şehri de kapsayan tekil bir anahtardır)
+
+            // 3. Veritabanında güncelle
+            _businessDal.Update(business);
+
+            return new SuccessResult("İşletme bilgileri başarıyla güncellendi.");
+        }
     }
 }

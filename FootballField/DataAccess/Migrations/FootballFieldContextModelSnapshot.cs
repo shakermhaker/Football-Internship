@@ -56,6 +56,31 @@ namespace DataAccess.Migrations
                     b.ToTable("Businesses");
                 });
 
+            modelBuilder.Entity("Entities.Concrete.BusinessImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCover")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("BusinessImages");
+                });
+
             modelBuilder.Entity("Entities.Concrete.City", b =>
                 {
                     b.Property<int>("Id")
@@ -136,9 +161,11 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("DayId");
 
-                    b.HasIndex("FootballFieldId");
-
                     b.HasIndex("TimeSlotId");
+
+                    b.HasIndex("FootballFieldId", "TimeSlotId", "DayId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Unique_Field_Time_Day");
 
                     b.ToTable("FieldPriceSchedules");
                 });
@@ -372,6 +399,17 @@ namespace DataAccess.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Entities.Concrete.BusinessImage", b =>
+                {
+                    b.HasOne("Entities.Concrete.Business", "Business")
+                        .WithMany("BusinessImages")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+                });
+
             modelBuilder.Entity("Entities.Concrete.District", b =>
                 {
                     b.HasOne("Entities.Concrete.City", "City")
@@ -391,7 +429,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Entities.Concrete.FootballField", "FootballField")
+                    b.HasOne("Entities.Concrete.FootballField", null)
                         .WithMany("PriceSchedules")
                         .HasForeignKey("FootballFieldId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -404,8 +442,6 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Day");
-
-                    b.Navigation("FootballField");
 
                     b.Navigation("TimeSlot");
                 });
@@ -478,6 +514,8 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Entities.Concrete.Business", b =>
                 {
+                    b.Navigation("BusinessImages");
+
                     b.Navigation("FootballFields");
                 });
 

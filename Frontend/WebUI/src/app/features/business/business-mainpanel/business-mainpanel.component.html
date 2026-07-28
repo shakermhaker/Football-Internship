@@ -1,0 +1,195 @@
+<div class="container-fluid p-4 min-vh-100" style="background-color: #f8f9fa;">
+  
+  <!-- Sayfa Başlığı -->
+  <div class="mb-4">
+    <h3 class="fw-bold" style="color: #2b3445;">Ana Panel</h3>
+    <p class="text-muted">İşletme bilgilerinizi görüntüleyin ve güncelleyin.</p>
+  </div>
+
+  <!-- BÖLÜM 1: İŞLETME BİLGİLERİ -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+      <h5 class="fw-bold mb-1">İşletme Bilgileri</h5>
+      <p class="text-muted small mb-4">İşletme temel bilgilerinizi düzenleyin.</p>
+
+      <div class="row">
+        <!-- Sol Form Alanı -->
+        <div class="col-lg-8 pe-lg-5">
+          <form [formGroup]="businessForm" (ngSubmit)="onSubmit()">
+            <div class="row mb-3 g-3">
+              
+              <!-- İŞLETME ADI -->
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">İşletme Adı</label>
+                <input type="text" class="form-control form-control-lg bg-light border-0" formControlName="name" placeholder="Örn: Merkez Halısaha">
+              </div>
+              
+              <!-- ŞEHİR DROPDOWN -->
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Şehir</label>
+                <select class="form-select form-select-lg bg-light border-0" formControlName="city" (change)="onCityChange($event)">
+                  <option value="" disabled>Şehir Seçiniz</option>
+                  <option *ngFor="let c of cities()" [value]="c.name">{{ c.name }}</option>
+                </select>
+              </div>
+      
+              <!-- İLÇE DROPDOWN -->
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">İlçe</label>
+                <select class="form-select form-select-lg bg-light border-0" formControlName="district">
+                  <option value="" disabled>İlçe Seçiniz</option>
+                  <option *ngFor="let d of districts()" [value]="d.name">{{ d.name }}</option>
+                </select>
+              </div>
+              
+            </div>
+
+            <!-- ADRES -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">Adres</label>
+              <input type="text" class="form-control form-control-lg bg-light border-0" formControlName="address" placeholder="Açık adresinizi giriniz...">
+            </div>
+
+            <!-- BUTONLAR -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success px-4 fw-semibold rounded-3" style="background-color: #00c853; border: none;">
+                <span class="me-1">✓</span> Kaydet
+              </button>
+              <button type="button" class="btn btn-light px-4 fw-semibold border rounded-3 text-secondary">
+                ✕ İptal
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sağ Bilgi Kutusu -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+          <div class="p-3 rounded-4" style="background-color: #e8f5e9; border: 1px solid #c8e6c9;">
+            <div class="d-flex align-items-start gap-3">
+              <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center mt-1" style="width: 24px; height: 24px;">
+                <span class="small">i</span>
+              </div>
+              <div>
+                <h6 class="fw-bold text-dark mb-1">Bilgileriniz güncel mi?</h6>
+                <p class="text-muted small mb-0">Doğru ve güncel bilgiler, müşterilerinizin sizi kolayca bulmasını sağlar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BÖLÜM 2: GÖRSELLER (Kapak ve Galeri) -->
+  <div class="mb-4">
+    
+    <!-- Üst Başlık ve Kaydet Butonu Yan Yana -->
+    <div class="d-flex justify-content-between align-items-end mb-3 px-1">
+      <div>
+        <h5 class="fw-bold mb-1" style="color: #2b3445;">Görsel Yönetimi</h5>
+        <p class="text-muted small mb-0">Seçtiğiniz yeni görselleri kaydetmeyi unutmayın.</p>
+      </div>
+      <!-- 🎯 BUTON ARTIK İKİ KUTUNUN ARASINDA DEĞİL, EN TEPEDE! -->
+      <button type="button" class="btn btn-primary px-4 py-2 fw-semibold rounded-3 shadow-sm" (click)="onSaveImages()">
+        <span class="me-2">💾</span> Değişiklikleri Kaydet
+      </button>
+    </div>
+
+    <!-- Yan Yana Kutular (Grid Bozulmasın Diye Butonu Yukarı Aldık) -->
+    <div class="row g-4">
+      
+      <!-- Kapak Görseli -->
+      <div class="col-xl-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Kapak Görseli</h5>
+            <p class="text-muted small mb-3">İşletmenizin kapak görselini değiştirin.</p>
+            
+            <div class="position-relative mb-3 rounded-4 overflow-hidden d-flex align-items-center justify-content-center" style="height: 220px; background-color: #333;">
+              <!-- 🎯 ÖNİZLEME VARSA ONU, YOKSA DB'DEKİNİ GÖSTER -->
+              <img *ngIf="pendingCoverPreview || coverImage" 
+                   [src]="pendingCoverPreview ? pendingCoverPreview : imageBaseUrl + coverImage?.imagePath" 
+                   class="w-100 h-100 object-fit-cover" alt="Kapak Görseli">
+              <span *ngIf="!pendingCoverPreview && !coverImage" class="text-white small">Henüz görsel yok</span>
+            </div>
+
+            <input type="file" #coverFileInput style="display: none;" (change)="onCoverImageSelected($event)" accept="image/*">
+
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-success fw-semibold px-3 rounded-3" style="background-color: #00c853; border: none;" (click)="coverFileInput.click()">
+                <span class="me-1">↑</span> Görsel Seç
+              </button>
+              <!-- Seçmekten vazgeçerse -->
+              <button *ngIf="pendingCoverPreview" class="btn btn-outline-danger px-3 rounded-3 fw-semibold" (click)="cancelPendingCover()">
+                İptal
+              </button>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">Önerilen boyut: 1920x600px • JPG, PNG • Max 5MB</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- İşletme Görselleri (Galeri) -->
+      <div class="col-xl-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body p-4 d-flex flex-column">
+            <h5 class="fw-bold mb-1">İşletme Görselleri</h5>
+            <p class="text-muted small mb-3">İşletmenizi en iyi yansıtan görsellerinizi yükleyin.</p>
+            
+            <div class="d-flex flex-wrap gap-3 mb-4">
+              
+              <!-- 1. Eskiden Eklenmiş Görseller (Kalıcı Silme butonu ile) -->
+              <div class="position-relative rounded-4 overflow-hidden shadow-sm" style="width: 140px; height: 100px;" *ngFor="let img of galleryImages">
+                <img [src]="imageBaseUrl + img.imagePath" class="w-100 h-100 object-fit-cover" alt="Galeri">
+                
+                <!-- 🎯 İŞTE SİHİR BURADA: (click) eventi eklendi ve z-index: 10 ile buton en öne alındı! -->
+                <button class="btn btn-light rounded-circle position-absolute top-0 end-0 m-1 shadow-sm d-flex align-items-center justify-content-center" 
+                        style="width: 24px; height: 24px; padding: 0; z-index: 10; cursor: pointer;"
+                        (click)="onDeleteGalleryImage(img.id)">
+                  <span class="text-dark small">✕</span>
+                </button>
+              </div>
+              <!-- 2. YENİ SEÇİLEN (Önizleme) Görseller (Listeden Çıkarma butonu ile) -->
+              <div class="position-relative rounded-4 overflow-hidden shadow-sm border border-2 border-primary" style="width: 140px; height: 100px;" *ngFor="let pImg of pendingGalleryPreviews; let i = index">
+                <img [src]="pImg.url" class="w-100 h-100 object-fit-cover opacity-75" alt="Yeni Galeri">
+                <span class="badge bg-primary position-absolute bottom-0 start-0 m-1">Yeni</span>
+                <!-- 🎯 Tıklandığında sadece eklemeden vazgeçer (DB'ye hiç gitmemişti) -->
+                <button class="btn btn-light rounded-circle position-absolute top-0 end-0 m-1 shadow-sm d-flex align-items-center justify-content-center" 
+                        style="width: 24px; height: 24px; padding: 0;"
+                        (click)="removePendingGalleryImage(i)">
+                  <span class="text-dark small">✕</span>
+                </button>
+              </div>
+
+            </div>
+
+            <input type="file" #galleryFileInput style="display: none;" (change)="onGalleryImageSelected($event)" accept="image/*">
+
+            <div class="mt-auto border border-2 border-dashed rounded-4 p-3 text-center" style="border-color: #dee2e6 !important; cursor: pointer;" (click)="galleryFileInput.click()">
+              <div class="text-secondary fw-semibold mb-1">
+                <span class="me-1">+</span> Yeni Görsel Ekle
+              </div>
+              <small class="text-muted">JPG, PNG • Max 5MB • En fazla 5 görsel</small>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BÖLÜM 3: ALT BİLGİ UYARISI -->
+  <div class="p-3 rounded-4 d-flex align-items-center gap-3" style="background-color: #e3f2fd; border: none;">
+    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+      <span class="fs-5">i</span>
+    </div>
+    <div>
+      <h6 class="fw-bold text-dark mb-1">Profilinizi güncel tutun</h6>
+      <p class="text-muted small mb-0">Güncel bilgiler ve kaliteli görseller, daha fazla rezervasyon almanıza yardımcı olur.</p>
+    </div>
+  </div>
+
+</div>

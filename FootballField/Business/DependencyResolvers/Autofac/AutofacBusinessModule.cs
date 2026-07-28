@@ -27,6 +27,9 @@ namespace Business.DependencyResolvers.Autofac
 
             builder.RegisterType<EmailManager>().As<IEmailService>();
 
+            builder.RegisterType<EfBusinessImageDal>().As<IBusinessImageDal>();
+            builder.RegisterType<BusinessImageManager>().As<IBusinessImageService>();
+
             builder.RegisterType<UserManager>().As<IUserService>();
             builder.RegisterType<EfUserDal>().As<IUserDal>();
 

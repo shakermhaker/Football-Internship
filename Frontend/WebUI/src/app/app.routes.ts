@@ -8,6 +8,7 @@ import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
 import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
 import { AddFieldComponent } from './features/business/add-field/add-field.component';
+import { BusinessMainpanelComponent } from './features/business/business-mainpanel/business-mainpanel.component';
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -45,7 +46,11 @@ export const routes: Routes = [
       {
         path: 'my-fields/edit/:id', 
         component: AddFieldComponent // DİKKAT: Yeni sayfa yapmadık, yine aynı sayfaya yolladık!
-      }
+      },
+      {
+        path: 'mainpanel', // DİKKAT: Sadece mainpanel bıraktık
+        loadComponent: () => import('./features/business/business-mainpanel/business-mainpanel.component').then(m => m.BusinessMainpanelComponent)
+      },
     ]
   },
 

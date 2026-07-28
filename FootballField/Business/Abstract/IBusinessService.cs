@@ -13,5 +13,7 @@ namespace Business.Abstract
         IDataResult<Entities.Concrete.Business> GetByUserId(int userId);
         IDataResult<List<Entities.Concrete.Business>> GetFilteredBusinesses(int? cityId, int? districtId, string? search);
         IDataResult<List<Entities.Concrete.FootballField>> GetFieldsByUserId(int businessId);
+        IDataResult<BusinessDetailDto> GetBusinessDetails(int businessId);
+        IResult Update(BusinessUpdateDto businessUpdateDto);
     }
 }
