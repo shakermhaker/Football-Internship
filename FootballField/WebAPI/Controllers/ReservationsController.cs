@@ -103,5 +103,16 @@ namespace WebAPI.Controllers
 
             return BadRequest(result); // Kurallara uymazsa (Başkasına aitse vb.) 400 döner
         }
+
+        [HttpGet("getdailyreservations")]
+        public IActionResult GetDailyReservations(int businessId, DateTime date)
+            {
+            var result = _reservationService.GetDailyReservations(businessId, date);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
     }
 }
