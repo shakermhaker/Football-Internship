@@ -137,6 +137,12 @@ import { UserService } from '../../core/services/user.service';
                           Profilim
                         </a>
                     </div>
+                      <div class="menu-item px-5">
+                        <a (click)="isMenuOpen = false" routerLink="/user/my-reservations" class="menu-link px-5 text-dark text-hover-success text-decoration-none d-flex align-items-center gap-2 py-2">
+                          <i class="ki-duotone ki-calendar-tick fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
+                          Rezervasyonlarım
+                        </a>
+                    </div>
                     
                     <div class="separator my-2 border-gray-200"></div>
 
@@ -159,7 +165,7 @@ import { UserService } from '../../core/services/user.service';
   </nav>
 </div>
 
-      <div class="d-flex flex-column flex-grow-1 px-5 pb-5 pt-20 pl-10"  style="margin-top: 80px; margin-left: 100px;">
+      <div class="d-flex flex-column flex-grow-1 px-5 pb-5 pt-20 pl-10"  style="margin-top: 80px;">
         <router-outlet></router-outlet>
       </div>
 
@@ -185,20 +191,17 @@ export class MainLayoutComponent implements OnInit {
 
   // MainLayoutComponent veya ilgili component içinde
 ngOnInit() {
-  // Profil verisini çekmeye çalış
-  this.userService.fetchMyProfile().subscribe({
-    next: (profile) => {
-      console.log('Profil başarıyla yüklendi:', profile);
-    },
-    error: (err) => {
-      // 400 hatası alındığında (kullanıcı veritabanında yoksa)[cite: 1]
-      if (err.status === 400) {
-        console.warn('Kullanıcı bulunamadı, oturum temizleniyor.');
-        this.userService.clearUser(); // Signal'i null yap
-        localStorage.removeItem('token'); // Çöp veriyi sil
-        this.router.navigate(['/login']);
+    // Cookie kullanıldığı için Angular tarafında cookie'nin varlığını "doğrudan" bilemeyiz.
+    // O yüzden isteği atıyoruz. Eğer ziyaretçiyse arka plan 400 dönecek.
+    this.userService.fetchMyProfile().subscribe({
+      next: (profile) => {
+        // Zaten giriş yapmış, profil verisi signal'e doldu.
+      },
+      error: (err) => {
+        // 🚀 ZİYARETÇİ SENARYOSU: Hata fırlatma, loglama yapma ve login'e YÖNLENDİRME!
+        // Sadece currentUser signal'ini null'da tutmasını sağla.
+        this.userService.clearUser(); 
       }
-    }
-  });
-}
+    });
+  }
 }

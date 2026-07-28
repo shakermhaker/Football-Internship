@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
-
+using System.Text.Json.Serialization; // Bunu yukarı eklemeyi unutmayın
 namespace Entities.Concrete
 {
     public class FieldPriceSchedule : IEntity
@@ -13,8 +13,7 @@ namespace Entities.Concrete
 
         // Foreign Keys
         public int FootballFieldId { get; set; }
-        [ForeignKey("FootballFieldId")]
-        [NotMapped]
+        [JsonIgnore]
         public FootballField FootballField { get; set; } = null!;
 
 

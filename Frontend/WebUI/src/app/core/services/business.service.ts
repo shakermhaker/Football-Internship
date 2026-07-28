@@ -4,6 +4,30 @@ import { Observable } from 'rxjs';
 import { HttpParams } from '@angular/common/http';
 import { DataResult, UserService } from './user.service';
 
+export interface MonthlyRevenueDto {
+  month: number;
+  monthName: string;
+  revenue: number;
+  reservationCount: number;
+}
+
+export interface FieldRevenueDto {
+  fieldId: number;
+  fieldName: string;
+  totalRevenue: number;
+  reservationCount: number;
+  monthlyRevenues: MonthlyRevenueDto[]; // Sahanın aylık kırılımı
+}
+
+export interface BusinessDashboardDto {
+  totalRevenueThisYear: number;
+  totalRevenueThisMonth: number;
+  totalRevenueThisWeek: number;
+  totalReservationsThisMonth: number;
+  fieldRevenues: FieldRevenueDto[];
+  monthlyRevenues: MonthlyRevenueDto[];
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class BusinessService {
@@ -76,4 +100,11 @@ getBusinessDetails(businessId: number): Observable<any> {
   });
 }
   
+
+  getDashboardSummary(businessId: number, year: number): Observable<DataResult<BusinessDashboardDto>> {
+    return this.http.get<DataResult<BusinessDashboardDto>>(
+      `${this.apiUrl}/dashboard-summary?businessId=${businessId}&year=${year}`,
+      { withCredentials: true }
+    );
+  }
 }

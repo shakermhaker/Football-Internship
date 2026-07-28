@@ -9,6 +9,9 @@ import { FootballfieldsComponent } from './features/footballfields/footballfield
 import { MyFieldsComponent } from './features/business/my-fields/my-fields.component';
 import { AddFieldComponent } from './features/business/add-field/add-field.component';
 import { BusinessMainpanelComponent } from './features/business/business-mainpanel/business-mainpanel.component';
+import { ReservationComponent } from './features/reservation/reservation.component'; 
+import { MyReservationsComponent } from './features/user/user-reservation/my-reservations.component'; 
+import {BusinessAnalyticsComponent} from './features/business/business-analytics/business-analytics.component'
 
 export const routes: Routes = [
   // 1. Auth Sayfaları Grubu
@@ -51,6 +54,9 @@ export const routes: Routes = [
         path: 'mainpanel', // DİKKAT: Sadece mainpanel bıraktık
         loadComponent: () => import('./features/business/business-mainpanel/business-mainpanel.component').then(m => m.BusinessMainpanelComponent)
       },
+        path: 'analytics',
+        component: BusinessAnalyticsComponent
+      }
     ]
   },
 
@@ -83,6 +89,11 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      { 
+        path: 'my-reservations', 
+        component: MyReservationsComponent, 
+        
       }
 
       
@@ -95,6 +106,10 @@ export const routes: Routes = [
       {
         path: 'business-register',
         loadComponent: () => import('./features/business/business-register/business-register.component').then(m => m.BusinessRegisterComponent)
+      },
+      {
+        path: ':id/schedules',
+        loadComponent: () => import('./features/reservation/reservation.component').then(m => m.ReservationComponent)
       }
 
       
@@ -102,9 +117,5 @@ export const routes: Routes = [
   },
   // 3. Fallback/Catch-All Rota
   // 3. Fallback: Bilinmeyen yolda login'e değil, ana sayfaya atalım
-  {
-    path: '**',
-    redirectTo: '',
-    pathMatch: 'full'
-  }
+ 
 ];

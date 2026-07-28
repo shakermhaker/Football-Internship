@@ -15,5 +15,6 @@ namespace Business.Abstract
         IDataResult<List<Entities.Concrete.FootballField>> GetFieldsByUserId(int businessId);
         IDataResult<BusinessDetailDto> GetBusinessDetails(int businessId);
         IResult Update(BusinessUpdateDto businessUpdateDto);
+        IDataResult<BusinessDashboardDto> GetBusinessDashboardStats(int businessId, int year);
     }
 }

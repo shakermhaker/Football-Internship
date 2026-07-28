@@ -17,7 +17,7 @@ namespace Entities.Concrete
 
         // Navigation Properties
         public ICollection<FieldPriceSchedule> PriceSchedules { get; set; } = new List<FieldPriceSchedule>();
-        [NotMapped]
-        public List<FieldPriceSchedule> FieldPriceSchedules { get; set; }
+        
+        
     }
 }

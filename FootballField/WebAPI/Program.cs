@@ -12,6 +12,7 @@ using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using WebAPI.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FootballFieldContext>(options =>
@@ -85,6 +86,8 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // Klasik Swagger UI üreteci
+builder.Services.AddHostedService<ReservationStatusUpdaterService>();
+
 
 var app = builder.Build();
 
