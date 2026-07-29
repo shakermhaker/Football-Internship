@@ -45,8 +45,9 @@ namespace Business.Concrete
                 // 3. ADIM: O GRUBUN PERİYOTLARINI (TURUNCU ALANLARI) DÖN
                 foreach (var period in group.Periods)
                 {
-                    TimeSpan parsedStartTime = TimeSpan.Parse(period.StartTime);
-                    TimeSpan parsedEndTime = TimeSpan.Parse(period.EndTime);
+                    // Eğer önyüz "24:00" gönderirse, bunu C#'ın ve Veritabanının (SQL) anlayacağı "00:00" formatına çeviriyoruz.
+                    TimeSpan parsedStartTime = period.StartTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.StartTime);
+                    TimeSpan parsedEndTime = period.EndTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.EndTime);
 
                     // -- MÜKERRER SAAT KONTROLÜ --
                     var existingTimeSlot = _timeSlotDal.GetByTimes(parsedStartTime, parsedEndTime);
@@ -136,8 +137,14 @@ namespace Business.Concrete
                 var currentEnd = daySlots.First().TimeSlot.EndTime;
                 var currentPrice = daySlots.First().Price;
                 // DİNAMİK SÜRE HESAPLAMA (Sadece ilk tekil periyodun farkı):
-                var singleMatchDuration = (int)(daySlots.First().TimeSlot.EndTime - daySlots.First().TimeSlot.StartTime).TotalMinutes;
+                var firstSlotStart = daySlots.First().TimeSlot.StartTime;
+                var firstSlotEnd = daySlots.First().TimeSlot.EndTime;
 
+                if (firstSlotEnd <= firstSlotStart)
+                {
+                    firstSlotEnd = firstSlotEnd.Add(TimeSpan.FromDays(1)); // 00:00 ise ertesi güne sarkıt (24 saat ekle)
+                }
+                var singleMatchDuration = (int)(firstSlotEnd - firstSlotStart).TotalMinutes;
                 for (int i = 1; i < daySlots.Count; i++)
                 {
                     var slot = daySlots[i];
@@ -162,7 +169,15 @@ namespace Business.Concrete
                         currentEnd = slot.TimeSlot.EndTime;
                         currentPrice = slot.Price;
                         // Yeni grubun da tekil süresini dinamik hesaplıyoruz:
-                        singleMatchDuration = (int)(slot.TimeSlot.EndTime - slot.TimeSlot.StartTime).TotalMinutes;
+                        // Yeni grubun da tekil süresini dinamik hesaplıyoruz (Gece yarısı geçişi destekli):
+                        var currentSlotStart = slot.TimeSlot.StartTime;
+                        var currentSlotEnd = slot.TimeSlot.EndTime;
+
+                        if (currentSlotEnd <= currentSlotStart)
+                        {
+                            currentSlotEnd = currentSlotEnd.Add(TimeSpan.FromDays(1));
+                        }
+                        singleMatchDuration = (int)(currentSlotEnd - currentSlotStart).TotalMinutes;
                     }
                 }
 
@@ -205,36 +220,6 @@ namespace Business.Concrete
             return new SuccessDataResult<FootballFieldAddDTO>(fieldDto, "Veriler form mimarisine uygun gruplandı.");
         }
         // ARDIŞIK SAATLERİ BİRLEŞTİREN YARDIMCI METOT (Gaps and Islands)
-        private List<TimeRange> MergeConsecutiveTimeSlots(IEnumerable<TimeRangeInput> timeSlots)
-        {
-            var sortedSlots = timeSlots.OrderBy(x => x.StartTime).ToList();
-            var merged = new List<TimeRange>();
-
-            if (!sortedSlots.Any()) return merged;
-
-            var currentStart = sortedSlots.First().StartTime;
-            var currentEnd = sortedSlots.First().EndTime;
-
-            for (int i = 1; i < sortedSlots.Count; i++)
-            {
-                // Eğer bir önceki saatin bitişi, sonraki saatin başlangıcına eşitse (Ardışıksa)
-                if (sortedSlots[i].StartTime == currentEnd)
-                {
-                    currentEnd = sortedSlots[i].EndTime; // Süreyi uzat
-                }
-                else
-                {
-                    // Ardışıklık bozuldu, öncekini kaydet ve yeni başlat
-                    merged.Add(new TimeRange { StartTime = currentStart, EndTime = currentEnd });
-                    currentStart = sortedSlots[i].StartTime;
-                    currentEnd = sortedSlots[i].EndTime;
-                }
-            }
-            // Son kalanı ekle
-            merged.Add(new TimeRange { StartTime = currentStart, EndTime = currentEnd });
-
-            return merged;
-        }
 
         // Yardımcı Sınıflar (Manager içine veya uygun bir yere eklenebilir)
         public class TimeRangeInput
@@ -273,6 +258,9 @@ namespace Business.Concrete
             {
                 foreach (var period in group.Periods)
                 {
+
+                    TimeSpan parsedStart = period.StartTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.StartTime);
+                    TimeSpan parsedEnd = period.EndTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.EndTime);
                     // Saat aralığına uygun TimeSlot'u bul veya oluştur
                     var timeSlot = _timeSlotDal.Get(t => t.StartTime == TimeSpan.Parse(period.StartTime) && t.EndTime == TimeSpan.Parse(period.EndTime));
 
