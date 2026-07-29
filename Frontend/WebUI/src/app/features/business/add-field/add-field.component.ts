@@ -185,9 +185,11 @@ export class AddFieldComponent implements OnInit {
     return hours * 60 + minutes;
   }
 
+  // 🔥 GÜNCELLENDİ: Gece yarısını geçince (Örn: 25:00) saati 01:00'e geri sarması için % işlemi eklendi
   private minutesToTime(minutes: number): string {
-    const h = Math.floor(minutes / 60).toString().padStart(2, '0');
-    const m = (minutes % 60).toString().padStart(2, '0');
+    const normalizedMinutes = minutes % (24 * 60); // 1440'ı geçince başa sarar
+    const h = Math.floor(normalizedMinutes / 60).toString().padStart(2, '0');
+    const m = (normalizedMinutes % 60).toString().padStart(2, '0');
     return `${h}:${m}`;
   }
 
@@ -208,8 +210,13 @@ export class AddFieldComponent implements OnInit {
 
           group.periods.forEach((period: any) => {
             let currentMin = this.timeToMinutes(period.startTime);
-            const endMin = this.timeToMinutes(period.endTime);
+            let endMin = this.timeToMinutes(period.endTime); // DİKKAT: 'const' yerine 'let' yaptık
             const duration = period.duration;
+
+            // 🔥 İŞTE SİHİRLİ DOKUNUŞ: GECE YARISI KONTROLÜ
+            if (endMin <= currentMin) {
+              endMin += 24 * 60; // Eğer bitiş, başlangıçtan küçükse (01:00 < 18:00) bitişe 24 saat (1440 dk) ekle
+            }
 
             while (currentMin + duration <= endMin) {
               splitPeriods.push({
