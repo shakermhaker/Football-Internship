@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout.component';
 import { MainLayoutComponent } from './shared/layouts/main-layout.component';
-import { HowItWorksComponent } from './features/how-it-works/how-it-works'; // <-- Yeni import
-import { AboutComponent } from './features/about/about';           // <-- Yeni import
+import { HowItWorksComponent } from './features/how-it-works/how-it-works.component'; // <-- Yeni import
+import { AboutComponent } from './features/about/about.component';           // <-- Yeni import
 import { BusinessLayoutComponent } from './shared/layouts/business-layout.component';
 import { HomeComponent } from './features/home/home.component';
 import { FootballfieldsComponent } from './features/footballfields/footballfields.component';
@@ -72,11 +72,11 @@ export const routes: Routes = [
     children: [
       { 
         path: 'how-it-works', 
-        loadComponent: () => import('./features/how-it-works/how-it-works').then(m => m.HowItWorksComponent) 
+        loadComponent: () => import('./features/how-it-works/how-it-works.component').then(m => m.HowItWorksComponent) 
       },
       { 
         path: 'about', 
-        loadComponent: () => import('./features/about/about').then(m => m.AboutComponent) 
+        loadComponent: () => import('./features/about/about.component').then(m => m.AboutComponent) 
       },
       { 
         path: '', // Boş path = Ana sayfa
