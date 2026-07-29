@@ -18,6 +18,9 @@ namespace DataAccess.Concrete.EntityFramework
             {
                 var result = from b in context.Businesses
                              where b.Id == businessId
+
+
+                             where b.Id == businessId && b.IsApproved == true
                              select new BusinessDetailDto
                              {
                                  BusinessId = b.Id,
@@ -43,7 +46,8 @@ namespace DataAccess.Concrete.EntityFramework
         {
             using (var context = new FootballFieldContext())
             {
-                var query = context.Businesses.AsQueryable();
+
+                var query = context.Businesses.Where(b => b.IsApproved == true).AsQueryable();
 
                 // 1. Durum: İlçe seçilmişse
                 if (districtId.HasValue)
