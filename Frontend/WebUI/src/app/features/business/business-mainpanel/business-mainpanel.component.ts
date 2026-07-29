@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { BusinessService } from '../../../core/services/business.service';
 import { LocationService } from '../../../core/services/location.service';
 import Swal from 'sweetalert2';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
 export interface BusinessImage {
   id: number;
@@ -26,7 +27,8 @@ export interface BusinessDetail {
   styleUrls: ['./business-mainpanel.component.scss'],
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule, 
+    ImageCropperComponent
   ]
 })
 export class BusinessMainpanelComponent implements OnInit {
@@ -40,11 +42,16 @@ export class BusinessMainpanelComponent implements OnInit {
   cities = signal<any[]>([]);
   districts = signal<any[]>([]);  
 
-  // 🎯 GÜNCELLENEN KISIM: Bekleyen dosyalar ve anlık önizleme URL'leri
   pendingCoverFile: File | null = null;
   pendingCoverPreview: string | null = null; 
   
   pendingGalleryPreviews: { file: File, url: string }[] = [];
+
+  // 🎯 KIRPMA MODALI İÇİN YENİ DEĞİŞKENLER
+  isCropModalOpen = false;
+  imageChangedEvent: any = ''; 
+  croppedImageBlob: Blob | null | undefined = null;
+  croppingType: 'cover' | 'gallery' | null = null; // Ne tür bir resim kırptığımızı bilmek için
 
   constructor(
     private fb: FormBuilder,
@@ -131,11 +138,9 @@ export class BusinessMainpanelComponent implements OnInit {
     }
   }
 
-  // 🎯 GÜNCELLENEN KISIM: Kapak resmi seçilince anında önizleme oluşturur
- onCoverImageSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file) {
-      // 🎯 KONTROL: Veritabanında zaten 4 galeri + 1 kapak (Toplam 5) varsa izin verme!
+  // 🎯 GÜNCELLENDİ: Kapak resmi seçilince kırpma modalını açar
+  onCoverImageSelected(event: any) {
+    if (event.target.files && event.target.files.length > 0) {
       if (this.galleryImages.length >= 4 && this.coverImage) {
         Swal.fire({
           title: 'Sınır Aşıldı!',
@@ -144,49 +149,79 @@ export class BusinessMainpanelComponent implements OnInit {
           confirmButtonText: 'Tamam',
           confirmButtonColor: '#f1416c'
         });
-        event.target.value = ''; // Seçilen dosyayı temizle
+        event.target.value = ''; 
         return;
       }
 
-      this.pendingCoverFile = file;
-      this.pendingCoverPreview = URL.createObjectURL(file); 
+      this.croppingType = 'cover';
+      this.imageChangedEvent = event;
+      this.isCropModalOpen = true;
     }
   }
 
-  // 🎯 YENİ EKLENEN KISIM: Kapak resmini kaydetmekten vazgeçerse temizler
   cancelPendingCover() {
     this.pendingCoverFile = null;
     this.pendingCoverPreview = null;
   }
 
-  // 🎯 GÜNCELLENEN KISIM: Galeri resmi seçilince anında önizleme oluşturur
- onGalleryImageSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file) {
-      // 🎯 TOPLAM RESİM SAYISI KONTROLÜ (Mevcut galeri + Bekleyenler)
+  // 🎯 GÜNCELLENDİ: Galeri resmi seçilince kırpma modalını açar
+  onGalleryImageSelected(event: any) {
+    if (event.target.files && event.target.files.length > 0) {
       const totalCurrentImages = this.galleryImages.length + this.pendingGalleryPreviews.length;
       
-      if (totalCurrentImages >= 4) { // Kapak hariç galeri için maksimum 4 (toplam 5) veya genel toplam max 5
+      if (totalCurrentImages >= 4) { 
         Swal.fire({
           title: 'Sınır Aşıldı!',
           text: 'Bir işletmeye kapak görseli dahil en fazla 5 adet görsel ekleyebilirsiniz.',
           icon: 'warning',
           confirmButtonColor: '#f1416c'
         });
+        event.target.value = '';
         return;
       }
 
-      const previewUrl = URL.createObjectURL(file);
-      this.pendingGalleryPreviews.push({ file: file, url: previewUrl });
+      this.croppingType = 'gallery';
+      this.imageChangedEvent = event;
+      this.isCropModalOpen = true;
     }
   }
 
-  // 🎯 YENİ EKLENEN KISIM: Henüz kaydedilmemiş yeni galeri resmini listeden çıkarır
+  // 🎯 YENİ: Modal içindeki cropper hareket ettikçe kırpılmış veriyi yakalar
+  imageCropped(event: ImageCroppedEvent) {
+    this.croppedImageBlob = event.blob;
+  }
+
+  // 🎯 YENİ: Kırpma iptal edilirse
+  closeCropModal() {
+    this.isCropModalOpen = false;
+    this.imageChangedEvent = '';
+    this.croppedImageBlob = null;
+    this.croppingType = null;
+  }
+
+  // 🎯 YENİ: "Kırp ve Onayla" butonuna basıldığında
+  applyCroppedImage() {
+    if (!this.croppedImageBlob || !this.croppingType) return;
+
+    // Blob objesini senin C#'ın anlayacağı File objesine çeviriyoruz
+    const fileName = `cropped-${new Date().getTime()}.jpg`;
+    const fileToUpload = new File([this.croppedImageBlob], fileName, { type: "image/jpeg" });
+    const previewUrl = URL.createObjectURL(fileToUpload);
+
+    if (this.croppingType === 'cover') {
+      this.pendingCoverFile = fileToUpload;
+      this.pendingCoverPreview = previewUrl;
+    } else if (this.croppingType === 'gallery') {
+      this.pendingGalleryPreviews.push({ file: fileToUpload, url: previewUrl });
+    }
+
+    this.closeCropModal();
+  }
+
   removePendingGalleryImage(index: number) {
     this.pendingGalleryPreviews.splice(index, 1);
   }
 
-  // 🎯 YENİ EKLENEN KISIM: Veritabanında zaten kayıtlı olan eski resmi kalıcı olarak siler
   onDeleteGalleryImage(imageId: number) {
     Swal.fire({
       title: 'Emin misiniz?',
@@ -267,8 +302,7 @@ export class BusinessMainpanelComponent implements OnInit {
     }
   }
 
-  // 🎯 GÜNCELLENEN KISIM: Yeni önizleme mantığına göre görselleri kaydeder
- onSaveImages() {
+  onSaveImages() {
     if (!this.currentBusinessId) return;
 
     if (!this.pendingCoverFile && this.pendingGalleryPreviews.length === 0) {
@@ -282,7 +316,6 @@ export class BusinessMainpanelComponent implements OnInit {
       return;
     }
 
-    // 🎯 EKSTRA KONTROL: Kaydet'e basıldığında toplam 5 sınırındaysa direkt uyar
     if (this.pendingCoverFile && this.galleryImages.length >= 4 && this.coverImage) {
       Swal.fire({
         title: 'Sınır Aşıldı!',
@@ -294,7 +327,6 @@ export class BusinessMainpanelComponent implements OnInit {
       return;
     }
 
-    // 1. Kapak görseli varsa gönder
     if (this.pendingCoverFile) {
       this.businessService.addBusinessImage(this.currentBusinessId, this.pendingCoverFile, true).subscribe({
         next: () => {
@@ -314,19 +346,16 @@ export class BusinessMainpanelComponent implements OnInit {
         },
         error: (err) => {
           console.error("Kapak yüklenirken hata:", err);
-          // 🎯 BACKEND'DEN HATA GELİRSE DE POP-UP ÇIKAR
           Swal.fire({
-            title: 'Sınır Aşıldı!',
-            text: 'Kapakla beraber en fazla 5 görsel seçebilirsiniz. Lütfen görsellerinizden birini silin.',
-            icon: 'warning',
-            confirmButtonText: 'Tamam',
+            title: 'Hata!',
+            text: 'Kapak yüklenirken hata oluştu.',
+            icon: 'error',
             confirmButtonColor: '#f1416c'
           });
         }
       });
     }
 
-    // 2. Galeri görselleri varsa gönder
     if (this.pendingGalleryPreviews.length > 0) {
       this.pendingGalleryPreviews.forEach((item, index) => {
         this.businessService.addBusinessImage(this.currentBusinessId!, item.file, false).subscribe({
@@ -347,9 +376,8 @@ export class BusinessMainpanelComponent implements OnInit {
             console.error("Galeri görseli yüklenirken hata:", err);
             Swal.fire({
               title: 'Hata!',
-              text: 'Görsel yüklenirken bir hata oluştu. En fazla 5 görsel ekleyebilirsiniz.',
+              text: 'Görsel yüklenirken bir hata oluştu.',
               icon: 'error',
-              confirmButtonText: 'Tamam',
               confirmButtonColor: '#f1416c'
             });
           }
