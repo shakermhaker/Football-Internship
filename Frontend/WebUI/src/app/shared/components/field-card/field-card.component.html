@@ -1,8 +1,8 @@
-<div class="d-flex bg-white rounded-4 shadow-sm overflow-hidden h-100 transition-hover" 
+<div class="d-flex flex-column flex-md-row bg-white rounded-4 shadow-sm overflow-hidden h-100  hover-elevate-up" 
      style="border: 1px solid var(--border-input);">
   
   <!-- 🚀 Sol: Resim Slider (Bootstrap Carousel) -->
-  <div style="width: 220px; min-width: 220px; background-color: #e5e7eb; position: relative;">
+  <div class="field-img-wrapper" style="background-color: #e5e7eb; position: relative;">
     
     <!-- İşletmenin resimleri varsa Slider'ı çalıştır -->
     @if (field.images && field.images.length > 0) {
@@ -16,7 +16,7 @@
             
             <!-- TS'te cover olanı başa aldığımız için her zaman i === 0 olanı active yapıyoruz -->
             <div class="carousel-item h-100" [class.active]="i === 0">
-              <img [src]="getFullImagePath(img.imagePath)" class="d-block w-100 h-100" style="object-fit: cover;" alt="Saha Resmi">
+              <img [src]="getFullImagePath(img.imagePath)" class="d-block w-100 h-100" style="object-fit: cover; position: absolute; top: 0; left: 0;" alt="Saha Resmi">
             </div>
             
           }
@@ -37,7 +37,7 @@
 
     } @else {
       <!-- Hiç resim yoksa boş placeholder (Gri kutu ve ikon) -->
-      <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+      <div class="w-100 h-100 d-flex align-items-center justify-content-center position-absolute" style="top: 0; left: 0;">
         <i class="ki-duotone ki-picture text-muted" style="font-size: 3rem;"><span class="path1"></span><span class="path2"></span></i>
       </div>
     }
@@ -79,3 +79,19 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Mobilde tam genişlik ve belli bir yükseklik, PC'de sabit 220px genişlik */
+  .field-img-wrapper {
+    width: 100%;
+    min-height: 200px;
+  }
+  @media (min-width: 768px) {
+    .field-img-wrapper {
+      width: 220px;
+      min-width: 220px;
+    }
+  }
+
+  .hover-elevate-up:hover { transform: translateY(-1px) !important; }
+</style>
