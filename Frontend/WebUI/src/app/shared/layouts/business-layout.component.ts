@@ -31,7 +31,7 @@ import { UserService } from '../../core/services/user.service';
      class="nav-link custom-nav-link" 
      style="color: var(--text-light);">
     <i class="ki-duotone ki-element-11 fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
-    <span class="menu-text" data-text="Ana Panel">Ana Panel</span>
+    <span class="menu-text" style="padding-left: 4px" data-text="Ana Panel">Ana Panel</span>
   </a>
 </li>
 
@@ -42,7 +42,7 @@ import { UserService } from '../../core/services/user.service';
      class="nav-link custom-nav-link" 
      style="color: var(--text-light);">
     <i class="ki-duotone ki-map fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-    <span class="menu-text" data-text="Halısahalarım">Halısahalarım</span>
+    <span class="menu-text" style="padding-left: 4px" data-text="Halısahalarım">Halısahalarım</span>
   </a>
 </li>
 
@@ -52,7 +52,7 @@ import { UserService } from '../../core/services/user.service';
      class="nav-link custom-nav-link" 
      style="color: var(--text-light);">
     <i class="ki-duotone ki-calendar-8 fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
-    <span class="menu-text" data-text="Rezervasyonlar">Rezervasyonlar</span>
+    <span class="menu-text" style="padding-left: 4px" data-text="Rezervasyonlar">Rezervasyonlar</span>
   </a>
 </li>
 
@@ -62,7 +62,7 @@ import { UserService } from '../../core/services/user.service';
      class="nav-link custom-nav-link" 
      style="color: var(--text-light);">
     <i class="ki-duotone ki-chart-simple fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
-    <span class="menu-text" data-text="İstatistikler">İstatistikler</span>
+    <span class="menu-text" style="padding-left: 4px" data-text="İstatistikler">İstatistikler</span>
   </a>
 </li>
         </ul>
