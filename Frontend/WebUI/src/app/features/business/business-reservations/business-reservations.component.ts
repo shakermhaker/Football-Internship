@@ -2,6 +2,7 @@ import { Component, OnInit, inject , ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // 🚀 ngModel için FormsModule eklendi!
 import { ReservationService } from '../../../core/services/reservation.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-business-reservations',
@@ -173,6 +174,41 @@ export class BusinessReservationsComponent implements OnInit {
         };
         // 🎯 Hata durumunda da ekranı güncellemesi için
         this.cdr.detectChanges();
+      }
+    });
+  }
+  cancelReservation(reservationId: number) {
+    Swal.fire({
+      title: 'Emin misiniz?',
+      text: "Bu rezervasyonu iptal etmek istediğinize emin misiniz? İşlem geri alınamaz.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f1416c',
+      cancelButtonColor: '#b5b5c3',
+      confirmButtonText: 'Evet, İptal Et!',
+      cancelButtonText: 'Vazgeç'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.reservationService.cancelReservationByBusiness(reservationId).subscribe({
+          next: (response: any) => {
+            Swal.fire({
+              title: 'İptal Edildi!',
+              text: response.message || 'Rezervasyon başarıyla iptal edildi.',
+              icon: 'success',
+              confirmButtonColor: '#50cd89'
+            });
+            // İşlem bitince tabloyu güncelliyoruz
+            this.loadReservationsForDate(this.selectedDate); 
+          },
+          error: (err) => {
+            Swal.fire({
+              title: 'Hata!',
+              text: err.error?.message || 'İptal işlemi sırasında bir hata oluştu.',
+              icon: 'error',
+              confirmButtonColor: '#f1416c'
+            });
+          }
+        });
       }
     });
   }

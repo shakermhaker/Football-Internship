@@ -114,5 +114,16 @@ namespace WebAPI.Controllers
             }
             return BadRequest(result);
         }
+
+        [HttpPost("cancelbybusiness")]
+        public IActionResult CancelByBusiness([FromBody] int reservationId)
+        {
+            var result = _reservationService.CancelReservationByBusiness(reservationId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
     }
 }
