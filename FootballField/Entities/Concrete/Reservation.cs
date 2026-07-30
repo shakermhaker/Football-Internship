@@ -26,5 +26,6 @@ namespace Entities.Concrete
 
         public DateOnly ReservationDate { get; set; }
 
+
     }
 }

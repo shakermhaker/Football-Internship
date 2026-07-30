@@ -13,5 +13,6 @@ namespace Entities.DTOs
         public string CustomerName { get; set; } = string.Empty;  // Örn: "Mehmet Yılmaz"
         public string CustomerPhone { get; set; } = string.Empty; // Örn: "0555 123 45 67"
         public decimal FinalPrice { get; set; }
+        public int StatusId { get; set; }
     }
 }

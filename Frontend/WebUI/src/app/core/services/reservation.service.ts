@@ -79,4 +79,8 @@ export class ReservationService {
       withCredentials: true
     });
   }
+  cancelReservationByBusiness(reservationId: number): Observable<any> {
+    // HttpPost ile sadece body'de ID'yi yolluyoruz
+    return this.http.post(`${this.apiUrl}/cancelbybusiness`, reservationId, { withCredentials: true });
+  }
 }

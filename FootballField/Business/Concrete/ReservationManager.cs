@@ -1,6 +1,7 @@
 ﻿using Business.Abstract;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
+using DataAccess.Concrete;
 using Entities.Concrete;
 using Entities.DTOs;
 using System;
@@ -148,64 +149,38 @@ namespace Business.Concrete
 
         public IDataResult<DailyReservationSummaryDto> GetDailyReservations(int businessId, DateTime date)
         {
-            // 🚀 Angular'dan gelen DateTime'ı, veritabanındaki DateOnly formatıyla eşleştirmek için çeviriyoruz:
             var targetDate = DateOnly.FromDateTime(date);
 
-            // LINQ Join zinciri
-            var query = from res in _reservationDal.GetAll()
-                        join fps in _fieldPriceScheduleDal.GetAll() on res.FieldPriceScheduleId equals fps.Id
-                        join field in _footballFieldDal.GetAll() on fps.FootballFieldId equals field.Id
-                        join slot in _timeSlotDal.GetAll() on fps.TimeSlotId equals slot.Id
-                        join user in _userDal.GetAll() on res.UserId equals user.Id
-                        // 🎯 İŞTE BÜTÜN SORUNU ÇÖZEN O SİHİRLİ SATIR:
-                        where field.BusinessId == businessId && res.ReservationDate == targetDate
-                        select new
-                        {
-                            res.Id,
-                            res.UserId,
-                            field.FieldName,
-                            slot.StartTime,
-                            slot.EndTime,
-                            CustomerName = $"{user.FirstName} {user.LastName}",
-                            CustomerPhone = user.Phone ?? "",
-                            res.FinalPrice
-                        };
+            // Sadece DAL'ı çağırıp sonucu dönüyoruz. SOLID'in Single Responsibility (Tek Sorumluluk) prensibine tam uyum!
+            var summaryDto = _reservationDal.GetDailyReservationSummary(businessId, targetDate);
 
-            var rawData = query.ToList();
-
-            if (!rawData.Any())
+            return new SuccessDataResult<DailyReservationSummaryDto>(summaryDto, "Günlük rezervasyonlar getirildi.");
+        }
+        // Business -> Concrete -> ReservationManager.cs içine ekle:
+        public IResult CancelReservationByBusiness(int reservationId)
+        {
+            var reservation = _reservationDal.Get(r => r.Id == reservationId);
+            if (reservation == null)
             {
-                return new SuccessDataResult<DailyReservationSummaryDto>(new DailyReservationSummaryDto());
+                return new ErrorResult("Rezervasyon bulunamadı.");
             }
 
-            // Tablo Satırları DTO Dönüşümü
-            var reservationList = rawData.Select(x => new DailyReservationDetailDto
+            // İptal edilecek saatin StartTime'ını DAL üzerinden çekiyoruz
+            var slotStartTime = _reservationDal.GetStartTimeByScheduleId(reservation.FieldPriceScheduleId);
+
+            // Rezervasyonun tam başlama anını oluşturuyoruz (Tarih + Saat)
+            DateTime reservationDateTime = reservation.ReservationDate.ToDateTime(slotStartTime);
+            // GEÇMİŞ ZAMAN KONTROLÜ!
+            if (reservationDateTime <= DateTime.Now)
             {
-                Id = x.Id,
-                FieldName = x.FieldName,
-                TimeInterval = $"{x.StartTime:hh\\:mm} - {x.EndTime:hh\\:mm}",
-                CustomerName = x.CustomerName,
-                CustomerPhone = x.CustomerPhone,
-                FinalPrice = x.FinalPrice
-            }).ToList();
+                return new ErrorResult("Geçmişteki veya şu an oynanmakta olan bir rezervasyonu iptal edemezsiniz.");
+            }
 
-            // Kart İstatistikleri Hesaplama
-            int totalReservations = rawData.Count;
-            int uniqueCustomers = rawData.Select(x => x.UserId).Distinct().Count();
+            // Her şey yolundaysa iptal et (StatusId = 2 yapıyoruz)
+            reservation.StatusId = 2;
+            _reservationDal.Update(reservation);
 
-            var minTime = rawData.Min(x => x.StartTime);
-            var maxTime = rawData.Max(x => x.EndTime);
-            string earliestAndLatest = $"{minTime:hh\\:mm} - {maxTime:hh\\:mm}";
-
-            var summaryDto = new DailyReservationSummaryDto
-            {
-                TotalReservations = totalReservations,
-                EarliestAndLatestTime = earliestAndLatest,
-                TotalUniqueCustomers = uniqueCustomers,
-                Reservations = reservationList
-            };
-
-            return new SuccessDataResult<DailyReservationSummaryDto>(summaryDto);
+            return new SuccessResult("Rezervasyon işletme tarafından başarıyla iptal edildi. Kullanıcı paneline iade bilgisi yansıtıldı.");
         }
     }
 }

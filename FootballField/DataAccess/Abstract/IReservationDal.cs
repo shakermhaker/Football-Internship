@@ -1,4 +1,5 @@
 ﻿using Core.DataAccess;
+using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
 using System;
@@ -18,9 +19,6 @@ namespace DataAccess.Abstract
 
         BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
         TimeOnly GetStartTimeByScheduleId(int scheduleId);
-
-
-
-
+        DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate);
     }
 }

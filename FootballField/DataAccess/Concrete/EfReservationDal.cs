@@ -251,5 +251,69 @@ namespace DataAccess.Concrete
                 return dashboardDto;
             }
         }
+
+        public DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                // 1. ADIM: Include ve Lambda ifadeleriyle veriyi çekme ve formatlama
+                var rawData = context.Reservations
+                    .Include(r => r.User)
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.FootballField)
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.TimeSlot)
+                    .Where(r => r.FieldPriceSchedule.FootballField.BusinessId == businessId
+                             && r.ReservationDate == targetDate)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.UserId,
+                        FieldName = r.FieldPriceSchedule.FootballField.FieldName,
+                        StartTime = r.FieldPriceSchedule.TimeSlot.StartTime,
+                        EndTime = r.FieldPriceSchedule.TimeSlot.EndTime,
+                        CustomerName = $"{r.User.FirstName} {r.User.LastName}",
+                        CustomerPhone = r.User.Phone ?? "",
+                        r.FinalPrice,
+                        r.StatusId
+                    })
+                    .ToList();
+
+                // 2. ADIM: Eğer o gün hiç rezervasyon yoksa boş DTO dön
+                if (!rawData.Any())
+                {
+                    return new DailyReservationSummaryDto();
+                }
+
+                // 3. ADIM: Çekilen ham veriyi senin Angular tarafında beklediğin DTO formatına çevirme
+                var reservationList = rawData.Select(x => new DailyReservationDetailDto
+                {
+                    Id = x.Id,
+                    FieldName = x.FieldName,
+                    TimeInterval = $"{x.StartTime:hh\\:mm} - {x.EndTime:hh\\:mm}",
+                    CustomerName = x.CustomerName,
+                    CustomerPhone = x.CustomerPhone,
+                    FinalPrice = x.FinalPrice,
+                    StatusId = x.StatusId
+                }).ToList();
+
+                // 4. ADIM: İstatistik kartları için hesaplamalar (Min, Max, Unique Müşteri vs.)
+                int totalReservations = rawData.Count;
+                int uniqueCustomers = rawData.Select(x => x.UserId).Distinct().Count();
+
+                var minTime = rawData.Min(x => x.StartTime);
+                var maxTime = rawData.Max(x => x.EndTime);
+                string earliestAndLatest = $"{minTime:hh\\:mm} - {maxTime:hh\\:mm}";
+
+                // 5. ADIM: Paketi topla ve gönder!
+                return new DailyReservationSummaryDto
+                {
+                    TotalReservations = totalReservations,
+                    EarliestAndLatestTime = earliestAndLatest,
+                    TotalUniqueCustomers = uniqueCustomers,
+                    Reservations = reservationList
+                };
+            }
+        }
     }
 }
