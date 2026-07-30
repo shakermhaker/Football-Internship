@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using Core.Utilities.Security.Hashing;
 using Core.Utilities.Security.JWT;
@@ -129,6 +130,8 @@ namespace Business.Concrete
             return new SuccessDataResult<User>(user, "E-posta adresiniz başarıyla doğrulanmış ve hesabınız aktif edilmiştir!");
         }
 
+
+        [TransactionScopeAspect]
         public async Task<IDataResult<User>> Register(UserForRegisterDto userForRegisterDto, string password)
         {
             byte[] passwordHash, passwordSalt;

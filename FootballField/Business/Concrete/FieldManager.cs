@@ -1,11 +1,12 @@
-﻿using Core.Utilities.Results;
+﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
+using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Business.Abstract;
 
 namespace Business.Concrete
 {
@@ -28,6 +29,8 @@ namespace Business.Concrete
             _fieldPriceScheduleDal = fieldPriceScheduleDal;
         }
 
+
+        [TransactionScopeAspect]
         public IResult AddWithDetails(FootballFieldAddDTO fieldDto)
         {
             // 1. ADIM: ANA SAHAYI EKLE

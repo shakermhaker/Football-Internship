@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -18,6 +19,7 @@ namespace Business.Concrete
         {
             _fieldPriceSheduleDal = fieldPriceSheduleDal;
         }
+        [TransactionScopeAspect]
         public IResult Add(FieldPriceSchedule fieldPriceSchedule)
         {
             _fieldPriceSheduleDal.Add(fieldPriceSchedule);

@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using DataAccess.Concrete;
@@ -19,7 +20,7 @@ namespace Business.Concrete
         }
 
         // Metot imzası IBusinessService ile birebir aynı olmalı
-
+        [TransactionScopeAspect]
         public IResult Add(BusinessForRegisterDTO businessDto, int userId)
         {
             // BusinessManager.cs dosyasındaki ilgili kısmı şöyle düzelt:

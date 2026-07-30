@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -52,6 +53,8 @@ namespace Business.Concrete
             return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
         }
 
+
+        [TransactionScopeAspect]
         public IResult CreateReservation(CreateReservationDto createDto, int userId)
         {
             // LOCK Mekanizması: Aynı anda birden fazla kişi istek atarsa, biri bitene kadar bekler.
@@ -117,6 +120,7 @@ namespace Business.Concrete
             return new SuccessDataResult<List<UserReservationDetailDto>>(data, "Rezervasyon geçmişiniz başarıyla getirildi.");
         }
 
+        [TransactionScopeAspect]
         public IResult CancelReservation(int reservationId, int userId)
         {
             
