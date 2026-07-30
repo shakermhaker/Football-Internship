@@ -1,57 +1,73 @@
-<div class="container-fluid py-8 px-4" style="min-height: 80vh;">
+<div class="container d-flex flex-column align-items-center justify-content-center" style="max-width: 1200px; min-height: 75vh; padding-top: 2rem; padding-bottom: 2rem;">
   
-  <!-- Hikaye Kısmı -->
-  <div class="row align-items-center justify-content-center mb-15">
-    <div class="col-lg-8 text-center">
-      <span class="badge badge-light-success text-success fs-6 fw-bold px-4 py-2 rounded-pill mb-4">Biz Kimiz?</span>
-      <h1 class="fw-bolder fs-2hx text-dark mb-6">Oyunu Değiştiren <span style="color: #00c853;">Dijital Saha!</span></h1>
-      
-      <p class="text-muted fs-4 lh-lg">
-        FootballField, her hafta yaşanan <strong>"Acaba hangi sahada boş yer var?"</strong> stresine ve ardı ardına yapılan uzun telefon görüşmelerine son vermek için doğdu. <br><br>
-        Sporcuların maç tutkusunu teknolojiyle birleştiriyor, halı saha kiralama sürecini bir uçak bileti almak kadar kolay, şeffaf ve hızlı hale getiriyoruz.
-      </p>
-    </div>
-  </div>
-
-  <!-- Neden FootballField (Özellikler) -->
-  <div class="row g-8 mt-5 justify-content-center">
+  <!-- 🚀 ÇÖZÜM: Arka plandaki desenden etkilenmemesi için içeriği kapsayan şık bir ana "Buzlu Cam" (Glassmorphism) kartı -->
+  <div class="card shadow-sm border-0 rounded-4 w-100 p-8 p-lg-12" 
+       style="background: rgba(255, 255, 255, 0.90); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5) !important;">
     
-    <div class="col-lg-4 col-md-6">
-      <div class="card border-0 shadow-sm rounded-4 h-100 bg-white p-6">
-        <div class="d-flex align-items-center mb-4">
-          <div class="bg-light-success rounded p-3 me-4">
-            <i class="ki-duotone ki-rocket fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
-          </div>
-          <h4 class="fw-bold text-dark m-0">Hızlı ve Pratik</h4>
-        </div>
-        <p class="text-muted fs-6 m-0">Saniyeler içinde arama yapın, boş saatleri görün ve tek tıkla anında yerinizi ayırtın. Zamanınızı sahada harcayın, telefonda değil.</p>
+    <!-- Hikaye Kısmı -->
+    <div class="row align-items-center justify-content-center mb-12">
+      <div class="col-lg-10 text-center">
+        <span class="badge badge-light-success text-success fs-6 fw-bold px-4 py-2 rounded-pill mb-5 shadow-xs">Biz Kimiz?</span>
+        <h1 class="fw-bolder fs-2hx text-dark mb-6" style="letter-spacing: -1px;">
+          Oyunu Değiştiren <span class="text-success">Dijital Saha!</span>
+        </h1>
+        
+        <p class="text-gray-700 fs-4 lh-lg mx-auto fw-medium" style="max-width: 800px;">
+          FootballField, her hafta yaşanan <strong>"Acaba hangi sahada boş yer var?"</strong> stresine ve ardı ardına yapılan uzun telefon görüşmelerine son vermek için doğdu. <br><br>
+          Sporcuların maç tutkusunu teknolojiyle birleştiriyor, halı saha kiralama sürecini bir uçak bileti almak kadar kolay, şeffaf ve hızlı hale getiriyoruz.
+        </p>
       </div>
     </div>
 
-    <div class="col-lg-4 col-md-6">
-      <div class="card border-0 shadow-sm rounded-4 h-100 bg-white p-6">
-        <div class="d-flex align-items-center mb-4">
-          <div class="bg-light-success rounded p-3 me-4">
-            <i class="ki-duotone ki-shield-tick fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
+    <!-- Neden FootballField (Özellikler) -->
+    <!-- 🚀 ÇÖZÜM: max-width ile sınırlandırıp merkeze hizaladık (Geniş ekranlarda çok yayılmasın diye) -->
+    <div class="row g-6 justify-content-center mx-auto" style="max-width: 1000px;">
+      
+      <div class="col-12 col-md-4">
+        <div class="card border border-gray-200 shadow-xs rounded-4 h-100 bg-white p-6 hover-elevate-up transition-all">
+          <div class="d-flex flex-column align-items-center text-center mb-4">
+            <div class="bg-light-success rounded-circle d-flex align-items-center justify-content-center mb-4 shadow-sm" style="width: 60px; height: 60px;">
+              <i class="ki-duotone ki-rocket fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
+            </div>
+            <h4 class="fw-bold text-dark m-0">Hızlı ve Pratik</h4>
           </div>
-          <h4 class="fw-bold text-dark m-0">Güvenilir Şeffaflık</h4>
+          <p class="text-muted fs-7 m-0 text-center lh-lg">Saniyeler içinde arama yapın, boş saatleri görün ve tek tıkla anında yerinizi ayırtın. Zamanınızı sahada harcayın, telefonda değil.</p>
         </div>
-        <p class="text-muted fs-6 m-0">Gittiğinizde sürprizle karşılaşmayın! Sahaların gerçek görselleri, detaylı zemin özellikleri ve net fiyatlandırması her zaman elinizin altında.</p>
       </div>
-    </div>
 
-    <div class="col-lg-4 col-md-6">
-      <div class="card border-0 shadow-sm rounded-4 h-100 bg-white p-6">
-        <div class="d-flex align-items-center mb-4">
-          <div class="bg-light-success rounded p-3 me-4">
-            <i class="ki-duotone ki-briefcase fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
+      <div class="col-12 col-md-4">
+        <div class="card border border-gray-200 shadow-xs rounded-4 h-100 bg-white p-6 hover-elevate-up transition-all">
+          <div class="d-flex flex-column align-items-center text-center mb-4">
+            <div class="bg-light-success rounded-circle d-flex align-items-center justify-content-center mb-4 shadow-sm" style="width: 60px; height: 60px;">
+              <i class="ki-duotone ki-shield-tick fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
+            </div>
+            <h4 class="fw-bold text-dark m-0">Güvenilir Şeffaflık</h4>
           </div>
-          <h4 class="fw-bold text-dark m-0">İşletme Dostu</h4>
+          <p class="text-muted fs-7 m-0 text-center lh-lg">Gittiğinizde sürprizle karşılaşmayın! Sahaların gerçek görselleri, detaylı zemin özellikleri ve net fiyatlandırması her zaman elinizin altında.</p>
         </div>
-        <p class="text-muted fs-6 m-0">Halı saha sahiplerini dijitalleştirerek operasyonel yüklerini azaltıyor, yeni müşterilerle buluşup kazançlarını artırmalarını sağlıyoruz.</p>
       </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card border border-gray-200 shadow-xs rounded-4 h-100 bg-white p-6 hover-elevate-up transition-all">
+          <div class="d-flex flex-column align-items-center text-center mb-4">
+            <div class="bg-light-success rounded-circle d-flex align-items-center justify-content-center mb-4 shadow-sm" style="width: 60px; height: 60px;">
+              <i class="ki-duotone ki-briefcase fs-2x text-success"><span class="path1"></span><span class="path2"></span></i>
+            </div>
+            <h4 class="fw-bold text-dark m-0">İşletme Dostu</h4>
+          </div>
+          <p class="text-muted fs-7 m-0 text-center lh-lg">Halı saha sahiplerini dijitalleştirerek operasyonel yüklerini azaltıyor, yeni müşterilerle buluşup kazançlarını artırmalarını sağlıyoruz.</p>
+        </div>
+      </div>
+
     </div>
 
   </div>
 
 </div>
+
+<style>
+  .hover-elevate-up { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+  .hover-elevate-up:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+  .transition-all { transition: all 0.2s ease-in-out; }
+  .shadow-xs { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important; }
+</style>
