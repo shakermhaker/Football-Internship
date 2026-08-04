@@ -39,29 +39,34 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("hold-slot")]
+        [EnableRateLimiting("ReservationLimit")] // Hold işlemi de spama karşı korunsun
+        public async Task<IActionResult> HoldSlot([FromQuery] int businessId, [FromQuery] DateOnly date, [FromQuery] int scheduleId)
+        {
+            var userId = User.GetUserId(); // Token içinden UserId'yi güvenle alıyoruz
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+
+            var result = await _reservationService.HoldReservationSlotAsync(businessId, date, scheduleId, userId);
+
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
         [HttpPost("create")]
         [EnableRateLimiting("ReservationLimit")]
-        public IActionResult CreateReservation([FromBody] CreateReservationDto reservationDto)
+        public async Task<IActionResult> CreateReservation([FromBody] CreateReservationDto reservationDto) // 🚀 Task yapıldı
         {
-            var userId = User.GetUserId(); // Kullanıcı kimliğini almak içi
-            if (userId == null)
-            {
-                return Unauthorized("Kullanıcı kimliği doğrulanamadı. Lütfen tekrar giriş yapın.");
-            }
+            var userId = User.GetUserId(); // Token içinden UserId'yi güvenle alıyoruz
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
 
-            var result = _reservationService.CreateReservation(reservationDto, userId);
+            // 🚀 async/await yapısına uyarlandı
+            var result = await _reservationService.CreateReservationAsync(reservationDto, userId);
 
-
-            // Sonuç başarılıysa 200 (Ok), hata varsa (örn: slot dolmuşsa) 400 (BadRequest) dönüyoruz.
-            if (result.Success)
-            {
-                return Ok(result);
-            }
+            if (result.Success) return Ok(result);
             return BadRequest(result);
         }
 
         [HttpGet("my-reservations")]
-        
         public IActionResult GetMyReservations()
         {
             // Token içinden UserId'yi güvenle alıyoruz

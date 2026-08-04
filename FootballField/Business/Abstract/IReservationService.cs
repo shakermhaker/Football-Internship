@@ -12,8 +12,8 @@ namespace Business.Abstract
         IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date);
         IDataResult<List<int>> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
 
-        IResult CreateReservation(CreateReservationDto createDto, int userId);
-
+        Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId);
+        Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId);
         IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId);
 
         IResult CancelReservation(int reservationId, int userId);

@@ -56,6 +56,10 @@ export class ReservationService {
     return this.http.get<DataResult<number[]>>(`${this.apiUrl}/getbookedids?businessId=${businessId}&date=${dateStr}`);
   }
 
+  holdReservationSlot(businessId: number, dateStr: string, scheduleId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/hold-slot?businessId=${businessId}&date=${dateStr}&scheduleId=${scheduleId}`, {}, { withCredentials: true });
+  }
+
   createReservation(dto: CreateReservationDto): Observable<any> {
     // withCredentials: true ekliyoruz ki eğer token cookie'deyse güvenle backend'e gitsin.
     // Interceptor kullanıyorsan buna gerek kalmayabilir ama zarar vermez.

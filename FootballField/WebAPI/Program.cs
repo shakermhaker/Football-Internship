@@ -103,10 +103,12 @@ builder.Host.UseSerilog();
 
 // 1. .NET 10'un Kendi Servis Tanımlamaları (Başka hiçbir harici paket yok)
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(); // Klasik Swagger UI üreteci
 builder.Services.AddHostedService<ReservationStatusUpdaterService>();
+builder.Services.AddScoped<Business.Abstract.IReservationNotificationService, WebAPI.SignalR.ReservationNotificationManager>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -159,6 +161,16 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    // Yerel bilgisayarındaki Redis sunucusunun adresi (Varsayılan port 6379'dur)
+    options.Configuration = "localhost:6379";
+
+    // Uygulamanın Redis'teki anahtarlarının başına otomatik olarak "FF_" (FootballField) koysun.
+    // Bu sayede aynı Redis'i başka projeler de kullanıyorsa verilerimiz karışmaz.
+    options.InstanceName = "FF_";
+});
+
 
 var app = builder.Build();
 
@@ -181,6 +193,7 @@ app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<WebAPI.Hubs.ReservationHub>("/reservationHub");
 app.MapControllers();
 
 app.Run();

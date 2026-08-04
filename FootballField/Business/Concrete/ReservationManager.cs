@@ -17,10 +17,12 @@ namespace Business.Concrete
     public class ReservationManager : IReservationService
     {
         private readonly IReservationDal _reservationDal;
+        private readonly IRedisLockService _redisLockService;
         private readonly IFieldPriceSheduleDal _fieldPriceScheduleDal;
         private readonly IFieldDal _footballFieldDal;
         private readonly ITimeSlotDal _timeSlotDal;
         private readonly IUserDal _userDal;
+        private readonly IReservationNotificationService _notificationService;
 
         private static readonly object _reservationLock = new object();
 
@@ -30,13 +32,34 @@ namespace Business.Concrete
             IFieldPriceSheduleDal fieldPriceScheduleDal,
             IFieldDal footballFieldDal,
             ITimeSlotDal timeSlotDal,
-            IUserDal userDal)
+            IUserDal userDal,
+            IRedisLockService redisLockService,
+            IReservationNotificationService notificationService)
         {
             _reservationDal = reservationDal;
+            _redisLockService = redisLockService;
             _fieldPriceScheduleDal = fieldPriceScheduleDal;
             _footballFieldDal = footballFieldDal;
             _timeSlotDal = timeSlotDal;
             _userDal = userDal;
+            _notificationService = notificationService;
+
+        }
+
+
+        public async Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
+        {
+            bool isLocked = await _redisLockService.LockSlotAsync(businessId, date, scheduleId, userId, 5);
+
+            if (isLocked)
+            {
+                // 🚀 GÜNCELLENDİ: Artık tarihi de yolluyoruz!
+                await _notificationService.SendSlotHeldNotificationAsync(businessId, date, scheduleId);
+
+                return new SuccessResult("Saha 5 dakikalığına sizin için rezerve edildi. Lütfen işlemi tamamlayın.");
+            }
+
+            return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından işlem görüyor.");
         }
 
         public IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date)
@@ -62,63 +85,80 @@ namespace Business.Concrete
         [LogAspect]
         [ExceptionLogAspect]
         [PerformanceAspect(2)]
-        public IResult CreateReservation(CreateReservationDto createDto, int userId)
+        public async Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId)
         {
-            // LOCK Mekanizması: Aynı anda birden fazla kişi istek atarsa, biri bitene kadar bekler.
-            lock (_reservationLock)
+            var today = DateOnly.FromDateTime(DateTime.Now);
+
+            // 1. Gün geçmiş mi? (Dün veya öncesi mi?)
+            if (createDto.ReservationDate < today)
             {
-                var today = DateOnly.FromDateTime(DateTime.Now);
-
-                // 1. Gün geçmiş mi? (Dün veya öncesi mi?)
-                if (createDto.ReservationDate < today)
-                {
-                    return new ErrorResult("Geçmiş tarihlere rezervasyon yapılamaz!");
-                }
-
-                // 2. Bugün seçilmişse, saat geçmiş mi?
-                if (createDto.ReservationDate == today)
-                {
-                    var slotStartTime = _reservationDal.GetStartTimeByScheduleId(createDto.FieldPriceScheduleId);
-                    var currentTime = TimeOnly.FromDateTime(DateTime.Now);
-
-                    if (slotStartTime <= currentTime)
-                    {
-                        return new ErrorResult("Geçmiş saatlere rezervasyon yapılamaz!");
-                    }
-                }
-
-                int requestedDayOfWeek = (int)createDto.ReservationDate.DayOfWeek;
-                int requestedDbDayId = requestedDayOfWeek == 0 ? 7 : requestedDayOfWeek;
-
-                int actualSlotDayId = _reservationDal.GetDayIdByScheduleId(createDto.FieldPriceScheduleId);
-
-                // Gönderilen tarih ile, seçilen saatin veritabanındaki günü eşleşmiyor! Hacker var!
-                if (actualSlotDayId != requestedDbDayId)
-                {
-                    return new ErrorResult("Sistem İhlali Tespit Edildi: Seçilen tarih ile rezerve edilmek istenen saatin günü uyuşmuyor!");
-                }
-
-                // 1. KONTROL: İçeri giren kişinin istediği slot az önce doldurulmuş mu?
-                bool isBooked = _reservationDal.IsSlotBooked(createDto.FieldPriceScheduleId, createDto.ReservationDate);
-
-                if (isBooked)
-                {
-                    return new ErrorResult("Üzgünüz, bu saha ve saat az önce başka biri tarafından rezerve edildi. Lütfen başka bir saat seçiniz.");
-                }
-
-                // 2. KONTROL BAŞARILIYSA: Güvenle rezervasyonu oluştur
-                var reservation = new Entities.Concrete.Reservation
-                {
-                    FieldPriceScheduleId = createDto.FieldPriceScheduleId,
-                    ReservationDate = createDto.ReservationDate,
-                    FinalPrice = createDto.FinalPrice,
-                    StatusId = 1, // 1 = Aktif/Onaylandı
-                    UserId = userId  // 🚀 ARTIK TOKEN'DAN GELEN GERÇEK ID KULLANILIYOR!
-                };
-
-                _reservationDal.Add(reservation);
-                return new SuccessResult("Rezervasyon başarıyla oluşturuldu.");
+                return new ErrorResult("Geçmiş tarihlere rezervasyon yapılamaz!");
             }
+
+            // 2. Bugün seçilmişse, saat geçmiş mi?
+            if (createDto.ReservationDate == today)
+            {
+                var slotStartTime = _reservationDal.GetStartTimeByScheduleId(createDto.FieldPriceScheduleId);
+                var currentTime = TimeOnly.FromDateTime(DateTime.Now);
+
+                if (slotStartTime <= currentTime)
+                {
+                    return new ErrorResult("Geçmiş saatlere rezervasyon yapılamaz!");
+                }
+            }
+
+            // 3. SİSTEM İHLALİ (HACKER) KONTROLÜ
+            int requestedDayOfWeek = (int)createDto.ReservationDate.DayOfWeek;
+            int requestedDbDayId = requestedDayOfWeek == 0 ? 7 : requestedDayOfWeek;
+
+            int actualSlotDayId = _reservationDal.GetDayIdByScheduleId(createDto.FieldPriceScheduleId);
+
+            if (actualSlotDayId != requestedDbDayId)
+            {
+                return new ErrorResult("Sistem İhlali Tespit Edildi: Seçilen tarih ile rezerve edilmek istenen saatin günü uyuşmuyor!");
+            }
+
+            // 4. VERİTABANI GÜVENLİĞİ: İçeri giren kişinin istediği slot az önce doldurulmuş mu?
+            bool isBooked = _reservationDal.IsSlotBooked(createDto.FieldPriceScheduleId, createDto.ReservationDate);
+
+            if (isBooked)
+            {
+                return new ErrorResult("Üzgünüz, bu saha ve saat az önce başka biri tarafından rezerve edildi. Lütfen başka bir saat seçiniz.");
+            }
+
+            // 5. 🚀 YENİ - REDIS (GEÇİCİ BLOKAJ) GÜVENLİĞİ: Bu slot şu an başkasının sepetinde mi?
+            // Not: Redis Lock metodumuz businessId istiyor. DTO'nda olmadığı için şimdilik 0 veriyoruz. 
+            // İleride DTO'ya eklersen burayı createDto.BusinessId olarak güncelleyebilirsin.
+            int businessId = 0;
+
+            // Redis'e sor: Bu slot kilitli mi? Kilitliyse kime ait?
+            int? lockOwnerId = await _redisLockService.GetLockOwnerAsync(businessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+
+            // Eğer kilitli bir slot varsa VE bu kilit (UserId) işlemi yapan kişiye AİT DEĞİLSE reddet!
+            if (lockOwnerId.HasValue && lockOwnerId.Value != userId)
+            {
+                return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından ödeme aşamasında. Lütfen 5 dakika sonra tekrar deneyin.");
+            }
+
+            // 6. KONTROLLER BAŞARILI: Güvenle rezervasyonu oluştur
+            var reservation = new Entities.Concrete.Reservation
+            {
+                FieldPriceScheduleId = createDto.FieldPriceScheduleId,
+                ReservationDate = createDto.ReservationDate,
+                FinalPrice = createDto.FinalPrice,
+                StatusId = 1, // 1 = Aktif/Onaylandı
+                UserId = userId
+            };
+
+            _reservationDal.Add(reservation);
+
+            // 7. 🚀 TEMİZLİK: Başarıyla DB'ye kaydedildiği için Redis'teki 5 dakikalık geçici kilidi (sepeti) boşaltıyoruz.
+            await _redisLockService.UnlockSlotAsync(businessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+
+            await _notificationService.SendSlotBookedNotificationAsync(businessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+
+
+            return new SuccessResult("Rezervasyon başarıyla oluşturuldu.");
         }
 
         public IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId)

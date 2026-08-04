@@ -162,26 +162,52 @@
                       @for (slot of day.slots; track slot.fieldPriceScheduleId) {
                         
                         @if (!isSlotInPast(slot.startTime)) {
+                          <!-- 🚀 YENİ DEĞİŞKENLERİMİZİ BURADA ÇAĞIRIYORUZ -->
                           @let booked = isSlotBooked(slot.fieldPriceScheduleId);
+                          @let held = isSlotHeld(slot.fieldPriceScheduleId);
+                          @let isMine = isMyHold(slot.fieldPriceScheduleId);
 
                           <button (click)="onSlotSelected(slot, field.fieldName)" 
-                                  [disabled]="booked"
+                                  [disabled]="booked || held"
                                   class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
-                                  [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
+                                  [ngClass]="{
+                                    'bg-light-danger border-danger opacity-75': booked,
+                                    'bg-light-warning border-warning opacity-75': held,
+                                    'bg-light-success border-success shadow-sm': isMine,
+                                    'bg-white hover-text-gray border-gray-300': !booked && !held && !isMine
+                                  }"
                                   style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
                             
                             <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
-                                 [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
-                              <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
-                              <span class="fw-bold fs-6 transition-all" [ngClass]="booked ? 'text-danger fw-bolder' : 'text-dark'">
+                                 [ngClass]="{
+                                   'border-danger border-opacity-25 text-danger': booked,
+                                   'border-warning border-opacity-25 text-warning': held,
+                                   'border-success border-opacity-25 text-success': isMine,
+                                   'border-gray-200 text-gray-700': !booked && !held && !isMine
+                                 }">
+                              <i class="ki-duotone ki-time fs-4" 
+                                 [ngClass]="{'text-danger': booked, 'text-warning': held, 'text-success': isMine, 'text-gray-600': !booked && !held && !isMine}">
+                                <span class="path1"></span><span class="path2"></span>
+                              </i>
+                              <span class="fw-bold fs-6 transition-all" 
+                                    [ngClass]="{'text-danger fw-bolder': booked, 'text-warning fw-bolder': held, 'text-success fw-bolder': isMine, 'text-dark': !booked && !held && !isMine}">
                                 {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
                               </span>
                             </div>
                             
                             <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
-                                 [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
+                                 [ngClass]="{
+                                   'bg-danger text-white': booked,
+                                   'bg-warning text-dark': held,
+                                   'bg-success text-white': isMine,
+                                   'bg-light text-dark': !booked && !held && !isMine
+                                 }">
                               @if (booked) {
                                 <span class="fw-bolder fs-7 text-white">DOLU</span>
+                              } @else if (held) {
+                                <span class="fw-bolder fs-8 text-dark">İŞLEMDE</span>
+                              } @else if (isMine) {
+                                <span class="fw-bolder fs-7 text-white">SEPETİMDE</span>
                               } @else {
                                 <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
                                 <span class="fw-bolder fs-5 text-dark">
@@ -218,8 +244,15 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0 rounded-4 p-4">
         
-        <div class="modal-header border-bottom pb-4">
+        <div class="modal-header border-bottom pb-4 d-flex justify-content-between align-items-center">
           <h3 class="modal-title fw-bold text-dark m-0">⚽ Rezervasyonu Onayla</h3>
+          
+          <!-- 🚀 MODAL ÜSTÜNDEKİ SAYAÇ (KIRMIZI OLACAK) -->
+          <div class="d-flex align-items-center bg-light-danger rounded-pill px-4 py-1 border border-danger border-opacity-25 ms-auto me-4">
+            <i class="ki-duotone ki-time fs-2 text-danger me-2"><span class="path1"></span><span class="path2"></span></i>
+            <span class="fw-bolder fs-4 text-danger" style="letter-spacing: 2px;">{{ countdownText() }}</span>
+          </div>
+
           <button type="button" (click)="closeModal()" class="btn-close"></button>
         </div>
 
