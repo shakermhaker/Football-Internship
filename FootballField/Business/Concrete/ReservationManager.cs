@@ -1,4 +1,7 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
@@ -54,8 +57,11 @@ namespace Business.Concrete
             return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
         }
 
-
+        [SecuredOperation("user")]
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult CreateReservation(CreateReservationDto createDto, int userId)
         {
             // LOCK Mekanizması: Aynı anda birden fazla kişi istek atarsa, biri bitene kadar bekler.
@@ -122,6 +128,9 @@ namespace Business.Concrete
         }
 
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult CancelReservation(int reservationId, int userId)
         {
             
@@ -161,6 +170,10 @@ namespace Business.Concrete
             return new SuccessDataResult<DailyReservationSummaryDto>(summaryDto, "Günlük rezervasyonlar getirildi.");
         }
         // Business -> Concrete -> ReservationManager.cs içine ekle:
+        [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult CancelReservationByBusiness(int reservationId)
         {
             var reservation = _reservationDal.Get(r => r.Id == reservationId);

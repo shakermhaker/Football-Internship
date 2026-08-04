@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
@@ -31,6 +33,9 @@ namespace Business.Concrete
 
 
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult AddWithDetails(FootballFieldAddDTO fieldDto)
         {
             // 1. ADIM: ANA SAHAYI EKLE
@@ -90,6 +95,11 @@ namespace Business.Concrete
             // İŞTE DOĞRU YER BURASI! Her şey bittikten sonra, dışarıda return ediyoruz.
             return new SuccessResult("Halı saha ve tüm rezervasyon fiyatlandırmaları başarıyla oluşturuldu.");
         }
+
+        [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult DeleteField(int fieldId)
         {
             // 1. Önce sahayı bul
