@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization; // Bunu yukarı eklemeyi unutmayın
 namespace Entities.Concrete
 {
-    public class FieldPriceSchedule : IEntity
+    public class FieldPriceSchedule : BaseEntity
     {
         public int Id { get; set; }
         public decimal Price { get; set; }

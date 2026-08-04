@@ -1,22 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Core.Entities;
+using Core.Utilities.IoC;
 using Entities.Concrete;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Text;
 
-   
+
 
 namespace FootballField.DataAccess.Concrete.EntityFramework;
 
 public class FootballFieldContext : DbContext
 {
-    public FootballFieldContext(DbContextOptions<FootballFieldContext> options) : base(options)
+
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public FootballFieldContext(DbContextOptions<FootballFieldContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    // 🎯 2. KRİTİK EKLEME: Boş Constructor (EF Core Migration araçları bazen arar, hata vermesin diye koyarız)
     public FootballFieldContext()
     {
+        _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -59,6 +68,50 @@ public class FootballFieldContext : DbContext
                   .IsUnique()
                   .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId");
         });
+    }
+
+    public override int SaveChanges()
+    {
+        AddAuditInfo();
+        return base.SaveChanges();
+    }
+
+    // 🚀 2. Asenkron (Async) Kaydetme işlemini eziyoruz
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        AddAuditInfo();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void AddAuditInfo()
+    {
+        var entries = ChangeTracker.Entries<IAuditableEntity>();
+
+        // Artık _httpContextAccessor null gelmeyecek!
+        var userIdString = _httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        int? currentUserId = null;
+        if (int.TryParse(userIdString, out int parsedId))
+        {
+            currentUserId = parsedId;
+        }
+
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedAt = DateTime.UtcNow; // PostgreSQL UTC ister
+                entry.Entity.CreatedBy = currentUserId;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Property(p => p.CreatedAt).IsModified = false;
+                entry.Property(p => p.CreatedBy).IsModified = false;
+
+                entry.Entity.UpdatedAt = DateTime.UtcNow; // PostgreSQL UTC ister
+                entry.Entity.UpdatedBy = currentUserId;
+            }
+        }
     }
 
 
