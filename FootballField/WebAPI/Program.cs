@@ -16,6 +16,8 @@ using WebAPI.BackgroundServices;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;    
 using System.Security.Claims;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FootballFieldContext>(options =>
@@ -82,6 +84,20 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterModule(new AutofacBusinessModule());
 });
+
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+    .WriteTo.Console()
+    .WriteTo.File(
+        formatter: new CompactJsonFormatter(),
+        path: "Logs/log-.json",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 
 
