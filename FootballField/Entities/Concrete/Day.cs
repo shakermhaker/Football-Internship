@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class Day : IEntity
+    public class Day : BaseEntity
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty; // Diyagramdaki Context (Pazartesi, Salı vb.)

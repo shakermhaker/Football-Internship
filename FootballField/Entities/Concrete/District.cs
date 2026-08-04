@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class District : IEntity
+    public class District : BaseEntity
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty; // Diyagramdaki Context

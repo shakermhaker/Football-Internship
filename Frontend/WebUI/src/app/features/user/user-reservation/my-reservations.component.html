@@ -3,45 +3,56 @@
   <!-- REZERVASYONLARIM KARTI -->
   <div class="card shadow-sm border-0 mb-10 rounded-4 bg-white">
     
-    <!-- 🚀 BAŞLIK KISMI KARTIN İÇİNE ALINDI (card-header) -->
-    <div class="card-header border-0 pt-6 px-6">
+    <div class="card-header border-0 pt-8 px-8">
       <div class="card-title d-flex flex-column mb-0">
         <h1 class="fw-bolder fs-2tx text-dark d-flex align-items-center gap-3 m-0">
           <i class="ki-duotone ki-calendar-tick fs-1 text-success"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span></i>
           Geçmiş Rezervasyonlarım
         </h1>
-        <span class="text-muted fs-5 fw-semibold mt-2">Daha önce yaptığınız tüm rezervasyonları görüntüleyin ve detaylarına ulaşın.</span>
+        <span class="text-muted fs-6 fw-medium mt-2">Daha önce yaptığınız tüm rezervasyonları görüntüleyin ve yönetin.</span>
       </div>
     </div>
 
-    <!-- FİLTRELEME ARAÇLARI (card-body) -->
-    <div class="card-body p-6 d-flex flex-column flex-md-row gap-4 align-items-center">
+    <div class="card-body p-8 pt-4">
       
-      <!-- Arama Kutusu -->
-      <div class="position-relative flex-grow-1 w-100">
-        <i class="ki-duotone ki-magnifier fs-2 text-gray-500 position-absolute top-50 translate-middle-y ms-4"><span class="path1"></span><span class="path2"></span></i>
-        <input type="text" 
-               class="form-control form-control-solid ps-12 rounded-3 border-0 bg-light" 
-               placeholder="İşletme adı, saha adı, il veya ilçe ara..." 
-               [(ngModel)]="searchTerm" 
-               (keyup)="applyFilters()">
+      <!-- 🚀 YENİ: STATÜ FİLTRE BUTONLARI (PILLS) -->
+      <div class="d-flex flex-wrap gap-3 mb-6">
+        @for (status of statusOptions; track status) {
+          <button (click)="setStatusFilter(status)"
+                  class="btn btn-sm rounded-pill fw-bolder px-6 ff-filter-btn"
+                  [class.active-filter]="selectedStatus === status">
+            {{ status }}
+          </button>
+        }
       </div>
 
-      <!-- Tarih Seçici -->
-      <div class="position-relative w-100 w-md-250px">
-        <i class="ki-duotone ki-calendar fs-2 text-gray-500 position-absolute top-50 translate-middle-y ms-4" style="pointer-events: none; z-index: 10;"><span class="path1"></span><span class="path2"></span></i>
-        <input type="date" 
-               class="form-control form-control-solid ps-12 rounded-3 border-0 bg-light ff-date-filter" 
-               [(ngModel)]="filterDate" 
-               (change)="applyFilters()">
-      </div>
+      <!-- ARAMA VE TARİH FİLTRELERİ -->
+      <div class="d-flex flex-column flex-md-row gap-4 align-items-center bg-light rounded-4 p-4">
+        
+        <div class="position-relative flex-grow-1 w-100">
+          <i class="ki-duotone ki-magnifier fs-3 text-gray-500 position-absolute top-50 translate-middle-y ms-4"><span class="path1"></span><span class="path2"></span></i>
+          <input type="text" 
+                 class="form-control form-control-solid ps-12 rounded-3 border-0 bg-white shadow-sm" 
+                 placeholder="İşletme veya saha ara..." 
+                 [(ngModel)]="searchTerm" 
+                 (keyup)="applyFilters()">
+        </div>
 
-      <!-- Temizle Butonu -->
-      @if (searchTerm || filterDate) {
-        <button (click)="clearFilters()" class="btn btn-light-danger fw-bold px-6 text-nowrap rounded-3">
-          Temizle
-        </button>
-      }
+        <div class="position-relative w-100 w-md-200px">
+          <i class="ki-duotone ki-calendar fs-3 text-gray-500 position-absolute top-50 translate-middle-y ms-4" style="pointer-events: none; z-index: 10;"><span class="path1"></span><span class="path2"></span></i>
+          <input type="date" 
+                 class="form-control form-control-solid ps-12 rounded-3 border-0 bg-white shadow-sm ff-date-filter" 
+                 [(ngModel)]="filterDate" 
+                 (change)="applyFilters()">
+        </div>
+
+        @if (searchTerm || filterDate || selectedStatus !== 'Hepsi') {
+          <button (click)="clearFilters()" class="btn btn-light-danger fw-bold px-6 text-nowrap rounded-3 shadow-sm">
+            Temizle
+          </button>
+        }
+      </div>
+      
     </div>
   </div>
 
@@ -52,96 +63,97 @@
   } @else if (filteredReservations().length === 0) {
     <!-- VERİ YOKSA -->
     <div class="card shadow-sm border-0 rounded-4 bg-white text-center p-15">
-      <i class="ki-duotone ki-abstract-11 fs-5x text-gray-400 mb-5"><span class="path1"></span><span class="path2"></span></i>
-      <h3 class="fw-bolder text-dark fs-2">Hiç Rezervasyon Bulunamadı</h3>
-      <p class="text-muted fs-5 mt-2">Arama kriterlerinize uygun veya daha önce yapılmış bir rezervasyonunuz yok.</p>
+      <i class="ki-duotone ki-abstract-11 fs-5x text-gray-300 mb-5"><span class="path1"></span><span class="path2"></span></i>
+      <h3 class="fw-bolder text-dark fs-2">Kayıt Bulunamadı</h3>
+      <p class="text-muted fs-5 mt-2">Seçtiğiniz filtrelere uygun bir rezervasyon bulunmuyor.</p>
     </div>
   } @else {
+    
+    <!-- 🚀 YENİ KART TASARIMI (Görsel Hiyerarşi Sağlandı) -->
     <div class="row g-6">
       @for (res of filteredReservations(); track res.reservationId) {
         <div class="col-12 col-md-6 col-lg-4">
           
-          <div class="card shadow-sm border-0 rounded-4 h-100 hover-elevate-up transition-all" style="border: 1px solid #e4e6ef !important;">
+          <div class="card shadow-sm border-0 rounded-4 h-100 transition-all card-hover-effect" 
+               [ngClass]="{
+                 'border-start-success': res.statusName === 'Onaylandı',
+                 'border-start-danger': res.statusName === 'İptal Edildi',
+                 'border-start-secondary': res.statusName === 'Tamamlandı'
+               }">
             
-            <!-- Kart Üst Kısmı -->
-            <div class="card-header border-0 pt-6 pb-2 d-flex justify-content-between align-items-center">
-              <h3 class="card-title fw-bolder text-dark fs-4 mb-0 text-truncate" [title]="res.businessName">
+            <div class="card-body p-6 d-flex flex-column">
+              
+              <!-- Üst Kısım: Tarih & Statü -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="text-gray-500 fw-semibold fs-7 d-flex align-items-center gap-1">
+                  <i class="ki-duotone ki-calendar fs-5"><span class="path1"></span><span class="path2"></span></i>
+                  {{ res.reservationDate | date:'dd.MM.yyyy' }}
+                </span>
+                
+                <!-- 🚀 ÇÖZÜM 2: SİLİK VE RENKLİ ROZETLER -->
+                <span class="badge rounded-pill fw-bolder fs-8 px-4 py-2" 
+                      [ngClass]="{
+                        'ff-badge-success': res.statusName === 'Onaylandı', 
+                        'ff-badge-danger': res.statusName === 'İptal Edildi',
+                        'ff-badge-secondary': res.statusName === 'Tamamlandı' 
+                      }">
+                  {{ res.statusName }}
+                </span>
+              </div>
+
+              <!-- İşletme ve Saha (Hiyerarşi: İşletme büyük, saha küçük) -->
+              <h3 class="fw-bolder text-dark fs-4 mb-1 text-truncate" [title]="res.businessName">
                 {{ res.businessName }}
               </h3>
-              <span class="badge rounded-pill fw-bold" 
-                    [ngClass]="{'badge-success': res.statusName === 'Onaylandı', 
-                                'badge-danger': res.statusName === 'İptal Edildi',
-                                'badge-secondary': res.statusName === 'Tamamlandı' }">
-                {{ res.statusName }}
-              </span>
-            </div>
-
-            <!-- Kart İçeriği -->
-            <div class="card-body pt-2 pb-4">
-              
-              <div class="d-flex align-items-center mb-4">
-                <i class="ki-duotone ki-map fs-4 text-primary me-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-                <span class="text-gray-600 fw-medium fs-6">{{ res.cityName }}, {{ res.districtName }}</span>
+              <div class="text-muted fw-medium fs-7 mb-5 d-flex align-items-center gap-1">
+                <i class="ki-duotone ki-flag fs-6"><span class="path1"></span><span class="path2"></span></i>
+                Saha: <span class="text-gray-700 fw-bold">{{ res.footballFieldName }}</span>
               </div>
 
-              <div class="d-flex align-items-center mb-4">
-                <i class="ki-duotone ki-flag fs-4 text-info me-2"><span class="path1"></span><span class="path2"></span></i>
-                <span class="text-dark fw-bold fs-6">{{ res.footballFieldName }}</span>
-              </div>
-
-              <div class="bg-light-success rounded-3 p-3 d-flex align-items-center justify-content-between mb-5">
-                <div class="d-flex flex-column">
-                  <span class="text-success fw-bold fs-7 text-uppercase mb-1">TARİH</span>
-                  <span class="text-dark fw-bolder fs-6">{{ res.reservationDate | date:'dd.MM.yyyy' }}</span>
+              <!-- Ortadaki Gri Kutu: Saat ve Fiyat (En çok bakılan yer) -->
+              <div class="bg-light rounded-3 p-4 d-flex justify-content-between align-items-center mb-5 border border-gray-200">
+                <div>
+                  <span class="d-block text-gray-500 fs-8 fw-bold text-uppercase mb-1">Saat Aralığı</span>
+                  <span class="fw-bolder fs-4 text-dark">{{ formatTime(res.startTime) }} - {{ formatTime(res.endTime) }}</span>
                 </div>
-                <div class="border-start border-success border-opacity-25 h-30px"></div>
-                <div class="d-flex flex-column text-end">
-                  <span class="text-success fw-bold fs-7 text-uppercase mb-1">SAAT</span>
-                  <span class="text-dark fw-bolder fs-6">{{ formatTime(res.startTime) }} - {{ formatTime(res.endTime) }}</span>
+                <div class="text-end">
+                  <span class="d-block text-gray-500 fs-8 fw-bold text-uppercase mb-1">Toplam Tutar</span>
+                  <span class="fw-bolder fs-4 text-primary">{{ res.finalPrice }} ₺</span>
                 </div>
               </div>
 
-              <div class="d-flex justify-content-between align-items-center mt-auto">
-                <div class="d-flex flex-column">
-                  <span class="text-muted fw-semibold fs-8">Ödenen Tutar</span>
-                  <span class="text-dark fw-bolder fs-3">{{ res.finalPrice }} ₺</span>
+              <!-- Alt Kısım: Adres & Butonlar -->
+              <div class="mt-auto">
+                <div class="d-flex align-items-center text-gray-500 fs-7 mb-4">
+                  <i class="ki-duotone ki-geolocation fs-5 me-2"><span class="path1"></span><span class="path2"></span></i>
+                  {{ res.cityName }}, {{ res.districtName }}
                 </div>
-                
-                <div class="d-flex align-items-center gap-2">
+
+                <div class="d-flex gap-2">
                   
-                  <!-- SADECE ONAYLI İSE İPTAL SEÇENEĞİ ÇIKAR -->
                   @if (res.statusName === 'Onaylandı') {
-                    
                     @if (cancelingId() === res.reservationId) {
-                      <!-- EMİN MİSİN GÖRÜNÜMÜ -->
-                      <div class="d-flex align-items-center gap-1 bg-light-danger p-1 rounded-3">
-                        <button (click)="confirmCancel(res.reservationId)" [disabled]="isCanceling()" class="btn btn-sm btn-danger fw-bold px-3 d-flex align-items-center gap-2">
-                          @if (isCanceling()) {
-                            <span class="spinner-border spinner-border-sm"></span> Bekleyin...
-                          } @else {
-                            Emin misin?
-                          }
-                        </button>
-                        <button (click)="cancelCancel()" [disabled]="isCanceling()" class="btn btn-sm btn-icon btn-color-gray-600 btn-active-light-dark">
-                          <i class="ki-duotone ki-cross fs-2"><span class="path1"></span><span class="path2"></span></i>
-                        </button>
+                      <div class="d-flex align-items-center gap-1 bg-light-danger p-1 rounded-3 w-100 justify-content-between">
+                        <span class="text-danger fw-bold fs-8 ms-2">Emin misiniz?</span>
+                        <div>
+                          <button (click)="confirmCancel(res.reservationId)" [disabled]="isCanceling()" class="btn btn-sm btn-danger fw-bold px-3 py-1">
+                            @if (isCanceling()) { <span class="spinner-border spinner-border-sm"></span> } @else { Evet }
+                          </button>
+                          <button (click)="cancelCancel()" [disabled]="isCanceling()" class="btn btn-sm btn-icon btn-active-light-dark py-1">
+                            <i class="ki-duotone ki-cross fs-3"></i>
+                          </button>
+                        </div>
                       </div>
                     } @else {
-                      <!-- İLK İPTAL BUTONU -->
-                      <!-- 🚀 ÇÖZÜM: btn-light-danger yerine kendi sınıfımızı yazdık -->
-                      <button (click)="startCancel(res.reservationId)" class="btn btn-sm ff-btn-static-danger fw-bold px-3 d-flex align-items-center gap-2">
-                        <i class="ki-duotone ki-trash fs-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span></i>
+                      <button (click)="startCancel(res.reservationId)" class="btn btn-sm btn-light-danger fw-bold w-100">
                         İptal Et
                       </button>
                     }
                   }
 
-                  <!-- İŞLETMEYE GİT BUTONU (Kullanıcı İptal menüsünü açmadıysa görünür) -->
                   @if (cancelingId() !== res.reservationId) {
-                    <!-- 🚀 ÇÖZÜM: btn-primary yerine kendi sınıfımızı yazdık -->
-                    <a [routerLink]="['/business', res.businessId, 'schedules']" class="btn btn-sm ff-btn-static-primary fw-bold px-4 d-flex align-items-center gap-2">
+                    <a [routerLink]="['/business', res.businessId, 'schedules']" class="btn btn-sm btn-light-primary fw-bold w-100">
                       İşletmeye Git
-                      <i class="ki-duotone ki-arrow-right fs-4"><span class="path1"></span><span class="path2"></span></i>
                     </a>
                   }
 
@@ -157,51 +169,58 @@
 </div>
 
 <style>
-  .hover-elevate-up {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  }
-  .hover-elevate-up:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+  .transition-all { transition: all 0.2s ease-in-out; }
+  
+  .card-hover-effect { border: 1px solid #e4e6ef; }
+  .card-hover-effect:hover { 
+    transform: translateY(-1px); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important; 
+    border-color: #d8dbe5;
   }
 
-  /* TAKVİM HİLESİ (CSS Trick) */
-  .ff-date-filter {
-    position: relative;
-    cursor: pointer;
-  }
+  /* Kartların sol kenarına şık bir renk vurgusu */
+  .border-start-success { border-left: 4px solid #198754 !important; }
+  .border-start-danger { border-left: 4px solid #dc3545 !important; }
+  .border-start-secondary { border-left: 4px solid #a1a5b7 !important; }
+
+  .hover-elevate-up:hover { transform: translateY(-1px); }
+
+  .ff-date-filter { position: relative; cursor: pointer; }
   .ff-date-filter::-webkit-calendar-picker-indicator {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0; /* İkonu şeffaf yap */
-    cursor: pointer;
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 100%; opacity: 0; cursor: pointer;
   }
 
-  /* 🚀 YENİ: BUTON SADELEŞTİRMELERİ (-1px LIFT VE SABİT RENK) */
-  .ff-btn-static-danger {
-    background-color: #fff5f8 !important; /* Açık kırmızı */
-    color: #f1416c !important; /* Koyu kırmızı yazı */
-    transition: transform 0.15s ease-in-out !important;
+  /* 🚀 ÇÖZÜM 1: FİLTRE BUTONLARI VE TIKLAMA HİSSİYATI */
+  .ff-filter-btn {
+    background-color: #f3f6f9;
+    color: #7e8299;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
   }
-  .ff-btn-static-danger:hover {
-    transform: translateY(-1px) !important;
-    background-color: #fff5f8 !important; /* Hover'da renk değişmesini engelle */
-    color: #f1416c !important; 
+  .ff-filter-btn:hover {
+    background-color: #e4e6ef;
+    color: #3f4254;
+    transform: translateY(-1px);
   }
-
-  .ff-btn-static-primary {
-    background-color: #009ef7 !important; /* Metronic mavi */
-    color: #ffffff !important; /* Beyaz yazı */
-    transition: transform 0.15s ease-in-out !important;
+  /* Tıklama Anındaki Geri Bildirim (İçeri göçme efekti) */
+  .ff-filter-btn:active {
+    transform: scale(0.92) !important;
   }
-  .ff-btn-static-primary:hover {
-    transform: translateY(-1px) !important;
-    background-color: #009ef7 !important; /* Hover'da renk değişmesini engelle */
+  /* Focus (Tıkladıktan sonra siyah olma/çizgi çıkma) sorununu engeller */
+  .ff-filter-btn:focus, .ff-filter-btn:active:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  /* Seçili Olan Filtre Stili */
+  .ff-filter-btn.active-filter {
+    background-color: #181c32 !important; /* Koyu lacivert/siyah */
     color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
+
+  /* 🚀 ÇÖZÜM 2: SİLİK (PASTEL) STATÜ ROZETLERİ */
+  .ff-badge-primary { background-color: #f1faff !important; color: #009ef7 !important; border: 1px solid rgba(0,158,247,0.2); } /* Onaylandı (Açık Mavi) */
+  .ff-badge-success { background-color: #e8fff3 !important; color: #198754 !important; border: 1px solid rgba(25,135,84,0.2); } /* Tamamlandı (Silik Yeşil) */
+  .ff-badge-danger { background-color: #fff5f8 !important; color: #f1416c !important; border: 1px solid rgba(241,65,108,0.2); }  /* İptal Edildi (Silik Kırmızı) */
 </style>

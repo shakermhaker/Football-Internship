@@ -88,6 +88,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 // 1. .NET 10'un Kendi Servis Tanımlamaları (Başka hiçbir harici paket yok)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(); // Klasik Swagger UI üreteci
 builder.Services.AddHostedService<ReservationStatusUpdaterService>();
 
