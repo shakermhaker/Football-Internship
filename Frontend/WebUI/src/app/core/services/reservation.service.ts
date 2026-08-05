@@ -20,6 +20,7 @@ export interface FootballFieldScheduleDto {
   schedules: PriceScheduleDto[];
 }
 export interface CreateReservationDto {
+  businessId: number;
   fieldPriceScheduleId: number;
   reservationDate: string;
   finalPrice: number;
@@ -62,7 +63,7 @@ export class ReservationService {
   holdReservationSlot(businessId: number, dateStr: string, scheduleId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/hold-slot?businessId=${businessId}&date=${dateStr}&scheduleId=${scheduleId}`, {}, { withCredentials: true });
   }
-  
+
   cancelHoldSlot(businessId: number, dateStr: string, scheduleId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/cancel-hold?businessId=${businessId}&date=${dateStr}&scheduleId=${scheduleId}`, {}, { withCredentials: true });
   }

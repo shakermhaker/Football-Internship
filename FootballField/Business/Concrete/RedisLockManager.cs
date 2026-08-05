@@ -15,7 +15,7 @@ namespace Business.Concrete
             _cache = cache;
         }
 
-        private string GenerateKey(int businessId, DateOnly date, int scheduleId)
+        private string GenerateKey(int? businessId, DateOnly date, int scheduleId)
         {
             // Örnek Çıktı: "Hold:2:2026-08-04:456"
             return $"Hold:{businessId}:{date.ToString("yyyy-MM-dd")}:{scheduleId}";

@@ -513,6 +513,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     const payload: CreateReservationDto = {
+      businessId: this.businessId,
       fieldPriceScheduleId: this.selectedSlot.fieldPriceScheduleId,
       reservationDate: this.selectedDate,
       finalPrice: this.selectedSlot.price,

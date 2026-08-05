@@ -10,5 +10,6 @@ namespace Entities.DTOs
         public DateOnly ReservationDate { get; set; }
         public decimal FinalPrice { get; set; }
         public string CardNumber { get; set; } // Şimdilik ödeme almadığımız için temsili
+        public int BusinessId { get; set; }
     }
 }
