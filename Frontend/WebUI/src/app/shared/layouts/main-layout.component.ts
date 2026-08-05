@@ -192,7 +192,10 @@ export class MainLayoutComponent implements OnInit {
     
     if (savedHold) {
       const parsedData = JSON.parse(savedHold);
-      const { businessId, scheduleId } = parsedData.myActiveHold;
+      
+      // 🚀 DÜZELTME: businessId myActiveHold'un içinde değil, ana JSON nesnesindeydi!
+      const businessId = parsedData.businessId; 
+      const scheduleId = parsedData.myActiveHold.scheduleId;
       const date = parsedData.selectedDate;
 
       // 1. Önce isteği atıyoruz
@@ -203,7 +206,7 @@ export class MainLayoutComponent implements OnInit {
         },
         error: (err) => {
           console.error("Çıkış yapılırken kilit temizlenemedi:", err);
-          this.executeLogout(); // İstek HATA verse bile çıkış yap (kullanıcıyı içeride esir etme)
+          this.executeLogout(); // İstek HATA verse bile çıkış yap 
         }
       });
     } else {
@@ -217,6 +220,8 @@ export class MainLayoutComponent implements OnInit {
     localStorage.removeItem('ff_active_hold');
     this.authService.logout();
     this.isMenuOpen = false;
+    this.router.navigate(['/auth/login']);
+
   }
 
   // MainLayoutComponent veya ilgili component içinde

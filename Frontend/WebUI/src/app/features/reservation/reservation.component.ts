@@ -1,4 +1,4 @@
-import { Component, OnInit,OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit,OnDestroy, inject, signal, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -102,6 +102,16 @@ export class ReservationComponent implements OnInit, OnDestroy {
       this.hubConnection.stop();
     }
     if (this.timerInterval) clearInterval(this.timerInterval);
+
+    if (this.myActiveHold) {
+      console.log("Kullanıcı sayfadan ayrıldı, kilit serbest bırakılıyor...");
+      
+    
+      this.reservationService.cancelHoldSlot(this.businessId, this.myActiveHold.date, this.myActiveHold.scheduleId).subscribe();
+      
+    
+      localStorage.removeItem('ff_active_hold');
+    }
   }
 
   private startSignalRConnection() {
@@ -354,6 +364,21 @@ export class ReservationComponent implements OnInit, OnDestroy {
     if (this.myActiveHold) {
        this.showPageAlert("Zaten işlemde olan bir rezervasyonunuz var. Lütfen önce onu tamamlayın veya iptal edin.", "İşlem Devam Ediyor");
        return;
+    }
+
+    const savedHold = localStorage.getItem('ff_active_hold');
+    if (savedHold) {
+        const parsed = JSON.parse(savedHold);
+        const oldBusinessId = parsed.businessId;
+        const oldScheduleId = parsed.myActiveHold.scheduleId;
+        const oldDate = parsed.selectedDate;
+
+        // Eğer hafızadaki kilidin işletme ID'si, şu anki işletme ID'sinden farklıysa backend'den temizle
+        if (oldBusinessId !== this.businessId) {
+            console.log("Farklı bir işletmeye geçildiği için eski kilit siliniyor:", oldScheduleId);
+            this.reservationService.cancelHoldSlot(oldBusinessId, oldDate, oldScheduleId).subscribe();
+            localStorage.removeItem('ff_active_hold');
+        }
     }
 
     // 6. İLK DEFA TIKLIYORSA -> API'ye Geçici Kilit (Hold) isteği at!
