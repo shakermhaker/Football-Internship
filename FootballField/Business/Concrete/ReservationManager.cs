@@ -62,6 +62,8 @@ namespace Business.Concrete
             return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından işlem görüyor.");
         }
 
+
+
         public IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date)
         {
             
@@ -79,6 +81,47 @@ namespace Business.Concrete
             var bookedIds = _reservationDal.GetBookedScheduleIdsByDate(businessId, date);
             return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
         }
+
+        public async Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date)
+        {
+            // 1. İşletmeye ait tüm takvimi (Schedule) çek
+            var allSchedules = GetBusinessFieldSchedules(businessId, date).Data;
+            if (allSchedules == null || allSchedules.Count == 0)
+            {
+                return new SuccessDataResult<List<int>>(new List<int>());
+            }
+
+            // 2. Takvim içindeki tüm ID'leri düz bir listeye çevir (Örn: [15, 16, 17, ...])
+            var scheduleIds = allSchedules
+                .SelectMany(field => field.Schedules.Select(slot => slot.FieldPriceScheduleId))
+                .ToList();
+
+            // 3. Bu ID listesini Redis'e ver ve sadece kilitli olanları ayıkla
+            var heldIds = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
+
+            return new SuccessDataResult<List<int>>(heldIds, "İşlemde olan slotlar getirildi.");
+        }
+
+        public async Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
+        {
+            // 1. Kilidin sahibini kontrol et (Sadece kilitleyen kişi iptal edebilir!)
+            int? lockOwner = await _redisLockService.GetLockOwnerAsync(businessId, date, scheduleId);
+
+            if (lockOwner.HasValue && lockOwner.Value == userId)
+            {
+                // 2. Kilidi Redis'ten sil
+                await _redisLockService.UnlockSlotAsync(businessId, date, scheduleId);
+
+                // 3. SignalR ile odadaki herkesin ekranında bu slotu tekrar YEŞİL (boş) yap!
+                await _notificationService.SendSlotUnlockedNotificationAsync(businessId, date, scheduleId);
+
+                return new SuccessResult("Geçici rezervasyon işlemi iptal edildi.");
+            }
+
+            return new ErrorResult("Bu işlem size ait değil veya süresi çoktan dolmuş.");
+        }
+
+
 
         [SecuredOperation("user")]
         [TransactionScopeAspect]

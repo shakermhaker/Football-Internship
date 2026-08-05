@@ -14,5 +14,6 @@ namespace Business.Abstract
 
         // 🚀 Geri dönüş tipi int? (Nullable int) yapıldı. Kilit yoksa null, varsa UserId dönecek.
         Task<int?> GetLockOwnerAsync(int businessId, DateOnly date, int scheduleId);
+        Task<List<int>> GetActiveHoldsAsync(int businessId, DateOnly date, List<int> scheduleIdsToCheck);
     }
 }

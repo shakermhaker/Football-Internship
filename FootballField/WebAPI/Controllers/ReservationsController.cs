@@ -39,6 +39,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("getheldids")]
+        public async Task<IActionResult> GetHeldScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
+        {
+            var result = await _reservationService.GetHeldScheduleIdsByDateAsync(businessId, date);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpPost("hold-slot")]
         [EnableRateLimiting("ReservationLimit")] // Hold işlemi de spama karşı korunsun
         public async Task<IActionResult> HoldSlot([FromQuery] int businessId, [FromQuery] DateOnly date, [FromQuery] int scheduleId)
@@ -47,6 +58,19 @@ namespace WebAPI.Controllers
             if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
 
             var result = await _reservationService.HoldReservationSlotAsync(businessId, date, scheduleId, userId);
+
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpPost("cancel-hold")]
+        public async Task<IActionResult> CancelHold([FromQuery] int businessId, [FromQuery] DateOnly date, [FromQuery] int scheduleId)
+        {
+            var userId = User.GetUserId();
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+
+            var result = await _reservationService.CancelHoldSlotAsync(businessId, date, scheduleId, userId);
 
             if (result.Success) return Ok(result);
             return BadRequest(result);

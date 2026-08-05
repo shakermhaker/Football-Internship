@@ -64,5 +64,25 @@ namespace Business.Concrete
 
             return null; // Key yoksa veya int'e çevrilemiyorsa null döner
         }
+
+        public async Task<List<int>> GetActiveHoldsAsync(int businessId, DateOnly date, List<int> scheduleIdsToCheck)
+        {
+            var heldSlots = new List<int>();
+
+            foreach (var scheduleId in scheduleIdsToCheck)
+            {
+                var key = GenerateKey(businessId, date, scheduleId);
+                var existingLock = await _cache.GetStringAsync(key);
+
+                // Eğer Redis'te bu anahtar varsa (null değilse), demek ki işlemde (turuncu)
+                if (!string.IsNullOrEmpty(existingLock))
+                {
+                    heldSlots.Add(scheduleId);
+                }
+            }
+
+            return heldSlots;
+        }
+
     }
 }

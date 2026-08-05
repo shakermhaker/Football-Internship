@@ -154,7 +154,7 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 3, // 1 kullanıcı, 1 dakikada maks 3 rezervasyon/iptal yapabilir (Spam engeller)
+                PermitLimit = 20, // 1 kullanıcı, 1 dakikada maks 3 rezervasyon/iptal yapabilir (Spam engeller)
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
             });
