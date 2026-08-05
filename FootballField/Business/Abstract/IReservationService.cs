@@ -11,9 +11,11 @@ namespace Business.Abstract
         // İşletmenin sahalarını ve fiyat/saat takvimini getirir
         IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date);
         IDataResult<List<int>> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
+        Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date);
+        Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId);
 
-        IResult CreateReservation(CreateReservationDto createDto, int userId);
-
+        Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId);
+        Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId);
         IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId);
 
         IResult CancelReservation(int reservationId, int userId);

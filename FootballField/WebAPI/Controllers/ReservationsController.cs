@@ -39,20 +39,10 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("create")]
-        [EnableRateLimiting("ReservationLimit")]
-        public IActionResult CreateReservation([FromBody] CreateReservationDto reservationDto)
+        [HttpGet("getheldids")]
+        public async Task<IActionResult> GetHeldScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
         {
-            var userId = User.GetUserId(); // Kullanıcı kimliğini almak içi
-            if (userId == null)
-            {
-                return Unauthorized("Kullanıcı kimliği doğrulanamadı. Lütfen tekrar giriş yapın.");
-            }
-
-            var result = _reservationService.CreateReservation(reservationDto, userId);
-
-
-            // Sonuç başarılıysa 200 (Ok), hata varsa (örn: slot dolmuşsa) 400 (BadRequest) dönüyoruz.
+            var result = await _reservationService.GetHeldScheduleIdsByDateAsync(businessId, date);
             if (result.Success)
             {
                 return Ok(result);
@@ -60,8 +50,47 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("hold-slot")]
+        [EnableRateLimiting("ReservationLimit")] // Hold işlemi de spama karşı korunsun
+        public async Task<IActionResult> HoldSlot([FromQuery] int businessId, [FromQuery] DateOnly date, [FromQuery] int scheduleId)
+        {
+            var userId = User.GetUserId(); // Token içinden UserId'yi güvenle alıyoruz
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+
+            var result = await _reservationService.HoldReservationSlotAsync(businessId, date, scheduleId, userId);
+
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpPost("cancel-hold")]
+        public async Task<IActionResult> CancelHold([FromQuery] int businessId, [FromQuery] DateOnly date, [FromQuery] int scheduleId)
+        {
+            var userId = User.GetUserId();
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+
+            var result = await _reservationService.CancelHoldSlotAsync(businessId, date, scheduleId, userId);
+
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("create")]
+        [EnableRateLimiting("ReservationLimit")]
+        public async Task<IActionResult> CreateReservation([FromBody] CreateReservationDto reservationDto) // 🚀 Task yapıldı
+        {
+            var userId = User.GetUserId(); // Token içinden UserId'yi güvenle alıyoruz
+            if (userId == null) return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+
+            // 🚀 async/await yapısına uyarlandı
+            var result = await _reservationService.CreateReservationAsync(reservationDto, userId);
+
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
         [HttpGet("my-reservations")]
-        
         public IActionResult GetMyReservations()
         {
             // Token içinden UserId'yi güvenle alıyoruz

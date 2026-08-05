@@ -162,36 +162,52 @@
                       @for (slot of day.slots; track slot.fieldPriceScheduleId) {
                         
                         @if (!isSlotInPast(slot.startTime)) {
-                          @let booked = isSlotBooked(slot.fieldPriceScheduleId);
+  
+  @let booked = isSlotBooked(slot.fieldPriceScheduleId);
+  <!-- 🚀 DÜZELTİLDİ: Artık kendi işlemimi başkasınınmış gibi algılamayacak -->
+  @let heldByOther = isSlotHeldByOthers(slot.fieldPriceScheduleId);
+  @let isMyHold = (myActiveHold?.scheduleId === slot.fieldPriceScheduleId);
 
-                          <button (click)="onSlotSelected(slot, field.fieldName)" 
-                                  [disabled]="booked"
-                                  class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
-                                  [ngClass]="booked ? 'bg-light-danger border-danger opacity-75' : 'bg-white hover-text-gray border-gray-300'"
-                                  style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
-                            
-                            <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
-                                 [ngClass]="booked ? 'border-danger border-opacity-25 text-danger' : 'border-gray-200 text-gray-700'">
-                              <i class="ki-duotone ki-time fs-4" [ngClass]="booked ? 'text-danger' : 'text-gray-600'"><span class="path1"></span><span class="path2"></span></i>
-                              <span class="fw-bold fs-6 transition-all" [ngClass]="booked ? 'text-danger fw-bolder' : 'text-dark'">
-                                {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
-                              </span>
-                            </div>
-                            
-                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
-                                 [ngClass]="booked ? 'bg-danger text-white' : 'bg-light text-dark'">
-                              @if (booked) {
-                                <span class="fw-bolder fs-7 text-white">DOLU</span>
-                              } @else {
-                                <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
-                                <span class="fw-bolder fs-5 text-dark">
-                                  {{ slot.price }} ₺
-                                </span>
-                              }
-                            </div>
-                            
-                          </button>
-                        }
+  <button (click)="onSlotSelected(slot, field.fieldName)" 
+          [disabled]="booked || heldByOther"
+          class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
+          [ngClass]="{
+            'bg-light-danger border-danger opacity-75': booked,
+            'bg-light-warning border-warning opacity-75': heldByOther,
+            'bg-light-success border-success': isMyHold,
+            'bg-white hover-text-gray border-gray-300': !booked && !heldByOther && !isMyHold
+          }"
+          style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
+    
+    <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
+         [ngClass]="(booked || heldByOther || isMyHold) ? 'border-opacity-25' : 'border-gray-200'">
+      <i class="ki-duotone ki-time fs-4" 
+         [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success' : 'text-gray-600'))">
+         <span class="path1"></span><span class="path2"></span>
+      </i>
+      <span class="fw-bold fs-6 transition-all" 
+            [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success fw-bolder' : 'text-dark'))">
+        {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+      </span>
+    </div>
+    
+    <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
+         [ngClass]="booked ? 'bg-danger text-white' : (heldByOther ? 'bg-warning text-dark' : (isMyHold ? 'bg-success text-white' : 'bg-light text-dark'))">
+      
+      @if (booked) {
+        <span class="fw-bolder fs-7 text-white">DOLU</span>
+      } @else if (heldByOther) {
+        <span class="fw-bolder fs-7 text-dark">İŞLEMDE</span>
+      } @else if (isMyHold) {
+        <span class="fw-bolder fs-7 text-white">SİZDE</span>
+      } @else {
+        <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
+        <span class="fw-bolder fs-5 text-dark">{{ slot.price }} ₺</span>
+      }
+
+    </div>
+  </button>
+}
                       }
                     </div>
                   </div>
@@ -211,6 +227,48 @@
     </div>
   </div>
 </div>
+@if (myActiveHold && !isModalOpen()) {
+  <div class="position-fixed bottom-0 start-50 translate-middle-x mb-6 z-index-100 animate__animated animate__fadeInUp" style="z-index: 1050;">
+    <div class="bg-dark px-6 py-4 rounded-pill shadow-lg d-flex align-items-center gap-4 border border-gray-600">
+      
+      <div class="d-flex align-items-center gap-2">
+        <!-- 🚀 ff-banner-warning sınıfı kullanıldı -->
+        <span class="spinner-grow spinner-grow-sm ff-banner-warning" role="status"></span>
+        <!-- 🚀 ff-banner-text sınıfı kullanıldı -->
+        <span class="fw-bold fs-6 ff-banner-text">İşlemdeki Rezervasyonunuz:</span>
+        <span class="badge bg-warning text-dark fw-bolder fs-7 px-3 py-1 rounded-pill ms-1">
+          {{ myActiveHold.slotName }}
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 border-start border-gray-600 ps-4">
+        <!-- 🚀 ff-banner-warning sınıfı kullanıldı -->
+        <i class="ki-duotone ki-time fs-2 ff-banner-warning"><span class="path1"></span><span class="path2"></span></i>
+        <span class="fw-bolder fs-4 ff-banner-warning" style="letter-spacing: 1px;">{{ countdownText() }}</span>
+      </div>
+
+     <div class="d-flex align-items-center gap-3 ms-4">
+        
+        <!-- 🚀 DÜZELTİLDİ: Özel ff-btn-success sınıfı eklendi -->
+        <button type="button" (click)="reopenModal()" [disabled]="isCancelingHold" class="btn btn-sm rounded-pill px-5 fw-bold shadow-sm ff-btn-success">
+          Devam Et
+        </button>
+        
+        <!-- 🚀 DÜZELTİLDİ: Özel ff-btn-danger sınıfı eklendi -->
+        <button type="button" (click)="cancelMyHold()" [disabled]="isCancelingHold" class="btn btn-sm rounded-pill px-5 fw-bold shadow-sm ff-btn-danger" style="min-width: 90px;">
+          @if (isCancelingHold) {
+            <span class="spinner-border spinner-border-sm text-white"></span>
+          } @else {
+            İptal
+          }
+        </button>
+        
+      </div>
+
+    </div>
+  </div>
+}
+
 
 <!-- 🚀 İKİ MODAL İÇİN DE PARANTEZ EKLENDİ () -->
 @if (isModalOpen()) {
@@ -218,14 +276,20 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg border-0 rounded-4 p-4">
         
-        <div class="modal-header border-bottom pb-4">
+        <div class="modal-header border-bottom pb-4 d-flex justify-content-between align-items-center">
           <h3 class="modal-title fw-bold text-dark m-0">⚽ Rezervasyonu Onayla</h3>
-          <button type="button" (click)="closeModal()" class="btn-close"></button>
+          
+          <!-- SAYAÇ (KIRMIZI/TURUNCU ROZET) -->
+          <div class="d-flex align-items-center bg-light-danger rounded-pill px-4 py-1 border border-danger border-opacity-25 ms-auto me-4">
+            <i class="ki-duotone ki-time fs-2 text-danger me-2"><span class="path1"></span><span class="path2"></span></i>
+            <span class="fw-bolder fs-4 text-danger" style="letter-spacing: 2px;">{{ countdownText() }}</span>
+          </div>
+
+          <!-- Modalı gizler (İptal etmez) -->
+          <button type="button" (click)="closeModal()" class="btn-close" title="Pencereyi kapat (İşlem arka planda devam eder)"></button>
         </div>
 
         <div class="modal-body py-6">
-          
-          <!-- Seçilen Özet Bilgiler -->
           <div class="bg-light-success p-4 rounded-3 mb-6 border border-success border-dashed">
             <div class="fw-bold text-dark fs-5 mb-1">{{ selectedFieldName }}</div>
             <div class="text-muted fs-6 mb-2">Tarih: <span class="fw-bold text-dark">{{ selectedDate }}</span></div>
@@ -233,11 +297,9 @@
             <div class="text-muted fs-6">Tutar: <span class="fw-bold text-success fs-4">{{ selectedSlot?.price }} ₺</span></div>
           </div>
 
-          <!-- Kredi Kartı (Temsili) -->
           <div class="mb-3">
             <label class="form-label fw-semibold text-dark fs-6 required">Temsili Kart Numarası</label>
             <input type="text" [(ngModel)]="cardNumber" class="form-control form-control-solid" placeholder="4111 2222 3333 4444" maxlength="19">
-            <div class="form-text fs-8 text-muted mt-2">Bu proje bir bitirme projesi olduğu için şimdilik temsili ödeme alınmaktadır.</div>
           </div>
 
           @if (errorMessage) {
@@ -245,16 +307,31 @@
           }
         </div>
 
-        <div class="modal-footer border-top pt-4 d-flex justify-content-end gap-2">
-          <button type="button" (click)="closeModal()" class="btn btn-light rounded-pill px-5" [disabled]="isSubmitting">Vazgeç</button>
+        <!-- MODAL FOOTER (ÜÇ BUTONLU YENİ YAPI) -->
+        <div class="modal-footer border-top pt-4 d-flex justify-content-between align-items-center">
+          <button type="button" (click)="closeModal()" class="btn btn-light rounded-pill px-4" [disabled]="isSubmitting">
+              Kapat
+            </button>
+         
           
-          <button type="button" (click)="confirmReservation()" class="btn btn-success rounded-pill px-6" [disabled]="isSubmitting">
-            @if (isSubmitting) {
-              <span class="spinner-border spinner-border-sm me-2"></span> İşleniyor...
-            } @else {
-              Tamamla ve Rezerve Et
-            }
+          
+          <div class="d-flex gap-2">
+           
+             <button type="button" (click)="cancelMyHold()" class="btn ff-btn-danger rounded-pill px-4 fw-bold text-white">
+            <i class="ki-duotone ki-cross fs-4 me-1 text-white"><span class="path1"></span><span class="path2"></span></i>
+            İşlemi İptal Et
           </button>
+            
+            
+            <!-- Ödemeyi onaylar -->
+            <button type="button" (click)="confirmReservation()" class="btn ff-btn-success rounded-pill px-6 fw-bold" [disabled]="isSubmitting">
+              @if (isSubmitting) {
+                <span class="spinner-border spinner-border-sm me-2"></span> İşleniyor...
+              } @else {
+                Tamamla ve Rezerve Et
+              }
+            </button>
+          </div>
         </div>
 
       </div>
@@ -287,8 +364,58 @@
   </div>
 }
 
+
+@if (pageAlert()) {
+  <div class="position-fixed top-0 end-0 p-6 z-index-1055 animate__animated animate__fadeInDown" style="z-index: 9999; max-width: 450px;">
+    
+    <!--begin::Alert-->
+    <div class="alert d-flex align-items-center p-5 shadow-lg rounded-4 bg-white"
+         [ngClass]="{
+           'border border-warning': pageAlert()?.type === 'warning',
+           'border border-danger': pageAlert()?.type === 'danger',
+           'border border-success': pageAlert()?.type === 'success'
+         }">
+        
+        <!--begin::Icon-->
+        @if (pageAlert()?.type === 'warning') {
+          <i class="ki-duotone ki-information-5 fs-2hx text-warning me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+        } @else if (pageAlert()?.type === 'danger') {
+          <i class="ki-duotone ki-shield-cross fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+        } @else {
+          <i class="ki-duotone ki-shield-tick fs-2hx text-success me-4"><span class="path1"></span><span class="path2"></span></i>
+        }
+        <!--end::Icon-->
+
+        <!--begin::Wrapper-->
+        <div class="d-flex flex-column pe-0 pe-sm-10">
+            <!--begin::Title-->
+            <h4 class="mb-1 text-dark fw-bold">{{ pageAlert()?.title }}</h4>
+            <!--end::Title-->
+            <!--begin::Content-->
+            <span class="text-gray-800 fw-medium fs-6">{{ pageAlert()?.message }}</span>
+            <!--end::Content-->
+        </div>
+        <!--end::Wrapper-->
+        
+        <!--begin::Close-->
+        <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" (click)="closePageAlert()">
+            <i class="ki-duotone ki-cross fs-1" [ngClass]="'text-' + pageAlert()?.type"><span class="path1"></span><span class="path2"></span></i>
+        </button>
+        <!--end::Close-->
+    </div>
+    <!--end::Alert-->
+
+  </div>
+}
+
 <style>
  /* Zümrüt Renk Paleti ve Sekme Ayarları */
+ .animate__animated { animation-duration: 0.5s; animation-fill-mode: both; }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translate3d(0, -100%, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  .animate__fadeInDown { animation-name: fadeInDown; }
   .text-emerald { color: #059669 !important; }
   .badge-light-emerald { background-color: #ecfdf5 !important; color: #047857 !important; }
   .ff-custom-tab { background-color: #ffffff !important; color: #3f4254 !important; }
@@ -297,4 +424,36 @@
   .hover-text-gray:hover { border-color: #059669 !important; }
   .hover-text-gray:hover span.fw-bold { color: #059669 !important; }
   .transition-all { transition: all 0.2s ease-in-out; }
+
+  .ff-banner-text { color: #ffffff !important; }
+  .ff-banner-warning { color: #f1bc00 !important; } 
+
+  .ff-btn-success {
+    background-color: #198754 !important; /* Standart Yeşil */
+    color: #ffffff !important; /* Bembeyaz Yazı */
+    border: none !important;
+  }
+  .ff-btn-success:hover {
+    background-color: #157347 !important; /* Hoverda Koyu Yeşil */
+    color: #ffffff !important; 
+  }
+  .ff-btn-success:disabled {
+    background-color: #a3d7b8 !important; /* Kilitliyken Soluk Yeşil */
+    color: #ffffff !important;
+  }
+
+  /* İPTAL BUTONU */
+  .ff-btn-danger {
+    background-color: #dc3545 !important; /* Standart Kırmızı */
+    color: #ffffff !important; /* Bembeyaz Yazı */
+    border: none !important;
+  }
+  .ff-btn-danger:hover {
+    background-color: #bb2d3b !important; /* Hoverda Koyu Kırmızı */
+    color: #ffffff !important;
+  }
+  .ff-btn-danger:disabled {
+    background-color: #ed9b9e !important; /* Kilitliyken Soluk Kırmızı */
+    color: #ffffff !important;
+  }
 </style>

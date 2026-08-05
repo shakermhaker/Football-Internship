@@ -3,6 +3,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { CommonModule } from '@angular/common'; 
 import { AuthService } from '../../core/services/auth.service'; 
 import { UserService } from '../../core/services/user.service';
+import {ReservationService} from '../../core/services/reservation.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -179,12 +180,41 @@ import { UserService } from '../../core/services/user.service';
 export class MainLayoutComponent implements OnInit {
   authService = inject(AuthService);
   private userService = inject(UserService);
+
+  private reservationService = inject(ReservationService);
   private router = inject(Router);
   
   isMenuOpen = false; 
   user = this.userService.currentUser;
 
   logout() {
+    const savedHold = localStorage.getItem('ff_active_hold');
+    
+    if (savedHold) {
+      const parsedData = JSON.parse(savedHold);
+      const { businessId, scheduleId } = parsedData.myActiveHold;
+      const date = parsedData.selectedDate;
+
+      // 1. Önce isteği atıyoruz
+      this.reservationService.cancelHoldSlot(businessId, date, scheduleId).subscribe({
+        next: () => {
+          console.log("Çıkış yapılırken Redis kilidi başarıyla temizlendi.");
+          this.executeLogout(); // İstek BAŞARILI bitince çıkış yap
+        },
+        error: (err) => {
+          console.error("Çıkış yapılırken kilit temizlenemedi:", err);
+          this.executeLogout(); // İstek HATA verse bile çıkış yap (kullanıcıyı içeride esir etme)
+        }
+      });
+    } else {
+      // 2. Eğer hafızada kilit yoksa direkt çıkış yap
+      this.executeLogout();
+    }
+  }
+
+  // 🚀 YENİ YARDIMCI METOT: Asıl çıkış işlemlerini buraya topladık
+  private executeLogout() {
+    localStorage.removeItem('ff_active_hold');
     this.authService.logout();
     this.isMenuOpen = false;
   }

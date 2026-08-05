@@ -11,16 +11,19 @@ using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Transactions;
 
 namespace Business.Concrete
 {
     public class ReservationManager : IReservationService
     {
         private readonly IReservationDal _reservationDal;
+        private readonly IRedisLockService _redisLockService;
         private readonly IFieldPriceSheduleDal _fieldPriceScheduleDal;
         private readonly IFieldDal _footballFieldDal;
         private readonly ITimeSlotDal _timeSlotDal;
         private readonly IUserDal _userDal;
+        private readonly IReservationNotificationService _notificationService;
 
         private static readonly object _reservationLock = new object();
 
@@ -30,14 +33,37 @@ namespace Business.Concrete
             IFieldPriceSheduleDal fieldPriceScheduleDal,
             IFieldDal footballFieldDal,
             ITimeSlotDal timeSlotDal,
-            IUserDal userDal)
+            IUserDal userDal,
+            IRedisLockService redisLockService,
+            IReservationNotificationService notificationService)
         {
             _reservationDal = reservationDal;
+            _redisLockService = redisLockService;
             _fieldPriceScheduleDal = fieldPriceScheduleDal;
             _footballFieldDal = footballFieldDal;
             _timeSlotDal = timeSlotDal;
             _userDal = userDal;
+            _notificationService = notificationService;
+
         }
+
+
+        public async Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
+        {
+            bool isLocked = await _redisLockService.LockSlotAsync(businessId, date, scheduleId, userId, 5);
+
+            if (isLocked)
+            {
+                // 🚀 GÜNCELLENDİ: Artık tarihi de yolluyoruz!
+                await _notificationService.SendSlotHeldNotificationAsync(businessId, date, scheduleId);
+
+                return new SuccessResult("Saha 5 dakikalığına sizin için rezerve edildi. Lütfen işlemi tamamlayın.");
+            }
+
+            return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından işlem görüyor.");
+        }
+
+
 
         public IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date)
         {
@@ -57,15 +83,60 @@ namespace Business.Concrete
             return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
         }
 
+        public async Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date)
+        {
+            // 1. İşletmeye ait tüm takvimi (Schedule) çek
+            var allSchedules = GetBusinessFieldSchedules(businessId, date).Data;
+            if (allSchedules == null || allSchedules.Count == 0)
+            {
+                return new SuccessDataResult<List<int>>(new List<int>());
+            }
+
+            // 2. Takvim içindeki tüm ID'leri düz bir listeye çevir (Örn: [15, 16, 17, ...])
+            var scheduleIds = allSchedules
+                .SelectMany(field => field.Schedules.Select(slot => slot.FieldPriceScheduleId))
+                .ToList();
+
+            // 3. Bu ID listesini Redis'e ver ve sadece kilitli olanları ayıkla
+            var heldIds = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
+
+            return new SuccessDataResult<List<int>>(heldIds, "İşlemde olan slotlar getirildi.");
+        }
+
+        public async Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
+        {
+            // 1. Kilidin sahibini kontrol et (Sadece kilitleyen kişi iptal edebilir!)
+            int? lockOwner = await _redisLockService.GetLockOwnerAsync(businessId, date, scheduleId);
+
+            if (lockOwner.HasValue && lockOwner.Value == userId)
+            {
+                // 2. Kilidi Redis'ten sil
+                await _redisLockService.UnlockSlotAsync(businessId, date, scheduleId);
+
+                // 3. SignalR ile odadaki herkesin ekranında bu slotu tekrar YEŞİL (boş) yap!
+                await _notificationService.SendSlotUnlockedNotificationAsync(businessId, date, scheduleId);
+
+                return new SuccessResult("Geçici rezervasyon işlemi iptal edildi.");
+            }
+
+            return new ErrorResult("Bu işlem size ait değil veya süresi çoktan dolmuş.");
+        }
+
+
+
         [SecuredOperation("user")]
-        [TransactionScopeAspect]
+        //[TransactionScopeAspect]
         [LogAspect]
         [ExceptionLogAspect]
         [PerformanceAspect(2)]
-        public IResult CreateReservation(CreateReservationDto createDto, int userId)
+        public async Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId)
         {
-            // LOCK Mekanizması: Aynı anda birden fazla kişi istek atarsa, biri bitene kadar bekler.
-            lock (_reservationLock)
+            // 🚀 YENİ: Asenkron uyumlu Transaction bloğumuz başlıyor!
+            // TransactionScopeAsyncFlowOption.Enabled parametresi sayesinde await satırlarında patlamayacak.
+            using (var transactionScope = new TransactionScope(
+                TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled))
             {
                 var today = DateOnly.FromDateTime(DateTime.Now);
 
@@ -87,18 +158,18 @@ namespace Business.Concrete
                     }
                 }
 
+                // 3. SİSTEM İHLALİ (HACKER) KONTROLÜ
                 int requestedDayOfWeek = (int)createDto.ReservationDate.DayOfWeek;
                 int requestedDbDayId = requestedDayOfWeek == 0 ? 7 : requestedDayOfWeek;
 
                 int actualSlotDayId = _reservationDal.GetDayIdByScheduleId(createDto.FieldPriceScheduleId);
 
-                // Gönderilen tarih ile, seçilen saatin veritabanındaki günü eşleşmiyor! Hacker var!
                 if (actualSlotDayId != requestedDbDayId)
                 {
                     return new ErrorResult("Sistem İhlali Tespit Edildi: Seçilen tarih ile rezerve edilmek istenen saatin günü uyuşmuyor!");
                 }
 
-                // 1. KONTROL: İçeri giren kişinin istediği slot az önce doldurulmuş mu?
+                // 4. VERİTABANI GÜVENLİĞİ: İçeri giren kişinin istediği slot az önce doldurulmuş mu?
                 bool isBooked = _reservationDal.IsSlotBooked(createDto.FieldPriceScheduleId, createDto.ReservationDate);
 
                 if (isBooked)
@@ -106,17 +177,36 @@ namespace Business.Concrete
                     return new ErrorResult("Üzgünüz, bu saha ve saat az önce başka biri tarafından rezerve edildi. Lütfen başka bir saat seçiniz.");
                 }
 
-                // 2. KONTROL BAŞARILIYSA: Güvenle rezervasyonu oluştur
+                
+
+                // 5. REDIS KONTROLÜ
+                int? lockOwnerId = await _redisLockService.GetLockOwnerAsync(createDto.BusinessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+
+                if (lockOwnerId.HasValue && lockOwnerId.Value != userId)
+                {
+                    return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından ödeme aşamasında. Lütfen 5 dakika sonra tekrar deneyin.");
+                }
+
+                // 6. KONTROLLER BAŞARILI: Güvenle rezervasyonu oluştur
                 var reservation = new Entities.Concrete.Reservation
                 {
                     FieldPriceScheduleId = createDto.FieldPriceScheduleId,
                     ReservationDate = createDto.ReservationDate,
                     FinalPrice = createDto.FinalPrice,
                     StatusId = 1, // 1 = Aktif/Onaylandı
-                    UserId = userId  // 🚀 ARTIK TOKEN'DAN GELEN GERÇEK ID KULLANILIYOR!
+                    UserId = userId
                 };
 
+                // Veritabanına Ekleme (DAL üzerinden)
                 _reservationDal.Add(reservation);
+
+                // 7. TEMİZLİK VE BİLDİRİM
+                await _redisLockService.UnlockSlotAsync(createDto.BusinessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+                await _notificationService.SendSlotBookedNotificationAsync(createDto.BusinessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
+
+                // 🚀 HER ŞEY YOLUNDA: İşlemi onayla ve veritabanına kalıcı olarak yaz!
+                transactionScope.Complete();
+
                 return new SuccessResult("Rezervasyon başarıyla oluşturuldu.");
             }
         }
