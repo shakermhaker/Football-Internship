@@ -61,6 +61,38 @@ namespace DataAccess.Concrete
             }
         }
 
+
+        // DataAccess/Concrete/EfReservationDal.cs içerisine ekle:
+
+        public List<FootballFieldScheduleDto> GetAllWeeklySchedulesByBusinessId(int businessId)
+        {
+            using (var context = new FootballFieldContext()) // Kendi Context ismini yaz
+            {
+                var result = context.FootballFields
+                    .Where(f => f.BusinessId == businessId)
+                    .Select(f => new FootballFieldScheduleDto
+                    {
+                        FootballFieldId = f.Id,
+                        FootballFieldName = f.FieldName,
+
+                        // 🚀 DÜZELTME: Senin DTO'na uygun düz liste yapısı
+                        Schedules = context.FieldPriceSchedules
+                            .Where(fps => fps.FootballFieldId == f.Id)
+                            .Select(fps => new PriceScheduleDto
+                            {
+                                FieldPriceScheduleId = fps.Id,
+                                DayId = fps.DayId,
+                                DayName = fps.Day.Name, // Day tablosundan gelen isim
+                                TimeSlotId = fps.TimeSlotId,
+                                StartTime = TimeOnly.FromTimeSpan(fps.TimeSlot.StartTime),
+                                EndTime = TimeOnly.FromTimeSpan(fps.TimeSlot.EndTime),
+                                Price = fps.Price
+                            }).ToList()
+                    }).ToList();
+
+                return result;
+            }
+        }
         public bool IsSlotBooked(int fieldPriceScheduleId, DateOnly date)
         {
             using (var context = new FootballFieldContext())
@@ -249,6 +281,24 @@ namespace DataAccess.Concrete
                 // Eğer hiç rezervasyon olmayan aylar varsa onları da sıfır olarak eklemek istersen burada küçük bir for döngüsü yapılabilir (Şimdilik olanları listeler).
 
                 return dashboardDto;
+            }
+        }
+
+        public List<SlotStateDto> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate)
+        {
+            using (var context = new FootballFieldContext()) // Kendi Context ismini yazmayı unutma
+            {
+                return context.Reservations
+                    .Where(r => r.StatusId == 1 && // 1 = Aktif/Onaylandı
+                                r.ReservationDate >= startDate &&
+                                r.ReservationDate <= endDate)
+                    // .Where(r => r.BusinessId == businessId) // Eğer Reservation tablosunda BusinessId varsa bu satırı aktif et
+                    .Select(r => new SlotStateDto
+                    {
+                        ScheduleId = r.FieldPriceScheduleId,
+                        Date = r.ReservationDate
+                    })
+                    .ToList();
             }
         }
 

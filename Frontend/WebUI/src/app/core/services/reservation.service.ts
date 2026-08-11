@@ -95,4 +95,18 @@ export class ReservationService {
     // HttpPost ile sadece body'de ID'yi yolluyoruz
     return this.http.post(`${this.apiUrl}/cancelbybusiness`, reservationId, { withCredentials: true });
   }
+
+  getWeeklyTemplates(businessId: number) {
+    return this.http.get<any>(`${this.apiUrl}/getweeklytemplates?businessId=${businessId}`);
+  }
+
+  // 2. İki tarih arasındaki dolu (kırmızı) slotları tarihleriyle birlikte getirir
+  getBookedSlotsByDateRange(businessId: number, startDate: string, endDate: string) {
+    return this.http.get<any>(`${this.apiUrl}/getbookedslots-range?businessId=${businessId}&startDate=${startDate}&endDate=${endDate}`);
+  }
+
+  // 3. İki tarih arasındaki işlemde (sarı) olan slotları tarihleriyle birlikte getirir
+  getHeldSlotsByDateRange(businessId: number, startDate: string, endDate: string) {
+    return this.http.get<any>(`${this.apiUrl}/getheldslots-range?businessId=${businessId}&startDate=${startDate}&endDate=${endDate}`);
+  }
 }

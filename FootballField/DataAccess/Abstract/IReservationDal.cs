@@ -20,5 +20,7 @@ namespace DataAccess.Abstract
         BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
         TimeOnly GetStartTimeByScheduleId(int scheduleId);
         DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate);
+        List<SlotStateDto> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate);
+        List<FootballFieldScheduleDto> GetAllWeeklySchedulesByBusinessId(int businessId);
     }
 }

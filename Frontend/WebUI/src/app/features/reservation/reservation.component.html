@@ -65,6 +65,7 @@
   }
 
   <!-- 🚀 TEK VE BÜTÜNLEŞİK REZERVASYON KARTI -->
+  <!-- 🚀 TEK VE BÜTÜNLEŞİK REZERVASYON KARTI -->
   <div class="card shadow-sm border-0 rounded-4 bg-white mb-10" style="border: 1px solid #e4e6ef !important;">
     
     <!-- KART ÜST KISMI (Header & Sekmeler) -->
@@ -102,7 +103,8 @@
 
       <!-- Saha Sekmeleri (Pills) -->
       <ul class="nav nav-pills flex-row border-0 gap-4 fs-6 overflow-auto flex-nowrap pb-6 hide-scrollbar">
-        @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+        <!-- 🚀 DÜZELTME: dynamicGroupedFields kullanıyoruz -->
+        @for (field of dynamicGroupedFields(); track field.fieldId; let isFirstField = $first) {
           <li class="nav-item">
             <a class="nav-link btn btn-outline btn-flex h-100 bg-white ff-custom-tab" 
                [class.active]="isFirstField"
@@ -126,7 +128,8 @@
     <div class="card-body p-8 bg-gray-50 rounded-bottom-4">
       <div class="tab-content" id="myTabContent">
         
-        @for (field of groupedFields(); track field.fieldId; let isFirstField = $first) {
+        <!-- 🚀 DÜZELTME: dynamicGroupedFields kullanıyoruz -->
+        @for (field of dynamicGroupedFields(); track field.fieldId; let isFirstField = $first) {
           <div class="tab-pane fade" 
                [class.show]="isFirstField" 
                [class.active]="isFirstField" 
@@ -135,7 +138,8 @@
             
             <div class="accordion accordion-icon-collapse" [id]="'kt_accordion_' + field.fieldId">
               
-              @for (day of field.days; track day.dayId; let isFirstDay = $first) {
+              <!-- 🚀 DÜZELTME: dynamicDays kullanıyoruz -->
+              @for (day of field.dynamicDays; track day.dayId; let isFirstDay = $first) {
                 <!-- Gün Satırı -->
                 <div class="mb-5 border-bottom border-gray-200 pb-2">
                   <div class="accordion-header py-3 d-flex align-items-center" 
@@ -149,7 +153,11 @@
                       <i class="ki-duotone ki-minus-square fs-3 accordion-icon-on text-emerald"><span class="path1"></span><span class="path2"></span></i>
                     </span>
                     
-                    <h3 class="fs-4 fw-bold mb-0 ms-4 text-dark">{{ day.dayName }}</h3>
+                    <!-- 🚀 YENİ: Başlığın yanına o günün tarihini de ekliyoruz (örn: Salı - 11.08.2026) -->
+                    <h3 class="fs-4 fw-bold mb-0 ms-4 text-dark">
+                      {{ day.dayName }} 
+                      <span class="fs-6 fw-normal text-muted ms-2">{{ day.displayDate }}</span>
+                    </h3>
                   </div>
 
                   <!-- Saat Butonları -->
@@ -161,60 +169,63 @@
                     <div class="d-flex flex-wrap gap-4 pb-4">
                       @for (slot of day.slots; track slot.fieldPriceScheduleId) {
                         
-                        @if (!isSlotInPast(slot.startTime)) {
+                        @if (!isSlotInPast(slot.startTime, day.date)) {
   
-  @let booked = isSlotBooked(slot.fieldPriceScheduleId);
-  <!-- 🚀 DÜZELTİLDİ: Artık kendi işlemimi başkasınınmış gibi algılamayacak -->
-  @let heldByOther = isSlotHeldByOthers(slot.fieldPriceScheduleId);
-  @let isMyHold = (myActiveHold?.scheduleId === slot.fieldPriceScheduleId);
+                          <!-- 🚀 DÜZELTME: day.date parametreleri metotlara eklendi -->
+                          @let booked = isSlotBooked(slot.fieldPriceScheduleId, day.date);
+                          @let heldByOther = isSlotHeldByOthers(slot.fieldPriceScheduleId, day.date);
+                          <!-- 🚀 DÜZELTME: isMyHold tarih kontrolü eklendi -->
+                          @let isMyHold = (myActiveHold?.scheduleId === slot.fieldPriceScheduleId && myActiveHold?.date === day.date);
 
-  <button (click)="onSlotSelected(slot, field.fieldName)" 
-          [disabled]="booked || heldByOther"
-          class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
-          [ngClass]="{
-            'bg-light-danger border-danger opacity-75': booked,
-            'bg-light-warning border-warning opacity-75': heldByOther,
-            'bg-light-success border-success': isMyHold,
-            'bg-white hover-text-gray border-gray-300': !booked && !heldByOther && !isMyHold
-          }"
-          style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
-    
-    <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
-         [ngClass]="(booked || heldByOther || isMyHold) ? 'border-opacity-25' : 'border-gray-200'">
-      <i class="ki-duotone ki-time fs-4" 
-         [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success' : 'text-gray-600'))">
-         <span class="path1"></span><span class="path2"></span>
-      </i>
-      <span class="fw-bold fs-6 transition-all" 
-            [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success fw-bolder' : 'text-dark'))">
-        {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
-      </span>
-    </div>
-    
-    <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
-         [ngClass]="booked ? 'bg-danger text-white' : (heldByOther ? 'bg-warning text-dark' : (isMyHold ? 'bg-success text-white' : 'bg-light text-dark'))">
-      
-      @if (booked) {
-        <span class="fw-bolder fs-7 text-white">DOLU</span>
-      } @else if (heldByOther) {
-        <span class="fw-bolder fs-7 text-dark">İŞLEMDE</span>
-      } @else if (isMyHold) {
-        <span class="fw-bolder fs-7 text-white">SİZDE</span>
-      } @else {
-        <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
-        <span class="fw-bolder fs-5 text-dark">{{ slot.price }} ₺</span>
-      }
+                          <!-- 🚀 DÜZELTME: onSlotSelected metoduna day.date gönderiliyor -->
+                          <button (click)="onSlotSelected(slot, field.fieldName, day.date)" 
+                                  [disabled]="booked || heldByOther"
+                                  class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
+                                  [ngClass]="{
+                                    'bg-light-danger border-danger opacity-75': booked,
+                                    'bg-light-warning border-warning opacity-75': heldByOther,
+                                    'bg-light-success border-success': isMyHold,
+                                    'bg-white hover-text-gray border-gray-300': !booked && !heldByOther && !isMyHold
+                                  }"
+                                  style="width: 160px; height: 110px; border-width: 2px; border-radius: 14px;">
+                            
+                            <div class="d-flex align-items-center gap-1 w-100 justify-content-center border-bottom pb-2"
+                                 [ngClass]="(booked || heldByOther || isMyHold) ? 'border-opacity-25' : 'border-gray-200'">
+                              <i class="ki-duotone ki-time fs-4" 
+                                 [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success' : 'text-gray-600'))">
+                                 <span class="path1"></span><span class="path2"></span>
+                              </i>
+                              <span class="fw-bold fs-6 transition-all" 
+                                    [ngClass]="booked ? 'text-danger' : (heldByOther ? 'text-warning' : (isMyHold ? 'text-success fw-bolder' : 'text-dark'))">
+                                {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+                              </span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill w-100 justify-content-center mt-1" 
+                                 [ngClass]="booked ? 'bg-danger text-white' : (heldByOther ? 'bg-warning text-dark' : (isMyHold ? 'bg-success text-white' : 'bg-light text-dark'))">
+                              
+                              @if (booked) {
+                                <span class="fw-bolder fs-7 text-white">DOLU</span>
+                              } @else if (heldByOther) {
+                                <span class="fw-bolder fs-7 text-dark">İŞLEMDE</span>
+                              } @else if (isMyHold) {
+                                <span class="fw-bolder fs-7 text-white">SİZDE</span>
+                              } @else {
+                                <i class="bi bi-cash-stack transition-all fs-5 text-gray-700"></i>
+                                <span class="fw-bolder fs-5 text-dark">{{ slot.price }} ₺</span>
+                              }
 
-    </div>
-  </button>
-}
+                            </div>
+                          </button>
+                        }
                       }
                     </div>
                   </div>
                 </div>
               }
               
-              @if (field.days.length === 0) {
+              <!-- 🚀 DÜZELTME: field.dynamicDays.length kontrol ediliyor -->
+              @if (field.dynamicDays.length === 0) {
                  <div class="text-center text-muted py-8 fw-medium bg-white rounded-3 border border-dashed border-gray-300">
                    Bu saha için henüz bir fiyatlandırma/takvim girilmemiş.
                  </div>
@@ -292,7 +303,7 @@
         <div class="modal-body py-6">
           <div class="bg-light-success p-4 rounded-3 mb-6 border border-success border-dashed">
             <div class="fw-bold text-dark fs-5 mb-1">{{ selectedFieldName }}</div>
-            <div class="text-muted fs-6 mb-2">Tarih: <span class="fw-bold text-dark">{{ selectedDate }}</span></div>
+            <div class="text-muted fs-6 mb-2">Tarih: <span class="fw-bold text-dark">{{ myActiveHold?.date }}</span></div>
             <div class="text-muted fs-6 mb-2">Saat: <span class="fw-bold text-dark">{{ formatTime(selectedSlot?.startTime || '') }} - {{ formatTime(selectedSlot?.endTime || '') }}</span></div>
             <div class="text-muted fs-6">Tutar: <span class="fw-bold text-success fs-4">{{ selectedSlot?.price }} ₺</span></div>
           </div>

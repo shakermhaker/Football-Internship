@@ -154,5 +154,28 @@ namespace WebAPI.Controllers
             }
             return BadRequest(result);
         }
+        [HttpGet("getweeklytemplates")]
+        public IActionResult GetWeeklyTemplates(int businessId)
+        {
+            var result = _reservationService.GetAllWeeklySchedules(businessId);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("getbookedslots-range")]
+        public IActionResult GetBookedSlotsByDateRange(int businessId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+        {
+            var result = _reservationService.GetBookedSlotsByDateRange(businessId, startDate, endDate);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("getheldslots-range")]
+        public async Task<IActionResult> GetHeldSlotsByDateRange(int businessId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+        {
+            var result = await _reservationService.GetHeldSlotsByDateRangeAsync(businessId, startDate, endDate);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
     }
 }

@@ -47,6 +47,48 @@ namespace Business.Concrete
 
         }
 
+        public IDataResult<List<FootballFieldScheduleDto>> GetAllWeeklySchedules(int businessId)
+        {
+            var schedules = _reservationDal.GetAllWeeklySchedulesByBusinessId(businessId);
+            return new SuccessDataResult<List<FootballFieldScheduleDto>>(schedules, "İşletmenin haftalık takvim şablonu başarıyla getirildi.");
+        }
+
+        // 2. DOLU SLOTLAR (Veritabanından)
+        public IDataResult<List<SlotStateDto>> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate)
+        {
+            var bookedSlots = _reservationDal.GetBookedSlotsByDateRange(businessId, startDate, endDate);
+            return new SuccessDataResult<List<SlotStateDto>>(bookedSlots, "Dolu slotlar başarıyla getirildi.");
+        }
+
+        // 3. İŞLEMDE OLAN SLOTLAR (Redis'ten)
+        public async Task<IDataResult<List<SlotStateDto>>> GetHeldSlotsByDateRangeAsync(int businessId, DateOnly startDate, DateOnly endDate)
+        {
+            var heldSlots = new List<SlotStateDto>();
+
+            var allSchedules = GetAllWeeklySchedules(businessId).Data;
+            if (allSchedules == null || allSchedules.Count == 0)
+            {
+                return new SuccessDataResult<List<SlotStateDto>>(heldSlots);
+            }
+
+            
+            var scheduleIds = allSchedules
+                .SelectMany(f => f.Schedules.Select(s => s.FieldPriceScheduleId))
+                .ToList();
+
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                var heldIdsForDate = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
+
+                foreach (var id in heldIdsForDate)
+                {
+                    heldSlots.Add(new SlotStateDto { ScheduleId = id, Date = date });
+                }
+            }
+
+            return new SuccessDataResult<List<SlotStateDto>>(heldSlots, "İşlemde olan slotlar getirildi.");
+        }
+
 
         public async Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
         {
