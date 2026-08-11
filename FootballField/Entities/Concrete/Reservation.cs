@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Entities.Concrete 
 {
-    public class Reservation : IEntity
+    public class Reservation :BaseEntity
     {
         public int Id { get; set; }
         public decimal FinalPrice { get; set; }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class TimeSlot : IEntity
+    public class TimeSlot : BaseEntity
     {
         public int Id { get; set; }
         public TimeSpan StartTime { get; set; }

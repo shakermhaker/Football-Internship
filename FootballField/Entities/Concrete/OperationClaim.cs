@@ -3,7 +3,7 @@ using Core.Entities;
 
 namespace Entities.Concrete
 {
-    public class OperationClaim : IEntity, IOperationClaim
+    public class OperationClaim : BaseEntity, IOperationClaim
     {
         public int Id { get; set; }
         public string Name { get; set; }

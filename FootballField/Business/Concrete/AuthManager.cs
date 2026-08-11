@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using Core.Utilities.Security.Hashing;
@@ -19,13 +21,15 @@ namespace Business.Concrete
         private ITokenHelper _tokenHelper;
         private IEmailService _emailService;
         private AppUrlSettings _appUrls;
+        private IUserOperationClaimService _userOperationClaimService;
 
-        public AuthManager(IUserService userService, ITokenHelper tokenHelper, IOptions<AppUrlSettings> appUrls, IEmailService emailService)
+        public AuthManager(IUserService userService, ITokenHelper tokenHelper, IOptions<AppUrlSettings> appUrls, IEmailService emailService, IUserOperationClaimService userOperationClaimService)
         {
             _userService = userService;
             _tokenHelper = tokenHelper;
             _appUrls = appUrls.Value;
             _emailService = emailService;
+            _userOperationClaimService = userOperationClaimService;
 
         }
         
@@ -132,6 +136,9 @@ namespace Business.Concrete
 
 
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public async Task<IDataResult<User>> Register(UserForRegisterDto userForRegisterDto, string password)
         {
             byte[] passwordHash, passwordSalt;
@@ -155,6 +162,15 @@ namespace Business.Concrete
             };
 
             _userService.Add(user);
+
+            var defaultClaim = new UserOperationClaim
+            {
+                UserId = user.Id,
+                OperationClaimId = 1
+            };
+
+            _userOperationClaimService.Add(defaultClaim);
+
             await SendVerificationEmailAsync(user);
             
             return new SuccessDataResult<User>(user, "Kayıt oldu");

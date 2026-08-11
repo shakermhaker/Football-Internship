@@ -1,4 +1,7 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
@@ -21,6 +24,9 @@ namespace Business.Concrete
 
         // Metot imzası IBusinessService ile birebir aynı olmalı
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult Add(BusinessForRegisterDTO businessDto, int userId)
         {
             // BusinessManager.cs dosyasındaki ilgili kısmı şöyle düzelt:
@@ -68,6 +74,11 @@ namespace Business.Concrete
 
             return new SuccessDataResult<BusinessDetailDto>(result, "İşletme detayları getirildi.");
         }
+        [SecuredOperation("user")]
+        [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult Update(BusinessUpdateDto businessUpdateDto)
         {
             // 1. Güncellenecek işletmeyi veritabanından bul

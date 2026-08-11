@@ -32,6 +32,7 @@ namespace WebAPI.Controllers
             // 3. ADIM: Güvenli ve dolgun veriyi Manager'ın şefkatli kollarına bırakıyoruz
             var result = _fieldService.AddWithDetails(fieldDto);
 
+
             if (result.Success)
             {
                 return Ok(result);

@@ -21,9 +21,13 @@ export class MyReservationsComponent implements OnInit {
   // Ekranda gösterilecek (Filtrelenmiş) veriler
   filteredReservations = signal<UserReservationDetailDto[]>([]);
 
-  // Filtreleme Değişkenleri (İki Yönlü Bağlama için)
+  // 🚀 Filtreleme Değişkenleri
   searchTerm: string = '';
   filterDate: string = '';
+  
+  // 🚀 YENİ: Statü Filtresi için Değişkenler
+  statusOptions: string[] = ['Hepsi', 'Onaylandı', 'İptal Edildi', 'Tamamlandı'];
+  selectedStatus: string = 'Hepsi';
 
   cancelingId = signal<number | null>(null); // Hangi satır iptal ediliyor?
   isCanceling = signal<boolean>(false);
@@ -37,8 +41,14 @@ export class MyReservationsComponent implements OnInit {
     this.reservationService.getUserReservations().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.allReservations.set(res.data);
-          this.filteredReservations.set(res.data); // Başlangıçta hepsi görünür
+          // Backend'den 'Bitti' geliyorsa arayüzde daha şık durması için 'Tamamlandı' yapıyoruz
+          const formattedData = res.data.map(r => ({
+            ...r,
+            statusName: r.statusName === 'Bitti' ? 'Tamamlandı' : r.statusName
+          }));
+          
+          this.allReservations.set(formattedData);
+          this.filteredReservations.set(formattedData);
         }
         this.isLoading.set(false);
       },
@@ -49,12 +59,17 @@ export class MyReservationsComponent implements OnInit {
     });
   }
 
+  // 🚀 GÜNCELLENDİ: Statü Filtresi de Eklendi
   applyFilters() {
     let currentData = this.allReservations();
 
-    // 1. İsme veya Şehre/İlçeye Göre Metin Filtresi
+    // 1. Statü Filtresi
+    if (this.selectedStatus !== 'Hepsi') {
+      currentData = currentData.filter(r => r.statusName === this.selectedStatus);
+    }
+
+    // 2. Metin Filtresi
     if (this.searchTerm.trim() !== '') {
-      // 🚀 ÇÖZÜM: Türkçe diline duyarlı küçük harf çevirimi yapıyoruz! (Büyük/Küçük harf sorunu çözüldü)
       const lowerTerm = this.searchTerm.toLocaleLowerCase('tr-TR');
       
       currentData = currentData.filter(r => 
@@ -65,10 +80,9 @@ export class MyReservationsComponent implements OnInit {
       );
     }
 
-    // 2. Tarihe Göre Filtre (Varsa)
+    // 3. Tarih Filtresi
     if (this.filterDate) {
       currentData = currentData.filter(r => {
-        // Backend'den YYYY-MM-DDT00:00:00 gibi gelebilir, biz sadece YYYY-MM-DD kısmını kıyaslayacağız
         const resDate = r.reservationDate.split('T')[0]; 
         return resDate === this.filterDate;
       });
@@ -77,14 +91,19 @@ export class MyReservationsComponent implements OnInit {
     this.filteredReservations.set(currentData);
   }
 
-  // Filtreleri temizleme butonu için
+  // Statü sekmesine tıklandığında çalışır
+  setStatusFilter(status: string) {
+    this.selectedStatus = status;
+    this.applyFilters();
+  }
+
   clearFilters() {
     this.searchTerm = '';
     this.filterDate = '';
+    this.selectedStatus = 'Hepsi';
     this.filteredReservations.set(this.allReservations());
   }
 
-  
   startCancel(reservationId: number) {
     this.cancelingId.set(reservationId);
   }
@@ -98,14 +117,13 @@ export class MyReservationsComponent implements OnInit {
     
     this.reservationService.cancelReservation(reservationId).subscribe({
       next: (res) => {
-        // Ekranı baştan yenilemek yerine, SADECE o satırın durumunu güncelliyoruz! (Çok Hızlı)
         const currentAll = this.allReservations();
         const updatedAll = currentAll.map(r => 
           r.reservationId === reservationId ? { ...r, statusName: 'İptal Edildi' } : r
         );
         
         this.allReservations.set(updatedAll);
-        this.applyFilters(); // Ekrana yansıt
+        this.applyFilters(); 
         
         this.isCanceling.set(false);
         this.cancelingId.set(null);
@@ -117,10 +135,9 @@ export class MyReservationsComponent implements OnInit {
       }
     });
   }
-  
 
   formatTime(timeStr: string): string {
     if (!timeStr) return '';
-    return timeStr.substring(0, 5); // "19:00:00" -> "19:00"
+    return timeStr.substring(0, 5); 
   }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class User : IEntity , ICoreUser
+    public class User : BaseEntity, ICoreUser
     {
         public int Id { get; set; }
         public Guid RowGuid { get; set; } = Guid.NewGuid();

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class FootballField : IEntity
+    public class FootballField : BaseEntity
     {
         public int Id { get; set; }
         public string FieldName { get; set; } = string.Empty;

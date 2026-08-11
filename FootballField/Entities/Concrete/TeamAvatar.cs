@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class TeamAvatar : IEntity
+    public class TeamAvatar : BaseEntity
     {
         public int Id { get; set; }
         public string TeamName { get; set; } = string.Empty;

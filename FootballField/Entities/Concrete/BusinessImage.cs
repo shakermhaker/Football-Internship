@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class BusinessImage : IEntity
+    public class BusinessImage : BaseEntity
     {
         public int Id { get; set; }
         public string ImagePath { get; set; } = string.Empty;

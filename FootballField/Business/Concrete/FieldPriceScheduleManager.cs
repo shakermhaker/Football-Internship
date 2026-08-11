@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
@@ -19,7 +21,12 @@ namespace Business.Concrete
         {
             _fieldPriceSheduleDal = fieldPriceSheduleDal;
         }
+
+       
         [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult Add(FieldPriceSchedule fieldPriceSchedule)
         {
             _fieldPriceSheduleDal.Add(fieldPriceSchedule);

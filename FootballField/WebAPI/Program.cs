@@ -16,6 +16,8 @@ using WebAPI.BackgroundServices;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;    
 using System.Security.Claims;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FootballFieldContext>(options =>
@@ -84,12 +86,29 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 });
 
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+    .WriteTo.Console()
+    .WriteTo.File(
+        formatter: new CompactJsonFormatter(),
+        path: "Logs/log-.json",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+
 
 // 1. .NET 10'un Kendi Servis Tanımlamaları (Başka hiçbir harici paket yok)
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(); // Klasik Swagger UI üreteci
 builder.Services.AddHostedService<ReservationStatusUpdaterService>();
+builder.Services.AddScoped<Business.Abstract.IReservationNotificationService, WebAPI.SignalR.ReservationNotificationManager>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -135,11 +154,21 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 3, // 1 kullanıcı, 1 dakikada maks 3 rezervasyon/iptal yapabilir (Spam engeller)
+                PermitLimit = 20, // 1 kullanıcı, 1 dakikada maks 3 rezervasyon/iptal yapabilir (Spam engeller)
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
             });
     });
+});
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    // Yerel bilgisayarındaki Redis sunucusunun adresi (Varsayılan port 6379'dur)
+    options.Configuration = "localhost:6379";
+
+    // Uygulamanın Redis'teki anahtarlarının başına otomatik olarak "FF_" (FootballField) koysun.
+    // Bu sayede aynı Redis'i başka projeler de kullanıyorsa verilerimiz karışmaz.
+    options.InstanceName = "FF_";
 });
 
 
@@ -164,6 +193,7 @@ app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<WebAPI.Hubs.ReservationHub>("/reservationHub");
 app.MapControllers();
 
 app.Run();
