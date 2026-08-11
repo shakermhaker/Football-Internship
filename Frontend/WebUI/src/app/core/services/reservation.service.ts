@@ -48,17 +48,11 @@ export class ReservationService {
   private http = inject(HttpClient);
   private apiUrl = 'https://localhost:7074/api/Reservations'; 
 
-  getBusinessFieldSchedules(businessId: number, dateStr: string): Observable<DataResult<FootballFieldScheduleDto[]>> {
-    return this.http.get<DataResult<FootballFieldScheduleDto[]>>(`${this.apiUrl}/getbusinessfieldschedules?businessId=${businessId}&date=${dateStr}`);
-  }
+  
 
 
-  getBookedScheduleIdsByDate(businessId: number, dateStr: string): Observable<DataResult<number[]>> {
-    return this.http.get<DataResult<number[]>>(`${this.apiUrl}/getbookedids?businessId=${businessId}&date=${dateStr}`);
-  }
-  getHeldScheduleIdsByDate(businessId: number, dateStr: string): Observable<DataResult<number[]>> {
-    return this.http.get<DataResult<number[]>>(`${this.apiUrl}/getheldids?businessId=${businessId}&date=${dateStr}`);
-  }
+  
+  
 
   holdReservationSlot(businessId: number, dateStr: string, scheduleId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/hold-slot?businessId=${businessId}&date=${dateStr}&scheduleId=${scheduleId}`, {}, { withCredentials: true });

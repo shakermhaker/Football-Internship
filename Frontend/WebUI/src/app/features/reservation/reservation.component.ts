@@ -256,37 +256,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
     return `https://localhost:7074${path}`; // Kendi portuna göre kontrol et!
   }
 
-  // fetchSchedules(businessId: number, dateStr: string) {
-  //   this.reservationService.getBusinessFieldSchedules(businessId, dateStr).subscribe({
-  //     next: (res) => {
-  //       if (res.success && res.data) {
-  //         this.processDataForAccordion(res.data);
-  //       }
-  //       this.isLoading.set(false);
-  //     },
-  //     error: (err) => {
-  //       console.error('Takvim çekilirken hata:', err);
-  //       this.isLoading.set(false);
-  //     }
-  //   });
-  // }
 
-  // Belirli tarihteki dolu ID'leri backend'den çeker
-  // fetchBookedSlots(businessId: number, dateStr: string) {
-  //   this.reservationService.getBookedScheduleIdsByDate(businessId, dateStr).subscribe({
-  //     next: (res) => {
-  //       if (res.success && res.data) {
-  //         this.bookedScheduleIds.set(res.data);
-  //       } else {
-  //         this.bookedScheduleIds.set([]);
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Dolu slotlar çekilirken hata:', err);
-  //       this.bookedScheduleIds.set([]);
-  //     }
-  //   });
-  // }
 
   // Kullanıcı takvimden yeni bir tarih seçtiğinde tetiklenir
   onDateChange(event: any) {
@@ -298,18 +268,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // fetchHeldSlots(businessId: number, dateStr: string) {
-  //   this.reservationService.getHeldScheduleIdsByDate(businessId, dateStr).subscribe({
-  //     next: (res) => {
-  //       if (res.success && res.data) {
-  //         // Gelen düz ID listesini, bizim objeli state yapımıza çeviriyoruz
-  //         const formattedHolds = res.data.map(id => ({ scheduleId: id, date: dateStr }));
-  //         this.heldScheduleIds.set(formattedHolds);
-  //       }
-  //     },
-  //     error: (err) => console.error('İşlemdeki slotlar çekilirken hata:', err)
-  //   });
-  // }
+  
 
 
 

@@ -107,43 +107,10 @@ namespace Business.Concrete
 
 
 
-        public IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date)
-        {
-            
-            int dayOfWeek = (int)date.DayOfWeek;
+        
+        
 
-            
-            int dbDayId = dayOfWeek == 0 ? 7 : dayOfWeek;
-
-            // 3. Sadece o günün (örneğin sadece Cuma'nın) slotlarını çekiyoruz
-            var data = _reservationDal.GetFieldSchedulesByBusinessId(businessId, dbDayId);
-            return new SuccessDataResult<List<FootballFieldScheduleDto>>(data, "Seçilen tarihe ait takvim verisi başarıyla çekildi.");
-        }
-        public IDataResult<List<int>> GetBookedScheduleIdsByDate(int businessId, DateOnly date)
-        {
-            var bookedIds = _reservationDal.GetBookedScheduleIdsByDate(businessId, date);
-            return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
-        }
-
-        public async Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date)
-        {
-            // 1. İşletmeye ait tüm takvimi (Schedule) çek
-            var allSchedules = GetBusinessFieldSchedules(businessId, date).Data;
-            if (allSchedules == null || allSchedules.Count == 0)
-            {
-                return new SuccessDataResult<List<int>>(new List<int>());
-            }
-
-            // 2. Takvim içindeki tüm ID'leri düz bir listeye çevir (Örn: [15, 16, 17, ...])
-            var scheduleIds = allSchedules
-                .SelectMany(field => field.Schedules.Select(slot => slot.FieldPriceScheduleId))
-                .ToList();
-
-            // 3. Bu ID listesini Redis'e ver ve sadece kilitli olanları ayıkla
-            var heldIds = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
-
-            return new SuccessDataResult<List<int>>(heldIds, "İşlemde olan slotlar getirildi.");
-        }
+        
 
         public async Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
         {

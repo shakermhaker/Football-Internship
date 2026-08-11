@@ -20,35 +20,11 @@ namespace WebAPI.Controllers
             _reservationService = reservationService;
         }
 
-        [HttpGet("getbusinessfieldschedules")]
-        public IActionResult GetBusinessFieldSchedules(int businessId, [FromQuery] DateOnly date) // 🚀 Tarih parametresi eklendi
-        {
-            var result = _reservationService.GetBusinessFieldSchedules(businessId, date);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
-        }
+        
 
-        [HttpGet("getbookedids")]
-        public IActionResult GetBookedScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
-        {
-            var result = _reservationService.GetBookedScheduleIdsByDate(businessId, date);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
+        
 
-        [HttpGet("getheldids")]
-        public async Task<IActionResult> GetHeldScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
-        {
-            var result = await _reservationService.GetHeldScheduleIdsByDateAsync(businessId, date);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
+        
 
         [HttpPost("hold-slot")]
         [EnableRateLimiting("ReservationLimit")] // Hold işlemi de spama karşı korunsun
