@@ -11,8 +11,7 @@ namespace DataAccess.Abstract
     public interface IReservationDal : IEntityRepository<Reservation>
     {
         // 🚀 İşletmenin sahalarına ait takvimi çeken özel metot
-        List<FootballFieldScheduleDto> GetFieldSchedulesByBusinessId(int businessId, int dayId);
-        List<int> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
+       
         bool IsSlotBooked(int fieldPriceScheduleId, DateOnly date);
         int GetDayIdByScheduleId(int scheduleId);
         List<UserReservationDetailDto> GetUserReservations(int userId);
@@ -20,5 +19,7 @@ namespace DataAccess.Abstract
         BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
         TimeOnly GetStartTimeByScheduleId(int scheduleId);
         DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate);
+        List<SlotStateDto> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate);
+        List<FootballFieldScheduleDto> GetAllWeeklySchedulesByBusinessId(int businessId);
     }
 }

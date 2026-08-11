@@ -30,7 +30,7 @@ import {ReservationService} from '../../core/services/reservation.service';
       background-color: #e8fff3 !important; /* Metronic bg-light-success karşılığı */
       color: #198754 !important; /* text-success */
       font-weight: 700; /* Seçiliyken BOLD olsun */
-      box-shadow: 0 2px 6px rgba(25, 135, 84, 0.15); /* Hafif gölge ile havaya kalksın */
+      box-shadow: 0 1px 3px rgba(25, 135, 84, 0.15); /* Hafif gölge ile havaya kalksın */
     }
   `],
   template: `

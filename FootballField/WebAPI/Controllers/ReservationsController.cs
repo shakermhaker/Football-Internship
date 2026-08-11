@@ -20,35 +20,11 @@ namespace WebAPI.Controllers
             _reservationService = reservationService;
         }
 
-        [HttpGet("getbusinessfieldschedules")]
-        public IActionResult GetBusinessFieldSchedules(int businessId, [FromQuery] DateOnly date) // 🚀 Tarih parametresi eklendi
-        {
-            var result = _reservationService.GetBusinessFieldSchedules(businessId, date);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
-        }
+        
 
-        [HttpGet("getbookedids")]
-        public IActionResult GetBookedScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
-        {
-            var result = _reservationService.GetBookedScheduleIdsByDate(businessId, date);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
+        
 
-        [HttpGet("getheldids")]
-        public async Task<IActionResult> GetHeldScheduleIdsByDate(int businessId, [FromQuery] DateOnly date)
-        {
-            var result = await _reservationService.GetHeldScheduleIdsByDateAsync(businessId, date);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
+        
 
         [HttpPost("hold-slot")]
         [EnableRateLimiting("ReservationLimit")] // Hold işlemi de spama karşı korunsun
@@ -152,6 +128,29 @@ namespace WebAPI.Controllers
             {
                 return Ok(result);
             }
+            return BadRequest(result);
+        }
+        [HttpGet("getweeklytemplates")]
+        public IActionResult GetWeeklyTemplates(int businessId)
+        {
+            var result = _reservationService.GetAllWeeklySchedules(businessId);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("getbookedslots-range")]
+        public IActionResult GetBookedSlotsByDateRange(int businessId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+        {
+            var result = _reservationService.GetBookedSlotsByDateRange(businessId, startDate, endDate);
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("getheldslots-range")]
+        public async Task<IActionResult> GetHeldSlotsByDateRange(int businessId, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+        {
+            var result = await _reservationService.GetHeldSlotsByDateRangeAsync(businessId, startDate, endDate);
+            if (result.Success) return Ok(result);
             return BadRequest(result);
         }
     }

@@ -9,9 +9,6 @@ namespace Business.Abstract
     public interface IReservationService
     {
         // İşletmenin sahalarını ve fiyat/saat takvimini getirir
-        IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date);
-        IDataResult<List<int>> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
-        Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date);
         Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId);
 
         Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId);
@@ -22,6 +19,10 @@ namespace Business.Abstract
 
         IDataResult<DailyReservationSummaryDto> GetDailyReservations(int businessId, DateTime date);
         IResult CancelReservationByBusiness(int reservationId);
+
+        IDataResult<List<FootballFieldScheduleDto>> GetAllWeeklySchedules(int businessId);
+        IDataResult<List<SlotStateDto>> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate);
+        Task<IDataResult<List<SlotStateDto>>> GetHeldSlotsByDateRangeAsync(int businessId, DateOnly startDate, DateOnly endDate);
 
     }
 }
