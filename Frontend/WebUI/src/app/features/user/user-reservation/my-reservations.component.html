@@ -78,7 +78,9 @@
                [ngClass]="{
                  'border-start-success': res.statusName === 'Onaylandı',
                  'border-start-danger': res.statusName === 'İptal Edildi',
-                 'border-start-secondary': res.statusName === 'Tamamlandı'
+                 'border-start-secondary': res.statusName === 'Tamamlandı',
+                 'border-start-primary': res.statusName === 'Ücretsiz Değişim',
+                 'border-start-dark card-passive': res.statusName === 'Ücretsiz Değişim Kullanıldı' 
                }">
             
             <div class="card-body p-6 d-flex flex-column">
@@ -95,8 +97,15 @@
                       [ngClass]="{
                         'ff-badge-success': res.statusName === 'Onaylandı', 
                         'ff-badge-danger': res.statusName === 'İptal Edildi',
-                        'ff-badge-secondary': res.statusName === 'Tamamlandı' 
+                        'ff-badge-secondary': res.statusName === 'Tamamlandı',
+                        'ff-badge-primary': res.statusName === 'Ücretsiz Değişim',
+                        'ff-badge-grey': res.statusName === 'Ücretsiz Değişim Kullanıldı' 
                       }">
+                  @if (res.statusName === 'Ücretsiz Değişim') {
+                    <i class="ki-duotone ki-gift fs-7 text-primary"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+                  } @else if (res.statusName === 'Ücretsiz Değişim Kullanıldı') {
+                    <i class="ki-duotone ki-check-circle fs-7 text-gray-500"><span class="path1"></span><span class="path2"></span></i>
+                  }
                   {{ res.statusName }}
                 </span>
               </div>
@@ -129,35 +138,43 @@
                   {{ res.cityName }}, {{ res.districtName }}
                 </div>
 
-                <div class="d-flex gap-2">
-                  
-                  @if (res.statusName === 'Onaylandı') {
-                    @if (cancelingId() === res.reservationId) {
-                      <div class="d-flex align-items-center gap-1 bg-light-danger p-1 rounded-3 w-100 justify-content-between">
-                        <span class="text-danger fw-bold fs-8 ms-2">Emin misiniz?</span>
-                        <div>
-                          <button (click)="confirmCancel(res.reservationId)" [disabled]="isCanceling()" class="btn btn-sm btn-danger fw-bold px-3 py-1">
-                            @if (isCanceling()) { <span class="spinner-border spinner-border-sm"></span> } @else { Evet }
-                          </button>
-                          <button (click)="cancelCancel()" [disabled]="isCanceling()" class="btn btn-sm btn-icon btn-active-light-dark py-1">
-                            <i class="ki-duotone ki-cross fs-3"></i>
-                          </button>
-                        </div>
-                      </div>
-                    } @else {
-                      <button (click)="startCancel(res.reservationId)" class="btn btn-sm btn-light-danger fw-bold w-100">
-                        İptal Et
-                      </button>
-                    }
-                  }
-
-                  @if (cancelingId() !== res.reservationId) {
-                    <a [routerLink]="['/business', res.businessId, 'schedules']" class="btn btn-sm btn-light-primary fw-bold w-100">
-                      İşletmeye Git
-                    </a>
-                  }
-
+                @if (res.statusName === 'Ücretsiz Değişim') {
+                <div class="alert alert-primary p-3 mb-4 fs-8 border border-primary border-dashed rounded-3">
+                  <i class="ki-duotone ki-information-5 text-primary me-1 fs-5"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                  İşletme saatleri güncellediği için bu rezervasyonunuz yerine <strong>yeni bir ücretsiz rezervasyon hakkı</strong> tanımlanmıştır. Yeni saat seçerken kullanabilirsiniz.
                 </div>
+              }
+                  
+                  <!-- 🚀 EĞER HAK KULLANILMIŞSA BUTONLARI GÖSTERME -->
+                @if (res.statusName !== 'Ücretsiz Değişim Kullanıldı') {
+                  <div class="d-flex gap-2">
+                    @if (res.statusName === 'Onaylandı') {
+                      @if (cancelingId() === res.reservationId) {
+                        <div class="d-flex align-items-center gap-1 bg-light-danger p-1 rounded-3 w-100 justify-content-between">
+                          <span class="text-danger fw-bold fs-8 ms-2">Emin misiniz?</span>
+                          <div>
+                            <button (click)="confirmCancel(res.reservationId)" [disabled]="isCanceling()" class="btn btn-sm btn-danger fw-bold px-3 py-1">
+                              @if (isCanceling()) { <span class="spinner-border spinner-border-sm"></span> } @else { Evet }
+                            </button>
+                            <button (click)="cancelCancel()" [disabled]="isCanceling()" class="btn btn-sm btn-icon btn-active-light-dark py-1">
+                              <i class="ki-duotone ki-cross fs-3"></i>
+                            </button>
+                          </div>
+                        </div>
+                      } @else {
+                        <button (click)="startCancel(res.reservationId)" class="btn btn-sm btn-light-danger fw-bold w-100">
+                          İptal Et
+                        </button>
+                      }
+                    }
+
+                    @if (cancelingId() !== res.reservationId) {
+                      <a [routerLink]="['/business', res.businessId, 'schedules']" class="btn btn-sm btn-light-primary fw-bold w-100">
+                        İşletmeye Git
+                      </a>
+                    }
+                  </div>
+                }
               </div>
 
             </div>
@@ -169,6 +186,7 @@
 </div>
 
 <style>
+  .border-start-primary { border-left: 4px solid #009ef7 !important; }
   .transition-all { transition: all 0.2s ease-in-out; }
   
   .card-hover-effect { border: 1px solid #e4e6ef; }
@@ -223,4 +241,23 @@
   .ff-badge-primary { background-color: #f1faff !important; color: #009ef7 !important; border: 1px solid rgba(0,158,247,0.2); } /* Onaylandı (Açık Mavi) */
   .ff-badge-success { background-color: #e8fff3 !important; color: #198754 !important; border: 1px solid rgba(25,135,84,0.2); } /* Tamamlandı (Silik Yeşil) */
   .ff-badge-danger { background-color: #fff5f8 !important; color: #f1416c !important; border: 1px solid rgba(241,65,108,0.2); }  /* İptal Edildi (Silik Kırmızı) */
+
+  /* 🚀 YENİ: PASİF KART TASARIMI */
+  .border-start-dark { border-left: 4px solid #4b5675 !important; }
+  
+  .card-passive {
+    background-color: #f9f9f9 !important;
+    border-color: #e4e6ef !important;
+    opacity: 0.65;
+    pointer-events: none; /* Hiçbir şeye tıklanamaz */
+    filter: grayscale(80%); /* Renkleri grileştirir */
+  }
+
+  /* YENİ: GRİ SİLİK ROZET */
+  .ff-badge-grey { 
+    background-color: #f3f6f9 !important; 
+    color: #7e8299 !important; 
+    border: 1px solid rgba(126,130,153,0.2); 
+  }
+
 </style>

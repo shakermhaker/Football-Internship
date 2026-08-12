@@ -154,5 +154,40 @@ namespace WebAPI.Controllers
             }
             return BadRequest(result);
         }
+
+        [HttpGet("check-free-rights")]
+        public IActionResult CheckFreeRights([FromQuery] int footballFieldId)
+        {
+            // Token'dan giriş yapan kullanıcının ID'sini alıyoruz
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdString, out int userId) || userId <= 0)
+            {
+                return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+            }
+
+            var result = _reservationService.CheckFreeBookingRights(userId, footballFieldId);
+
+            if (result.Success)
+            {
+                return Ok(result); // Geriye Data olarak hak sayısını (0, 1, 2 vs.) döner
+            }
+
+            return BadRequest(result);
+        }
+
+        [HttpPost("usefreebookingright")]
+        public IActionResult UseFreeBookingRight([FromBody] int reservationId)
+        {
+            // Yemeği mutfaktan (Manager'dan) alıp dışarıya servis ediyoruz
+            var result = _reservationService.UseFreeBookingRight(reservationId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
     }
 }

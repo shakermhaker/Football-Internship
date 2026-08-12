@@ -20,5 +20,8 @@ namespace DataAccess.Abstract
         BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
         TimeOnly GetStartTimeByScheduleId(int scheduleId);
         DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate);
+        void CompensateUsersForScheduleChange(int footballFieldId);
+        int GetFreeRightCount(int userId, int footballFieldId);
+        bool TryUseFreeRight(int userId, int fieldPriceScheduleId);
     }
 }

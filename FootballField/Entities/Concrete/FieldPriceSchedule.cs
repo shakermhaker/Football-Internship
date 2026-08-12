@@ -24,5 +24,7 @@ namespace Entities.Concrete
         public Day Day { get; set; } = null!;
 
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+        // Geçmiş rezervasyonların patlamaması için Soft Delete kolonu
+        public bool IsDeleted { get; set; } = false;
     }
 }

@@ -51,6 +51,7 @@ namespace Business.DependencyResolvers.Autofac
             builder.RegisterType<FieldPriceScheduleManager>().As<IFieldPriceScheduleService>();
 
 
+            builder.RegisterType<EfFreeBookingRightDal>().As<IFreeBookingRightDal>().SingleInstance();
             builder.RegisterType<AuthManager>().As<IAuthService>();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>();
 

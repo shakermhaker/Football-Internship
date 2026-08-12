@@ -18,16 +18,19 @@ namespace Business.Concrete
         private readonly ITimeSlotDal _timeSlotDal;
         private readonly IFieldPriceSheduleDal _fieldPriceScheduleDal;
         private readonly IFieldPriceScheduleService _scheduleService;
+        private readonly IReservationDal _reservationDal;
 
         public FieldManager(
             IFieldDal fieldDal,
             ITimeSlotDal timeSlotDal,
             IFieldPriceScheduleService scheduleService,
-            IFieldPriceSheduleDal fieldPriceScheduleDal)
+            IFieldPriceSheduleDal fieldPriceScheduleDal,
+            IReservationDal reservationDal)
         {
             _fieldDal = fieldDal;
             _timeSlotDal = timeSlotDal;
             _scheduleService = scheduleService;
+            _reservationDal = reservationDal;
             _fieldPriceScheduleDal = fieldPriceScheduleDal;
         }
 
@@ -124,7 +127,7 @@ namespace Business.Concrete
             if (field == null) return new ErrorDataResult<FootballFieldAddDTO>("Saha bulunamadı.");
 
             // 2. Sahaya ait tüm periyotları TimeSlot detayıyla çek
-            var schedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId);
+            var schedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId && s.IsDeleted == false);
             var detailedSchedules = schedules.Select(s => new
             {
                 s.DayId,
@@ -259,11 +262,13 @@ namespace Business.Concrete
             field.FieldName = fieldDto.Name; // Senin DTO'daki property adın neyse (Name / FieldName)
             _fieldDal.Update(field);
 
-            // 2. TEMİZLİK OPERASYONU: Bu sahaya ait eski tüm fiyat/saat programlarını bul ve sil
-            var oldSchedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId);
+            _reservationDal.CompensateUsersForScheduleChange(fieldId);
+            // 2. TEMİZLİK OPERASYONU (SOFT DELETE): Eski saatleri pasife al
+            var oldSchedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId && s.IsDeleted == false);
             foreach (var oldSchedule in oldSchedules)
             {
-                _fieldPriceScheduleDal.Delete(oldSchedule);
+                oldSchedule.IsDeleted = true; // Kaydı pasife çekiyoruz
+                _fieldPriceScheduleDal.Update(oldSchedule); // Delete yerine Update işlemi yapıyoruz
             }
 
             // 3. YENİLERİ EKLEME: Tıpkı eklemedeki mantıkla yeni gelen grupları ve periyotları ekle
