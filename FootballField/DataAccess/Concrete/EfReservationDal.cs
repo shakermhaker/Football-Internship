@@ -24,7 +24,8 @@ namespace DataAccess.Concrete
                         FootballFieldId = f.Id,
                         FootballFieldName = f.FieldName,
                         Schedules = f.PriceSchedules
-                            .Where(s => s.DayId == dayId) // 🚀 FİLTRE: SADECE SEÇİLEN GÜNÜN SLOTLARI GELİR
+                            // 🚀 DÜZELTME BURADA: Sadece o günün ve SİLİNMEMİŞ (aktif) olan slotları getir!
+                            .Where(s => s.DayId == dayId && s.IsDeleted == false)
                             .OrderBy(s => s.TimeSlot.StartTime)
                             .Select(s => new PriceScheduleDto
                             {
@@ -37,7 +38,7 @@ namespace DataAccess.Concrete
                                 Price = s.Price
                             }).ToList()
                     })
-                    .Where(f => f.Schedules.Any()) // 🚀 Eğer o sahada o gün için hiç slot yoksa, o sahayı ekrana boşuna getirme
+                    .Where(f => f.Schedules.Any())
                     .ToList();
 
                 return result;
@@ -318,17 +319,21 @@ namespace DataAccess.Concrete
             }
         }
 
-        public void CompensateUsersForScheduleChange(int footballFieldId)
+        // Parametre int footballFieldId yerine List<int> deletedFieldPriceScheduleIds oldu
+        public void CompensateUsersForScheduleChange(List<int> deletedFieldPriceScheduleIds)
         {
+            // Liste boşsa hiç yorulma
+            if (deletedFieldPriceScheduleIds == null || !deletedFieldPriceScheduleIds.Any()) return;
+
             using (var context = new FootballFieldContext())
             {
                 var today = DateOnly.FromDateTime(DateTime.Now);
 
-                // 1. O sahadaki aktif rezervasyonları, fiyat tarifesi ve halı saha (dolayısıyla BusinessId) bilgisiyle birlikte getir
+                // 1. 🚀 Sadece ID'si bizim silinenler listesinde (deletedFieldPriceScheduleIds) olan aktif rezervasyonları getir
                 var affectedReservations = context.Reservations
                     .Include(r => r.FieldPriceSchedule)
-                        .ThenInclude(fps => fps.FootballField) // FieldPriceSchedule üzerinden FootballField'a iniyoruz
-                    .Where(r => r.FieldPriceSchedule.FootballFieldId == footballFieldId
+                        .ThenInclude(fps => fps.FootballField)
+                    .Where(r => deletedFieldPriceScheduleIds.Contains(r.FieldPriceScheduleId) // NOKTA ATIŞI FİLTRE BURADA
                              && r.ReservationDate >= today
                              && r.StatusId == 1
                              && r.IsDeleted == false)
@@ -339,15 +344,14 @@ namespace DataAccess.Concrete
                 // 2. Hakları dağıt
                 foreach (var res in affectedReservations)
                 {
-                    res.StatusId = 4; // Statüyü 4 yap (Tamamlandı/Ücretsiz Değişim)
+                    res.StatusId = 4; // Tamamlandı/Ücretsiz Değişim
 
-                    // BusinessId'yi doğrudan rezervasyonun ilişkili olduğu tablolardan güvenli bir şekilde çekiyoruz
                     int currentBusinessId = res.FieldPriceSchedule.FootballField.BusinessId;
 
                     context.FreeBookingRights.Add(new FreeBookingRight
                     {
                         UserId = res.UserId,
-                        BusinessId = currentBusinessId, // Artık 0 gelme ihtimali yok (veritabanında doğruysa)
+                        BusinessId = currentBusinessId,
                         ReservationId = res.Id,
                         IsUsed = false
                     });

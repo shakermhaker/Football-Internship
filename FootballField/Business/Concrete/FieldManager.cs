@@ -249,66 +249,130 @@ namespace Business.Concrete
             public TimeSpan StartTime { get; set; }
             public TimeSpan EndTime { get; set; }
         }
+        [TransactionScopeAspect]
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
         public IResult UpdateWithSchedules(FootballFieldAddDTO fieldDto, int fieldId)
         {
-            // 1. Sahayı bul
+            // 1. Sahayı bul ve ana bilgileri güncelle
             var field = _fieldDal.Get(f => f.Id == fieldId);
             if (field == null)
             {
                 return new ErrorResult("Güncellenecek saha bulunamadı.");
             }
 
-            // Sahanın adını güncelle
-            field.FieldName = fieldDto.Name; // Senin DTO'daki property adın neyse (Name / FieldName)
+            field.FieldName = fieldDto.Name;
             _fieldDal.Update(field);
 
-            _reservationDal.CompensateUsersForScheduleChange(fieldId);
-            // 2. TEMİZLİK OPERASYONU (SOFT DELETE): Eski saatleri pasife al
-            var oldSchedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId && s.IsDeleted == false);
-            foreach (var oldSchedule in oldSchedules)
-            {
-                oldSchedule.IsDeleted = true; // Kaydı pasife çekiyoruz
-                _fieldPriceScheduleDal.Update(oldSchedule); // Delete yerine Update işlemi yapıyoruz
-            }
+            // 2. ÖNYÜZDEN GELEN VERİYİ DÜZ BİR "HEDEF" LİSTESİNE ÇEVİR (Flattening)
+            var targetSchedules = new List<FieldPriceSchedule>();
 
-            // 3. YENİLERİ EKLEME: Tıpkı eklemedeki mantıkla yeni gelen grupları ve periyotları ekle
             foreach (var group in fieldDto.ScheduleGroups)
             {
                 foreach (var period in group.Periods)
                 {
-
                     TimeSpan parsedStart = period.StartTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.StartTime);
                     TimeSpan parsedEnd = period.EndTime == "24:00" ? TimeSpan.Zero : TimeSpan.Parse(period.EndTime);
-                    // Saat aralığına uygun TimeSlot'u bul veya oluştur
-                    var timeSlot = _timeSlotDal.Get(t => t.StartTime == TimeSpan.Parse(period.StartTime) && t.EndTime == TimeSpan.Parse(period.EndTime));
 
+                    // Saat aralığına uygun TimeSlot'u bul veya yepyeni bir tane oluştur
+                    var timeSlot = _timeSlotDal.Get(t => t.StartTime == parsedStart && t.EndTime == parsedEnd);
                     if (timeSlot == null)
                     {
-                        timeSlot = new TimeSlot
-                        {
-                            StartTime = TimeSpan.Parse(period.StartTime),
-                            EndTime = TimeSpan.Parse(period.EndTime)
-                        };
+                        timeSlot = new TimeSlot { StartTime = parsedStart, EndTime = parsedEnd };
                         _timeSlotDal.Add(timeSlot);
                     }
 
-                    // Her bir seçilen gün için yeni kayıt at
                     foreach (var dayId in group.SelectedDayIds)
                     {
-                        var schedule = new FieldPriceSchedule
+                        targetSchedules.Add(new FieldPriceSchedule
                         {
                             FootballFieldId = field.Id,
-                            TimeSlotId = timeSlot.Id,
                             DayId = dayId,
+                            TimeSlotId = timeSlot.Id,
                             Price = period.Price
-                        };
-                        _fieldPriceScheduleDal.Add(schedule);
+                        });
                     }
                 }
             }
 
-            return new SuccessResult("Halı saha ve rezervasyon programları başarıyla güncellendi.");
+            // 3. VERİTABANINDAKİ MEVCUT KAYITLARI ÇEK
+            var existingSchedules = _fieldPriceScheduleDal.GetAll(s => s.FootballFieldId == fieldId);
+
+            var schedulesToUpdate = new List<FieldPriceSchedule>();
+            var schedulesToAdd = new List<FieldPriceSchedule>();
+
+            // 🚀 YENİ: Sadece silinen saatlerin ID'lerini toplayacağız
+            var deletedScheduleIds = new List<int>();
+
+            // 4. MEVCUT KAYITLARI KONTROL ET
+            foreach (var existing in existingSchedules)
+            {
+                var incomingMatch = targetSchedules.FirstOrDefault(x => x.DayId == existing.DayId && x.TimeSlotId == existing.TimeSlotId);
+
+                if (incomingMatch == null)
+                {
+                    // 🚨 SAAT SİLİNMİŞ (İşte mağduriyet burada başlıyor!)
+                    if (existing.IsDeleted == false)
+                    {
+                        existing.IsDeleted = true;
+                        schedulesToUpdate.Add(existing);
+
+                        // İptal edilen bu periyodun ID'sini listeye at
+                        deletedScheduleIds.Add(existing.Id);
+                    }
+                }
+                else
+                {
+                    // 💰 FİYAT DEĞİŞMİŞ (Veya Diriltilmiş)
+                    bool needsUpdate = false;
+
+                    if (existing.Price != incomingMatch.Price || existing.IsDeleted == true)
+                    {
+                        existing.Price = incomingMatch.Price;
+                        existing.IsDeleted = false;
+                        needsUpdate = true;
+
+                        // DİKKAT: Fiyat değişimi eski rezervasyonları etkilemez! 
+                        // O yüzden deletedScheduleIds listesine EKLEMİYORUZ.
+                    }
+
+                    if (needsUpdate) schedulesToUpdate.Add(existing);
+                }
+            }
+
+            // 5. YEPYENİ EKLENECEK KAYITLARI BUL
+            foreach (var target in targetSchedules)
+            {
+                bool existsInDb = existingSchedules.Any(x => x.DayId == target.DayId && x.TimeSlotId == target.TimeSlotId);
+
+                if (!existsInDb)
+                {
+                    schedulesToAdd.Add(new FieldPriceSchedule
+                    {
+                        FootballFieldId = target.FootballFieldId,
+                        DayId = target.DayId,
+                        TimeSlotId = target.TimeSlotId,
+                        Price = target.Price,
+                        IsDeleted = false
+                    });
+                    // Yeni saat eklenmesi de kimseyi mağdur etmez, listeye eklemiyoruz.
+                }
+            }
+
+            // 6. DB YANSITMA (UpdateBulk ve AddBulk işlemleri)
+            foreach (var item in schedulesToUpdate) { _fieldPriceScheduleDal.Update(item); }
+            foreach (var item in schedulesToAdd) { _fieldPriceScheduleDal.Add(item); }
+
+            // 7. 🚀 SADECE SİLİNEN (PASİFE ÇEKİLEN) SAATLER VARSA TELAFİ ET
+            if (deletedScheduleIds.Any())
+            {
+                // Artık Saha ID'sini değil, doğrudan bozulan periyotların listesini yolluyoruz!
+                _reservationDal.CompensateUsersForScheduleChange(deletedScheduleIds);
+            }
+
+            return new SuccessResult("Halı saha ve rezervasyon programları akıllı bir şekilde güncellendi.");
         }
 
-    }
+        }
     }
