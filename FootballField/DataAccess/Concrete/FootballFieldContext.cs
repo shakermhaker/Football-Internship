@@ -48,25 +48,29 @@ public class FootballFieldContext : DbContext
     // Ara tablo (Join Table)
     public DbSet<UserOperationClaim> UserOperationClaims{ get; set; }
     public DbSet<TeamAvatar> TeamAvatars { get; set; }
+    public DbSet<FreeBookingRight> FreeBookingRights { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Ayrı dosya oluşturmadan doğrudan Context içine kuralı yazmak (Tek kuralımız olduğu için en pratik yol. artık iki xd ama uğraşmicam ayırmakla)
         modelBuilder.Entity<FieldPriceSchedule>(entity =>
         {
             // İlgili 3 kolonu (Saha, Saat, Gün) birleştirip Unique (Benzersiz) yapıyoruz!
             entity.HasIndex(f => new { f.FootballFieldId, f.TimeSlotId, f.DayId })
                   .IsUnique()
-                  .HasDatabaseName("IX_Unique_Field_Time_Day");
+                  .HasDatabaseName("IX_Unique_Field_Time_Day")
+                  .HasFilter("\"IsDeleted\" = false");
         });
 
         modelBuilder.Entity<Reservation>(entity =>
         {
+            // Bir saat dilimine aynı gün için birden fazla rezervasyon atılmasını engelliyoruz
             entity.HasIndex(r => new { r.ReservationDate, r.FieldPriceScheduleId })
                   .IsUnique()
-                  .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId");
+                  .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId")
+                  // Hem silinmemiş HEM DE statüsü 1 (Aktif) olanlar benzersiz olsun
+                  .HasFilter("\"IsDeleted\" = false AND \"StatusId\" = 1");
         });
     }
 
@@ -76,7 +80,6 @@ public class FootballFieldContext : DbContext
         return base.SaveChanges();
     }
 
-    // 🚀 2. Asenkron (Async) Kaydetme işlemini eziyoruz
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         AddAuditInfo();
@@ -86,8 +89,6 @@ public class FootballFieldContext : DbContext
     private void AddAuditInfo()
     {
         var entries = ChangeTracker.Entries<IAuditableEntity>();
-
-        // Artık _httpContextAccessor null gelmeyecek!
         var userIdString = _httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         int? currentUserId = null;
@@ -100,7 +101,7 @@ public class FootballFieldContext : DbContext
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = DateTime.UtcNow; // PostgreSQL UTC ister
+                entry.Entity.CreatedAt = DateTime.UtcNow;
                 entry.Entity.CreatedBy = currentUserId;
             }
             else if (entry.State == EntityState.Modified)
@@ -108,12 +109,10 @@ public class FootballFieldContext : DbContext
                 entry.Property(p => p.CreatedAt).IsModified = false;
                 entry.Property(p => p.CreatedBy).IsModified = false;
 
-                entry.Entity.UpdatedAt = DateTime.UtcNow; // PostgreSQL UTC ister
+                entry.Entity.UpdatedAt = DateTime.UtcNow;
                 entry.Entity.UpdatedBy = currentUserId;
             }
         }
     }
-
-
 }
 

@@ -3,6 +3,7 @@ using System;
 using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    partial class FootballFieldContextModelSnapshot : ModelSnapshot
+    [Migration("20260811084245_AddedIsDeletedToReservations")]
+    partial class AddedIsDeletedToReservations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -217,9 +220,6 @@ namespace DataAccess.Migrations
                     b.Property<int>("FootballFieldId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
@@ -240,8 +240,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("FootballFieldId", "TimeSlotId", "DayId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Unique_Field_Time_Day")
-                        .HasFilter("\"IsDeleted\" = false");
+                        .HasDatabaseName("IX_Unique_Field_Time_Day");
 
                     b.ToTable("FieldPriceSchedules");
                 });
@@ -288,13 +287,10 @@ namespace DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BusinessId")
+                    b.Property<int>("FootballFieldId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("ReservationId")
+                    b.Property<int>("RemainingUsageCount")
                         .HasColumnType("integer");
 
                     b.Property<int>("UserId")
@@ -302,9 +298,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessId");
-
-                    b.HasIndex("ReservationId");
+                    b.HasIndex("FootballFieldId");
 
                     b.HasIndex("UserId");
 
@@ -391,8 +385,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("ReservationDate", "FieldPriceScheduleId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId")
-                        .HasFilter("\"IsDeleted\" = false AND \"StatusId\" = 1");
+                        .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId");
 
                     b.ToTable("Reservations");
                 });
@@ -678,15 +671,9 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Entities.Concrete.FreeBookingRight", b =>
                 {
-                    b.HasOne("Entities.Concrete.Business", "Business")
+                    b.HasOne("Entities.Concrete.FootballField", "FootballField")
                         .WithMany()
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Concrete.Reservation", "Reservation")
-                        .WithMany()
-                        .HasForeignKey("ReservationId")
+                        .HasForeignKey("FootballFieldId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -696,9 +683,7 @@ namespace DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Business");
-
-                    b.Navigation("Reservation");
+                    b.Navigation("FootballField");
 
                     b.Navigation("User");
                 });

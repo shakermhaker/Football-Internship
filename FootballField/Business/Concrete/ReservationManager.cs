@@ -23,6 +23,7 @@ namespace Business.Concrete
         private readonly IFieldDal _footballFieldDal;
         private readonly ITimeSlotDal _timeSlotDal;
         private readonly IUserDal _userDal;
+        private readonly IFreeBookingRightDal _freeBookingRightDal;
         private readonly IReservationNotificationService _notificationService;
 
         private static readonly object _reservationLock = new object();
@@ -35,7 +36,8 @@ namespace Business.Concrete
             ITimeSlotDal timeSlotDal,
             IUserDal userDal,
             IRedisLockService redisLockService,
-            IReservationNotificationService notificationService)
+            IReservationNotificationService notificationService,
+            IFreeBookingRightDal freeBookingRightDal)
         {
             _reservationDal = reservationDal;
             _redisLockService = redisLockService;
@@ -44,7 +46,7 @@ namespace Business.Concrete
             _timeSlotDal = timeSlotDal;
             _userDal = userDal;
             _notificationService = notificationService;
-
+            _freeBookingRightDal = freeBookingRightDal;
         }
 
         public IDataResult<List<FootballFieldScheduleDto>> GetAllWeeklySchedules(int businessId)
@@ -140,8 +142,6 @@ namespace Business.Concrete
         [PerformanceAspect(2)]
         public async Task<IResult> CreateReservationAsync(CreateReservationDto createDto, int userId)
         {
-            // 🚀 YENİ: Asenkron uyumlu Transaction bloğumuz başlıyor!
-            // TransactionScopeAsyncFlowOption.Enabled parametresi sayesinde await satırlarında patlamayacak.
             using (var transactionScope = new TransactionScope(
                 TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
@@ -186,8 +186,6 @@ namespace Business.Concrete
                     return new ErrorResult("Üzgünüz, bu saha ve saat az önce başka biri tarafından rezerve edildi. Lütfen başka bir saat seçiniz.");
                 }
 
-                
-
                 // 5. REDIS KONTROLÜ
                 int? lockOwnerId = await _redisLockService.GetLockOwnerAsync(createDto.BusinessId, createDto.ReservationDate, createDto.FieldPriceScheduleId);
 
@@ -196,14 +194,32 @@ namespace Business.Concrete
                     return new ErrorResult("Bu saha şu anda başka bir kullanıcı tarafından ödeme aşamasında. Lütfen 5 dakika sonra tekrar deneyin.");
                 }
 
+                // 🚀 YENİ EKLENEN KISIM: ÜCRETSİZ HAK KONTROLÜ
+                bool usedFreeRight = false;
+                decimal finalPrice = createDto.FinalPrice; // DTO'dan gelen normal fiyat
+
+                if (createDto.UseFreeRight)
+                {
+                    // Veritabanına gidip hakkı 1 azaltmayı deniyoruz
+                    usedFreeRight = _reservationDal.TryUseFreeRight(userId, createDto.FieldPriceScheduleId);
+
+                    if (!usedFreeRight)
+                    {
+                        return new ErrorResult("Ücretsiz değişim hakkınız bulunmamaktadır veya tükenmiştir!");
+                    }
+
+                    finalPrice = 0; // Hak kullanıldıysa fiyat sıfırlanır!
+                }
+
                 // 6. KONTROLLER BAŞARILI: Güvenle rezervasyonu oluştur
                 var reservation = new Entities.Concrete.Reservation
                 {
                     FieldPriceScheduleId = createDto.FieldPriceScheduleId,
                     ReservationDate = createDto.ReservationDate,
-                    FinalPrice = createDto.FinalPrice,
+                    FinalPrice = finalPrice, // 🚀 Ücretsizse 0, değilse normal fiyat kaydedilir
                     StatusId = 1, // 1 = Aktif/Onaylandı
-                    UserId = userId
+                    UserId = userId,
+                    IsUsedFreeRight = usedFreeRight // 🚀 Ücretsiz alındıysa işaretle
                 };
 
                 // Veritabanına Ekleme (DAL üzerinden)
@@ -216,10 +232,10 @@ namespace Business.Concrete
                 // 🚀 HER ŞEY YOLUNDA: İşlemi onayla ve veritabanına kalıcı olarak yaz!
                 transactionScope.Complete();
 
-                return new SuccessResult("Rezervasyon başarıyla oluşturuldu.");
+                // 🚀 Mesajı dinamikleştiriyoruz ki kullanıcı bedava aldığını hissetsin
+                return new SuccessResult(usedFreeRight ? "Ücretsiz değişim hakkınız kullanılarak rezervasyon başarıyla oluşturuldu." : "Rezervasyon başarıyla oluşturuldu.");
             }
         }
-
         public IDataResult<List<UserReservationDetailDto>> GetUserReservations(int userId)
         {
             var data = _reservationDal.GetUserReservations(userId);
@@ -298,5 +314,46 @@ namespace Business.Concrete
 
             return new SuccessResult("Rezervasyon işletme tarafından başarıyla iptal edildi. Kullanıcı paneline iade bilgisi yansıtıldı.");
         }
+        public IDataResult<int> CheckFreeBookingRights(int userId, int footballFieldId)
+        {
+            // DAL'dan hakkı çekiyoruz (Hiç yoksa 0 gelecek)
+            var count = _reservationDal.GetFreeRightCount(userId, footballFieldId);
+
+            return new SuccessDataResult<int>(count, "Kullanıcının ücretsiz hak sayısı başarıyla getirildi.");
+        }
+
+        [TransactionScopeAspect] // Hata olursa iki tablo da geri alınsın
+        [LogAspect]
+        [ExceptionLogAspect]
+        [PerformanceAspect(2)]
+        public IResult UseFreeBookingRight(int reservationId)
+        {
+            // 1. İlgili hakkı ReservationId üzerinden bul
+            var freeBookingRight = _freeBookingRightDal.Get(f => f.ReservationId == reservationId);
+
+            // Hak yoksa veya çoktan kullanıldıysa işlemi reddet
+            if (freeBookingRight == null || freeBookingRight.IsUsed)
+            {
+                return new ErrorResult("Kullanılabilir bir ücretsiz değişim hakkı bulunamadı veya bu hak zaten kullanılmış.");
+            }
+
+            // 2. İlgili rezervasyonu bul
+            var reservation = _reservationDal.Get(r => r.Id == reservationId);
+            if (reservation == null)
+            {
+                return new ErrorResult("Böyle bir rezervasyon bulunamadı.");
+            }
+
+            // 3. Hak tablosunu "Kullanıldı" (True) olarak güncelle
+            freeBookingRight.IsUsed = true;
+            _freeBookingRightDal.Update(freeBookingRight);
+
+            // 4. Rezervasyon tablosunu "Ücretsiz Değişim Kullanıldı" (StatusId = 5) olarak güncelle
+            reservation.StatusId = 5;
+            _reservationDal.Update(reservation);
+
+            return new SuccessResult("Ücretsiz değişim hakkı başarıyla kullanıldı ve kart pasife alındı.");
+        }
+
     }
 }

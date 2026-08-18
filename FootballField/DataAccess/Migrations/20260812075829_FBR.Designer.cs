@@ -3,6 +3,7 @@ using System;
 using FootballField.DataAccess.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(FootballFieldContext))]
-    partial class FootballFieldContextModelSnapshot : ModelSnapshot
+    [Migration("20260812075829_FBR")]
+    partial class FBR
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -240,8 +243,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("FootballFieldId", "TimeSlotId", "DayId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Unique_Field_Time_Day")
-                        .HasFilter("\"IsDeleted\" = false");
+                        .HasDatabaseName("IX_Unique_Field_Time_Day");
 
                     b.ToTable("FieldPriceSchedules");
                 });
@@ -391,8 +393,7 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("ReservationDate", "FieldPriceScheduleId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId")
-                        .HasFilter("\"IsDeleted\" = false AND \"StatusId\" = 1");
+                        .HasDatabaseName("IX_Unique_ReservationDate_ScheduleId");
 
                     b.ToTable("Reservations");
                 });

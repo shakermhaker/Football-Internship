@@ -185,6 +185,64 @@ export class AddFieldComponent implements OnInit {
     return hours * 60 + minutes;
   }
 
+  // ==========================================
+  // GİRİLEN SAATLERİN DOĞRULANMASI (ÇAKIŞMA VE BÖLÜNEBİLME)
+  // ==========================================
+  private validateSchedules(rawData: any): string | null {
+    // Gün bazında saat aralıklarını tutacağımız yapı (Çakışma kontrolü için)
+    const dayIntervals = new Map<number, {start: number, end: number, timeStr: string}[]>();
+
+    for (let group of rawData.scheduleGroups) {
+      // Eğer gruba hiç gün seçilmemişse uyarı ver
+      if (!group.selectedDayIds || group.selectedDayIds.length === 0) {
+        return "Lütfen her periyot grubu için en az bir gün seçtiğinizden emin olun.";
+      }
+
+      for (let period of group.periods) {
+        let startMins = this.timeToMinutes(period.startTime);
+        let endMins = this.timeToMinutes(period.endTime);
+
+        // Gece yarısını geçme durumu
+        if (endMins <= startMins || period.endTime === '00:00' || period.endTime === '24:00') {
+          endMins += 24 * 60;
+        }
+
+        // 1. KURAL KONTROLÜ: Tam Bölünebilme (Örn: 13:30 - 18:55 -> 60'a tam bölünmez)
+        let diff = endMins - startMins;
+        if (diff % period.duration !== 0) {
+          return `"${period.startTime} - ${period.endTime}" aralığı, ${period.duration} dakikalık maç süresine tam bölünemiyor. Lütfen bitiş saatini düzeltin.`;
+        }
+
+        // 2. KURAL KONTROLÜ: Çakışma (Overlap)
+        for (let dayId of group.selectedDayIds) {
+          if (!dayIntervals.has(dayId)) {
+            dayIntervals.set(dayId, []);
+          }
+
+          let intervals = dayIntervals.get(dayId)!;
+          
+          // O gün için daha önce kontrol edilmiş periyotlarla şu anki periyodu karşılaştır
+          for (let existing of intervals) {
+            // İki zaman aralığı kesişiyorsa formülü: (Start1 < End2) VE (End1 > Start2)
+            if (startMins < existing.end && endMins > existing.start) {
+              const dayName = this.days.find(d => d.id === dayId)?.name || 'Seçilen gün';
+              return `${dayName} günü için girilen "${period.startTime} - ${period.endTime}" aralığı ile "${existing.timeStr}" aralığı çakışıyor! Lütfen saatleri düzeltin.`;
+            }
+          }
+
+          // Çakışma yoksa bu periyodu o günün listesine ekle
+          intervals.push({
+            start: startMins,
+            end: endMins,
+            timeStr: `${period.startTime} - ${period.endTime}`
+          });
+        }
+      }
+    }
+
+    return null; // Hiçbir hata bulunamadı
+  }
+
   // 🔥 GÜNCELLENDİ: Gece yarısını geçince (Örn: 25:00) saati 01:00'e geri sarması için % işlemi eklendi
   private minutesToTime(minutes: number): string {
     const normalizedMinutes = minutes % (24 * 60); // 1440'ı geçince başa sarar
@@ -196,9 +254,29 @@ export class AddFieldComponent implements OnInit {
   // ==========================================
   // FORMU KAYDET VE PARÇALA (EKLEME & GÜNCELLEME)
   // ==========================================
+  // ==========================================
+  // FORMU KAYDET VE PARÇALA (EKLEME & GÜNCELLEME)
+  // ==========================================
   onSubmit() {
     if (this.fieldForm.valid) {
       const rawData = this.fieldForm.value;
+
+      // 🚀 1. ADIM: KAYDETMEDEN ÖNCE BÖLÜNEBİLME VE ÇAKIŞMA KONTROLÜ YAP
+      const validationError = this.validateSchedules(rawData);
+      
+      if (validationError) {
+        // Hata varsa işlemi durdur ve kullanıcıya uyarı göster
+        Swal.fire({
+          title: 'Hatalı Saat Girişi',
+          text: validationError,
+          icon: 'warning',
+          confirmButtonText: 'Düzelt',
+          confirmButtonColor: '#fd7e14'
+        });
+        return; // İŞLEMİ DURDUR! Backend'e istek atma.
+      }
+
+      // 🚀 2. ADIM: HER ŞEY GEÇERLİYSE BACKEND PAYLOAD'UNU HAZIRLA
       const currentBusinessId = this.userService.currentUser()?.businessId;
 
       const payload: any = {
@@ -210,12 +288,12 @@ export class AddFieldComponent implements OnInit {
 
           group.periods.forEach((period: any) => {
             let currentMin = this.timeToMinutes(period.startTime);
-            let endMin = this.timeToMinutes(period.endTime); // DİKKAT: 'const' yerine 'let' yaptık
+            let endMin = this.timeToMinutes(period.endTime); 
             const duration = period.duration;
 
-            // 🔥 İŞTE SİHİRLİ DOKUNUŞ: GECE YARISI KONTROLÜ
+            // Gece yarısı kontrolü
             if (endMin <= currentMin) {
-              endMin += 24 * 60; // Eğer bitiş, başlangıçtan küçükse (01:00 < 18:00) bitişe 24 saat (1440 dk) ekle
+              endMin += 24 * 60; 
             }
 
             while (currentMin + duration <= endMin) {
@@ -237,16 +315,16 @@ export class AddFieldComponent implements OnInit {
         })
       };
 
-      // 🔥 EĞER DÜZENLEME MODUNDAYSAK PAYLOAD'A ID EKLİYORUZ
+      // Eğer düzenleme modundaysak payload'a ID ekliyoruz
       if (this.isEditMode) {
         payload.id = this.editFieldId;
       }
 
       console.log(this.isEditMode ? "🚀 GÜNCELLEME İÇİN GİDEN DATA:" : "🚀 YENİ KAYIT İÇİN GİDEN DATA:", payload);
 
-      
+      // İstek Atma Kısmı
       const request$ = this.isEditMode 
-      ? this.fieldService.updateField(this.editFieldId!, payload) // Hem ID'yi hem payload'ı verdik!
+      ? this.fieldService.updateField(this.editFieldId!, payload) 
       : this.fieldService.addWithSchedules(payload);
 
       request$.subscribe({
@@ -259,10 +337,8 @@ export class AddFieldComponent implements OnInit {
             confirmButtonColor: '#50cd89'
           }).then((result) => {
             if (result.isConfirmed) {
-              // İsteğe bağlı: Başarılı olunca formu sıfırla veya başka sayfaya yönlendir
               this.fieldForm.reset();
               this.router.navigate(['/business-panel/my-fields']);
-              // this.addScheduleGroup(); // Sıfırlandıktan sonra 1 tane boş grup eklemek için
             }
           });
         },

@@ -19,6 +19,9 @@ namespace DataAccess.Abstract
         BusinessDashboardDto GetBusinessDashboardStats(int businessId, int year);
         TimeOnly GetStartTimeByScheduleId(int scheduleId);
         DailyReservationSummaryDto GetDailyReservationSummary(int businessId, DateOnly targetDate);
+        void CompensateUsersForScheduleChange(List<int> deletedFieldPriceScheduleIds);
+        int GetFreeRightCount(int userId, int footballFieldId);
+        bool TryUseFreeRight(int userId, int fieldPriceScheduleId);
         List<SlotStateDto> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate);
         List<FootballFieldScheduleDto> GetAllWeeklySchedulesByBusinessId(int businessId);
     }

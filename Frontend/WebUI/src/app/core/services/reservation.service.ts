@@ -25,6 +25,7 @@ export interface CreateReservationDto {
   reservationDate: string;
   finalPrice: number;
   cardNumber: string; // Şimdilik temsili ödeme için
+  useFreeRight?: boolean;
 }
 
 export interface UserReservationDetailDto {
@@ -89,6 +90,14 @@ export class ReservationService {
     // HttpPost ile sadece body'de ID'yi yolluyoruz
     return this.http.post(`${this.apiUrl}/cancelbybusiness`, reservationId, { withCredentials: true });
   }
+  checkFreeRights(footballFieldId: number): Observable<DataResult<number>> {
+    return this.http.get<DataResult<number>>(`${this.apiUrl}/check-free-rights?footballFieldId=${footballFieldId}`, { withCredentials: true });
+  }
+  useFreeBookingRight(reservationId: number): Observable<any> {
+    // HttpPost ile sadece body'de ID'yi yolluyoruz
+    return this.http.post(`${this.apiUrl}/usefreebookingright`, reservationId, { withCredentials: true });
+  }
+
 
   getWeeklyTemplates(businessId: number) {
     return this.http.get<any>(`${this.apiUrl}/getweeklytemplates?businessId=${businessId}`);

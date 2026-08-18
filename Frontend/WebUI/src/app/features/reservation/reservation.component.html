@@ -178,7 +178,7 @@
                           @let isMyHold = (myActiveHold?.scheduleId === slot.fieldPriceScheduleId && myActiveHold?.date === day.date);
 
                           <!-- 🚀 DÜZELTME: onSlotSelected metoduna day.date gönderiliyor -->
-                          <button (click)="onSlotSelected(slot, field.fieldName, day.date)" 
+                          <button (click)="onSlotSelected(slot, field.fieldName, day.date, field.fieldId)" 
                                   [disabled]="booked || heldByOther"
                                   class="btn btn-outline p-3 d-flex flex-column align-items-center justify-content-between transition-all shadow-xs"
                                   [ngClass]="{
@@ -301,6 +301,7 @@
         </div>
 
         <div class="modal-body py-6">
+          <!-- Seçilen Maç Özeti (Aynı Kalıyor) -->
           <div class="bg-light-success p-4 rounded-3 mb-6 border border-success border-dashed">
             <div class="fw-bold text-dark fs-5 mb-1">{{ selectedFieldName }}</div>
             <div class="text-muted fs-6 mb-2">Tarih: <span class="fw-bold text-dark">{{ myActiveHold?.date }}</span></div>
@@ -308,16 +309,42 @@
             <div class="text-muted fs-6">Tutar: <span class="fw-bold text-success fs-4">{{ selectedSlot?.price }} ₺</span></div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-dark fs-6 required">Temsili Kart Numarası</label>
-            <input type="text" [(ngModel)]="cardNumber" class="form-control form-control-solid" placeholder="4111 2222 3333 4444" maxlength="19">
-          </div>
+          <!-- 🚀 YENİ EKLENEN: Ücretsiz Hak Uyarı Banner'ı -->
+          @if (freeRightCount() > 0) {
+            <div class="alert alert-success d-flex align-items-center p-4 mb-5 border border-success">
+              <i class="ki-duotone ki-gift fs-2hx text-success me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+              <div class="d-flex flex-column pe-0 pe-sm-10">
+                <h5 class="mb-1 text-success fw-bold">Ücretsiz Değişim Hakkı!</h5>
+                <span class="text-success fs-7">İşletme tarafından tanımlanan <strong>{{ freeRightCount() }}</strong> adet hakkınız bulunuyor.</span>
+              </div>
+              <!-- Switch Butonu -->
+              <div class="form-check form-switch form-check-custom form-check-success ms-auto">
+                <input class="form-check-input cursor-pointer" type="checkbox" [checked]="useFreeRight()" (change)="toggleFreeRight($event)" style="width: 40px; height: 22px;">
+              </div>
+            </div>
+          }
 
+          <!-- Dinamik Ödeme Ekranı (Switch'in durumuna göre Kart Numarası veya 0₺ Bilgisi Gösterilir) -->
+          @if (!useFreeRight()) {
+            <!-- Standart Ödeme Adımı -->
+            <div class="mb-3 animate__animated animate__fadeIn">
+              <label class="form-label fw-semibold text-dark fs-6 required">Temsili Kart Numarası</label>
+              <input type="text" [(ngModel)]="cardNumber" class="form-control form-control-solid" placeholder="4111 2222 3333 4444" maxlength="19">
+            </div>
+          } @else {
+            <!-- Bedava Hak Kullanımı Aktif -->
+            <div class="mb-3 text-center py-4 bg-light-success rounded-3 border border-success border-dashed animate__animated animate__fadeIn">
+              <i class="ki-duotone ki-check-circle fs-3x text-success mb-2"><span class="path1"></span><span class="path2"></span></i>
+              <div class="fs-4 fw-bold text-success">Ödenecek Tutar: 0 ₺</div>
+              <div class="fs-7 text-success mt-1">Ödeme adımını atlıyorsunuz. Rezervasyon hakkınızdan düşülecektir.</div>
+            </div>
+          }
+
+          <!-- Hata Mesajı (Aynı Kalıyor) -->
           @if (errorMessage) {
-            <div class="alert alert-danger py-2 fs-7 mt-3">{{ errorMessage }}</div>
+            <div class="alert alert-danger py-2 fs-7 mt-3 animate__animated animate__fadeIn">{{ errorMessage }}</div>
           }
         </div>
-
         <!-- MODAL FOOTER (ÜÇ BUTONLU YENİ YAPI) -->
         <div class="modal-footer border-top pt-4 d-flex justify-content-between align-items-center">
           <button type="button" (click)="closeModal()" class="btn btn-light rounded-pill px-4" [disabled]="isSubmitting">

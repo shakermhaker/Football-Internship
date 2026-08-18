@@ -36,22 +36,44 @@ namespace DataAccess.Concrete
 
                         // 🚀 DÜZELTME: Senin DTO'na uygun düz liste yapısı
                         Schedules = context.FieldPriceSchedules
-                            .Where(fps => fps.FootballFieldId == f.Id)
+                            .Where(fps => fps.FootballFieldId == f.Id && fps.IsDeleted == false)
+                            .OrderBy(fps => fps.DayId)
+                            .ThenBy(fps => fps.TimeSlot.StartTime)
                             .Select(fps => new PriceScheduleDto
                             {
                                 FieldPriceScheduleId = fps.Id,
                                 DayId = fps.DayId,
-                                DayName = fps.Day.Name, // Day tablosundan gelen isim
+                                DayName = fps.Day.Name,
                                 TimeSlotId = fps.TimeSlotId,
                                 StartTime = TimeOnly.FromTimeSpan(fps.TimeSlot.StartTime),
                                 EndTime = TimeOnly.FromTimeSpan(fps.TimeSlot.EndTime),
                                 Price = fps.Price
                             }).ToList()
-                    }).ToList();
+                    })
+                    .Where(f => f.Schedules.Any())
+                    .ToList();
 
                 return result;
             }
         }
+
+
+
+
+        public List<int> GetBookedScheduleIdsByDate(int businessId, DateOnly date)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                // Reservations tablosundan, o işletmedeki sahalara ait ve verilen tarihteki rezervasyonları filtreliyoruz
+                var bookedIds = context.Reservations
+                    .Where(r => r.ReservationDate == date && r.FieldPriceSchedule.FootballField.BusinessId == businessId && r.Status.Id == 1 && r.IsDeleted == false)
+                    .Select(r => r.FieldPriceScheduleId)
+                    .ToList();
+
+                return bookedIds;
+            }
+        }
+
         public bool IsSlotBooked(int fieldPriceScheduleId, DateOnly date)
         {
             using (var context = new FootballFieldContext())
@@ -60,7 +82,8 @@ namespace DataAccess.Concrete
                 return context.Reservations.Any(r =>
                     r.FieldPriceScheduleId == fieldPriceScheduleId &&
                     r.ReservationDate == date &&
-                    r.StatusId == 1);
+                    r.StatusId == 1 &&
+                    r.IsDeleted == false);
             }
         }
 
@@ -102,7 +125,7 @@ namespace DataAccess.Concrete
                         .ThenInclude(fps => fps.FootballField)
                             .ThenInclude(ff => ff.Business)
                                 .ThenInclude(b => b.District)
-                    .Where(r => r.UserId == userId)
+                    .Where(r => r.UserId == userId && r.IsDeleted == false)
 
                     // 🚀 SIRALAMA BURADA: Önce Tarihe göre, tarih aynıysa Saate göre
                     .OrderByDescending(r => r.ReservationDate)
@@ -273,7 +296,8 @@ namespace DataAccess.Concrete
                     .Include(r => r.FieldPriceSchedule)
                         .ThenInclude(fps => fps.TimeSlot)
                     .Where(r => r.FieldPriceSchedule.FootballField.BusinessId == businessId
-                             && r.ReservationDate == targetDate)
+                     && r.ReservationDate == targetDate
+                     && r.IsDeleted == false)
                     .Select(r => new
                     {
                         r.Id,
@@ -324,5 +348,100 @@ namespace DataAccess.Concrete
                 };
             }
         }
+
+        // Parametre int footballFieldId yerine List<int> deletedFieldPriceScheduleIds oldu
+        public void CompensateUsersForScheduleChange(List<int> deletedFieldPriceScheduleIds)
+        {
+            // Liste boşsa hiç yorulma
+            if (deletedFieldPriceScheduleIds == null || !deletedFieldPriceScheduleIds.Any()) return;
+
+            using (var context = new FootballFieldContext())
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+
+                // 1. 🚀 Sadece ID'si bizim silinenler listesinde (deletedFieldPriceScheduleIds) olan aktif rezervasyonları getir
+                var affectedReservations = context.Reservations
+                    .Include(r => r.FieldPriceSchedule)
+                        .ThenInclude(fps => fps.FootballField)
+                    .Where(r => deletedFieldPriceScheduleIds.Contains(r.FieldPriceScheduleId) // NOKTA ATIŞI FİLTRE BURADA
+                             && r.ReservationDate >= today
+                             && r.StatusId == 1
+                             && r.IsDeleted == false)
+                    .ToList();
+
+                if (!affectedReservations.Any()) return;
+
+                // 2. Hakları dağıt
+                foreach (var res in affectedReservations)
+                {
+                    res.StatusId = 4; // Tamamlandı/Ücretsiz Değişim
+
+                    int currentBusinessId = res.FieldPriceSchedule.FootballField.BusinessId;
+
+                    context.FreeBookingRights.Add(new FreeBookingRight
+                    {
+                        UserId = res.UserId,
+                        BusinessId = currentBusinessId,
+                        ReservationId = res.Id,
+                        IsUsed = false
+                    });
+                }
+
+                context.SaveChanges();
+            }
+        }
+        public int GetFreeRightCount(int userId, int footballFieldId)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                // İlgili sahanın bağlı olduğu işletmeyi (Business) bul
+                var field = context.FootballFields.FirstOrDefault(f => f.Id == footballFieldId);
+                if (field == null) return 0;
+
+                // Kullanıcının o işletmeye (BusinessId) ait KULLANILMAMIŞ haklarının toplamını say
+                return context.FreeBookingRights
+                    .Count(f => f.UserId == userId
+                             && f.BusinessId == field.BusinessId
+                             && f.IsUsed == false);
+            }
+        }
+        public bool TryUseFreeRight(int userId, int fieldPriceScheduleId)
+        {
+            using (var context = new FootballFieldContext())
+            {
+                // 1. İşletmeyi bul
+                var schedule = context.FieldPriceSchedules
+                    .Include(s => s.FootballField)
+                    .FirstOrDefault(s => s.Id == fieldPriceScheduleId);
+
+                if (schedule == null || schedule.FootballField == null) return false;
+
+                int targetBusinessId = schedule.FootballField.BusinessId;
+
+                // 2. Kullanılmamış hakkı bul
+                var availableRight = context.FreeBookingRights
+                    .FirstOrDefault(f => f.UserId == userId && f.BusinessId == targetBusinessId && f.IsUsed == false);
+
+                if (availableRight != null)
+                {
+                    // 3. Hakkı "Kullanıldı" yap
+                    availableRight.IsUsed = true;
+
+                    // 🚀 BOMBAYI BURADA PATLATIYORUZ: 
+                    // Bu hakkı veren ESKİ rezervasyonu bul ve statüsünü 5 yap!
+                    var oldReservation = context.Reservations.FirstOrDefault(r => r.Id == availableRight.ReservationId);
+                    if (oldReservation != null)
+                    {
+                        oldReservation.StatusId = 5;
+                    }
+
+                    context.SaveChanges();
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
     }
 }

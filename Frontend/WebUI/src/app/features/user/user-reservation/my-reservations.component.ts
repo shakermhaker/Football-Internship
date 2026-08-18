@@ -26,7 +26,7 @@ export class MyReservationsComponent implements OnInit {
   filterDate: string = '';
   
   // 🚀 YENİ: Statü Filtresi için Değişkenler
-  statusOptions: string[] = ['Hepsi', 'Onaylandı', 'İptal Edildi', 'Tamamlandı'];
+  statusOptions: string[] = ['Hepsi', 'Onaylandı', 'İptal Edildi', 'Tamamlandı', 'Ücretsiz Değişim', 'Ücretsiz Değişim Kullanıldı'  ];
   selectedStatus: string = 'Hepsi';
 
   cancelingId = signal<number | null>(null); // Hangi satır iptal ediliyor?

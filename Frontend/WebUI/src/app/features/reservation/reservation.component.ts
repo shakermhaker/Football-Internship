@@ -58,6 +58,10 @@ export class ReservationComponent implements OnInit, OnDestroy {
   minDate: string = ''; 
   bookedScheduleIds = signal<{scheduleId: number, date: string}[]>([]);
   businessId: number = 0;
+  
+  freeRightCount = signal<number>(0);
+  useFreeRight = signal<boolean>(false);
+  selectedFieldId: number = 0;
 
   pageAlert = signal<{ message: string, title: string, type: string } | null>(null);
   private alertTimeout: any;
@@ -389,7 +393,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
     return this.heldScheduleIds().some(x => x.scheduleId === scheduleId && x.date === slotDate);
   }
 
-   onSlotSelected(slot: PriceScheduleDto, fieldName: string, slotDate: string) {
+   onSlotSelected(slot: PriceScheduleDto, fieldName: string, slotDate: string, fieldId: number) {
     const sId = slot.fieldPriceScheduleId;
 
     // 1. 🚀 slotDate parametresini içeriye gönderiyoruz
@@ -401,12 +405,11 @@ export class ReservationComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 3. GİRİŞ KONTROLÜ
-    const user = this.userService.currentUser();
-    if (!user) {
-      this.isLoginModalOpen.set(true); 
-      return;
-    }
+  const user = this.userService.currentUser();
+  if (!user) {
+    this.isLoginModalOpen.set(true); 
+    return;
+  }
 
     // 4. EĞER BU SLOT ZATEN KENDİ İŞLEMİMDEYSE (Yeşil - "SİZDE") -> Sadece modalı geri aç
     if (this.myActiveHold && this.myActiveHold.scheduleId === sId && this.myActiveHold.date === slotDate) {
@@ -416,26 +419,19 @@ export class ReservationComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 5. EĞER BAŞKA BİR SLOT İŞLEMİMDEYSE -> Yeni bir tane almasına izin verme
-    if (this.myActiveHold) {
-       this.showPageAlert("Zaten işlemde olan bir rezervasyonunuz var. Lütfen önce onu tamamlayın veya iptal edin.", "İşlem Devam Ediyor");
-       return;
-    }
+  if (this.myActiveHold) {
+     this.showPageAlert("Zaten işlemde olan bir rezervasyonunuz var. Lütfen önce onu tamamlayın veya iptal edin.", "İşlem Devam Ediyor");
+     return;
+  }
 
-    const savedHold = localStorage.getItem('ff_active_hold');
-    if (savedHold) {
-        const parsed = JSON.parse(savedHold);
-        const oldBusinessId = parsed.businessId;
-        const oldScheduleId = parsed.myActiveHold.scheduleId;
-        const oldDate = parsed.selectedDate;
-
-        // Eğer hafızadaki kilidin işletme ID'si, şu anki işletme ID'sinden farklıysa backend'den temizle
-        if (oldBusinessId !== this.businessId) {
-            console.log("Farklı bir işletmeye geçildiği için eski kilit siliniyor:", oldScheduleId);
-            this.reservationService.cancelHoldSlot(oldBusinessId, oldDate, oldScheduleId).subscribe();
-            localStorage.removeItem('ff_active_hold');
-        }
-    }
+  const savedHold = localStorage.getItem('ff_active_hold');
+  if (savedHold) {
+     const parsed = JSON.parse(savedHold);
+     if (parsed.businessId !== this.businessId) {
+         this.reservationService.cancelHoldSlot(parsed.businessId, parsed.selectedDate, parsed.myActiveHold.scheduleId).subscribe();
+         localStorage.removeItem('ff_active_hold');
+     }
+  }
 
     // 6. İLK DEFA TIKLIYORSA -> API'ye Geçici Kilit (Hold) isteği at!
     this.reservationService.holdReservationSlot(this.businessId, slotDate, sId).subscribe({
@@ -443,22 +439,35 @@ export class ReservationComponent implements OnInit, OnDestroy {
         if (res.success) {
           this.selectedSlot = slot;
           this.selectedFieldName = fieldName;
+          
+          // 🚀 SENİN DALINDAN GELEN KODLAR
+          this.selectedFieldId = fieldId; 
           this.cardNumber = ''; 
           this.errorMessage = '';
+          this.useFreeRight.set(false); 
+          this.freeRightCount.set(0);
+
+          // 🚀 BEDAVA HAK SORGUSU
+          this.reservationService.checkFreeRights(fieldId).subscribe(rightRes => {
+            if (rightRes.success) {
+              this.freeRightCount.set(rightRes.data);
+            }
+          });
           
+          // 🚀 DOĞRU TARİH (slotDate) İLE KİLİT OBJESİ
           this.myActiveHold = {
             scheduleId: sId,
-            date: slotDate, // 🚀 slotDate kullanıldı
+            date: slotDate, 
             expiresAt: Date.now() + (5 * 60 * 1000),
             slotName: `${this.formatTime(slot.startTime)} - ${this.formatTime(slot.endTime)}`, 
             price: slot.price 
           };
 
-          // F5 (Sayfa Yenileme) atılırsa unutmamak için tarayıcı hafızasına yaz!
           localStorage.setItem('ff_active_hold', JSON.stringify({
             businessId: this.businessId,
-            selectedDate: slotDate, // 🚀 slotDate kullanıldı
+            selectedDate: slotDate, 
             selectedFieldName: this.selectedFieldName,
+            selectedFieldId: this.selectedFieldId, 
             selectedSlot: this.selectedSlot,
             myActiveHold: this.myActiveHold
           }));
@@ -468,13 +477,13 @@ export class ReservationComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
+         // TEK BİR ERROR BLOĞU (Çakışma temizlendi)
          const errorMsg = err.error?.message || "Bu saha az önce başka bir kullanıcı tarafından işlem görmeye başladı!";
          this.showPageAlert(errorMsg, "Saha Müsait Değil", "warning");
-         // Senkronizasyon kaçmışsa (Örn: SignalR o an kopmuşsa) manuel olarak turuncu listesine ekle
          this.heldScheduleIds.update(holds => [...holds, { scheduleId: sId, date: slotDate }]);
       }
     });
-  }
+}
 
 
   private startCountdown() {
@@ -550,28 +559,30 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   private restoreHoldState() {
-    const savedData = localStorage.getItem('ff_active_hold');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
+  const savedData = localStorage.getItem('ff_active_hold');
+  if (savedData) {
+    const parsedData = JSON.parse(savedData);
+    
+    if (parsedData.businessId === this.businessId && parsedData.myActiveHold.expiresAt > Date.now()) {
+      this.selectedDate = parsedData.selectedDate;
+      this.selectedFieldName = parsedData.selectedFieldName;
+      this.selectedSlot = parsedData.selectedSlot;
+      this.selectedFieldId = parsedData.selectedFieldId || 0; // 🚀 Eklendi
+      this.myActiveHold = parsedData.myActiveHold;
       
-      // 1. Bu kilit bu işletmeye mi ait? VE 2. Süresi hala dolmamış mı?
-      if (parsedData.businessId === this.businessId && parsedData.myActiveHold.expiresAt > Date.now()) {
-        
-        console.log("F5 atıldı, yarım kalan işlem kurtarıldı!");
-        
-        this.selectedDate = parsedData.selectedDate;
-        this.selectedFieldName = parsedData.selectedFieldName;
-        this.selectedSlot = parsedData.selectedSlot;
-        this.myActiveHold = parsedData.myActiveHold;
-        
-        this.startCountdown();
-        
-      } else {
-        // Süresi geçmiş veya başka işletmeye aitse çöpü temizle
-        localStorage.removeItem('ff_active_hold');
+      // 🚀 F5 atıldıysa API'ye tekrar hakkı soruyoruz
+      if (this.selectedFieldId > 0) {
+        this.reservationService.checkFreeRights(this.selectedFieldId).subscribe(rightRes => {
+          if (rightRes.success) this.freeRightCount.set(rightRes.data);
+        });
       }
+
+      this.startCountdown();
+    } else {
+      localStorage.removeItem('ff_active_hold');
     }
   }
+}
 
   closeModal() {
     this.isModalOpen.set(false);
@@ -584,7 +595,14 @@ export class ReservationComponent implements OnInit, OnDestroy {
     }
   }
   confirmReservation() {
-    if (!this.selectedSlot || !this.cardNumber.trim() || !this.myActiveHold) {
+    // 1. Temel Güvenlik (main'den gelen myActiveHold kontrolü eklendi)
+    if (!this.selectedSlot || !this.myActiveHold) {
+      this.errorMessage = 'Geçersiz işlem. Lütfen tekrar deneyin.';
+      return;
+    }
+  
+    // 2. 🚀 SENİN DALINDAN: Sadece Hak kullanmıyorsa kart kontrolü yap
+    if (!this.useFreeRight() && !this.cardNumber.trim()) {
       this.errorMessage = 'Lütfen geçerli bir kart numarası giriniz.';
       return;
     }
@@ -592,12 +610,21 @@ export class ReservationComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    const payload: CreateReservationDto = {
+    // 3. Payload Hazırlığı
+    const payload: any = { // DTO'na useFreeRight eklediysen "any" yerine "CreateReservationDto" kullanabilirsin
       businessId: this.businessId,
       fieldPriceScheduleId: this.selectedSlot.fieldPriceScheduleId,
-      reservationDate: this.myActiveHold.date, // 🚀 Doğru tarih
+      
+      // 🚀 main'den: Takvimin bugünü değil, tıklanan slotun GERÇEK tarihi
+      reservationDate: this.myActiveHold.date, 
+      
       finalPrice: this.selectedSlot.price,
-      cardNumber: this.cardNumber
+      
+      // Hak kullanılıyorsa backend'e kart numarası boş gidebilir
+      cardNumber: this.useFreeRight() ? '' : this.cardNumber,
+      
+      // 🚀 YENİ: Backend'in bu rezervasyonun bedava hakla yapıldığını bilmesi için
+      useFreeRight: this.useFreeRight() 
     };
 
     this.reservationService.createReservation(payload).subscribe({
@@ -609,8 +636,6 @@ export class ReservationComponent implements OnInit, OnDestroy {
         if (this.timerInterval) clearInterval(this.timerInterval);
 
         this.closeModal();
-        
-        
       },
       error: (err) => {
         this.isSubmitting = false;
@@ -620,9 +645,46 @@ export class ReservationComponent implements OnInit, OnDestroy {
     });
   }
 
+  this.isSubmitting = true;
+  this.errorMessage = '';
+
+  const payload: CreateReservationDto = {
+    businessId: this.businessId,
+    fieldPriceScheduleId: this.selectedSlot.fieldPriceScheduleId,
+    reservationDate: this.selectedDate,
+    finalPrice: this.selectedSlot.price,
+    cardNumber: this.useFreeRight() ? '' : this.cardNumber, // Hak kullanılıyorsa kart boş gider
+    useFreeRight: this.useFreeRight() // 🚀 Eklendi
+  };
+
+  this.reservationService.createReservation(payload).subscribe({
+    // ... next ve error blokları mevcut haliyle aynı kalıyor ...
+    next: (res) => {
+      this.isSubmitting = false;
+      this.clearMyHoldState();
+      this.selectedSlot = null;
+      if (this.timerInterval) clearInterval(this.timerInterval);
+      this.closeModal();
+      this.fetchBookedSlots(this.businessId, this.selectedDate);
+    },
+    error: (err) => {
+      this.isSubmitting = false;
+      this.errorMessage = err.error?.message || 'Rezervasyon oluşturulurken bir hata oluştu.';
+    }
+  });
+}
+
   // "18:00:00" string'ini "18:00" yapar
   formatTime(timeStr: string): string {
     if (!timeStr) return '';
     return timeStr.substring(0, 5); 
   }
+
+  toggleFreeRight(event: any) {
+  this.useFreeRight.set(event.target.checked);
+  if (this.useFreeRight()) {
+    this.cardNumber = ''; // Hak kullanılıyorsa kart bilgisini sıfırla
+    this.errorMessage = '';
+  }
+}
 }
