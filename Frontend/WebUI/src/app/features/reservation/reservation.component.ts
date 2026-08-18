@@ -594,6 +594,20 @@ export class ReservationComponent implements OnInit, OnDestroy {
       this.isModalOpen.set(true);
     }
   }
+
+
+    formatTime(timeStr: string): string {
+    if (!timeStr) return '';
+    return timeStr.substring(0, 5); 
+  }
+
+  toggleFreeRight(event: any) {
+  this.useFreeRight.set(event.target.checked);
+  if (this.useFreeRight()) {
+    this.cardNumber = ''; // Hak kullanılıyorsa kart bilgisini sıfırla
+    this.errorMessage = '';
+  }
+}
   confirmReservation() {
     // 1. Temel Güvenlik (main'den gelen myActiveHold kontrolü eklendi)
     if (!this.selectedSlot || !this.myActiveHold) {
@@ -645,46 +659,9 @@ export class ReservationComponent implements OnInit, OnDestroy {
     });
   }
 
-  this.isSubmitting = true;
-  this.errorMessage = '';
+ 
 
-  const payload: CreateReservationDto = {
-    businessId: this.businessId,
-    fieldPriceScheduleId: this.selectedSlot.fieldPriceScheduleId,
-    reservationDate: this.selectedDate,
-    finalPrice: this.selectedSlot.price,
-    cardNumber: this.useFreeRight() ? '' : this.cardNumber, // Hak kullanılıyorsa kart boş gider
-    useFreeRight: this.useFreeRight() // 🚀 Eklendi
-  };
-
-  this.reservationService.createReservation(payload).subscribe({
-    // ... next ve error blokları mevcut haliyle aynı kalıyor ...
-    next: (res) => {
-      this.isSubmitting = false;
-      this.clearMyHoldState();
-      this.selectedSlot = null;
-      if (this.timerInterval) clearInterval(this.timerInterval);
-      this.closeModal();
-      this.fetchBookedSlots(this.businessId, this.selectedDate);
-    },
-    error: (err) => {
-      this.isSubmitting = false;
-      this.errorMessage = err.error?.message || 'Rezervasyon oluşturulurken bir hata oluştu.';
-    }
-  });
 }
 
-  // "18:00:00" string'ini "18:00" yapar
-  formatTime(timeStr: string): string {
-    if (!timeStr) return '';
-    return timeStr.substring(0, 5); 
-  }
 
-  toggleFreeRight(event: any) {
-  this.useFreeRight.set(event.target.checked);
-  if (this.useFreeRight()) {
-    this.cardNumber = ''; // Hak kullanılıyorsa kart bilgisini sıfırla
-    this.errorMessage = '';
-  }
-}
-}
+

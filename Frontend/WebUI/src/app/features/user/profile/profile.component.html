@@ -13,7 +13,7 @@
             
             @if (user()?.avatarPath) {
               <!-- Eğer takım maskotu seçmişse -->
-              <img [src]="user()?.avatarPath" class="symbol-label shadow" 
+              <img [src]="user()?.avatarPath" class="symbol-label" 
                    style="width: 130px; height: 130px; object-fit: cover; border-radius: 20px; border: 4px solid white;" alt="Avatar">
             } @else {
               <!-- Seçmemişse Baş Harf -->
@@ -58,7 +58,7 @@
 
           <!-- ALT BİLGİ KARTLARI (Senin border-dashed yapın) -->
           <div class="d-flex flex-wrap justify-content-start gap-5 pt-3 border-top border-gray-300">
-            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 bg-white shadow-sm">
+            <div class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 bg-white ">
               <div class="d-flex align-items-center">
                 <div class="fs-4 fw-bold text-success">
                   @if (user()?.status) { Aktif } @else { Pasif }
