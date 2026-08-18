@@ -162,6 +162,9 @@ namespace WebAPI.Controllers
             {
                 return Ok(result);
             }
+            return BadRequest();
+
+        }
 
         [HttpGet("getweeklytemplates")]
         public IActionResult GetWeeklyTemplates(int businessId)
