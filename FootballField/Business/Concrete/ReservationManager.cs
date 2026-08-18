@@ -49,6 +49,48 @@ namespace Business.Concrete
             _freeBookingRightDal = freeBookingRightDal;
         }
 
+        public IDataResult<List<FootballFieldScheduleDto>> GetAllWeeklySchedules(int businessId)
+        {
+            var schedules = _reservationDal.GetAllWeeklySchedulesByBusinessId(businessId);
+            return new SuccessDataResult<List<FootballFieldScheduleDto>>(schedules, "İşletmenin haftalık takvim şablonu başarıyla getirildi.");
+        }
+
+        // 2. DOLU SLOTLAR (Veritabanından)
+        public IDataResult<List<SlotStateDto>> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate)
+        {
+            var bookedSlots = _reservationDal.GetBookedSlotsByDateRange(businessId, startDate, endDate);
+            return new SuccessDataResult<List<SlotStateDto>>(bookedSlots, "Dolu slotlar başarıyla getirildi.");
+        }
+
+        // 3. İŞLEMDE OLAN SLOTLAR (Redis'ten)
+        public async Task<IDataResult<List<SlotStateDto>>> GetHeldSlotsByDateRangeAsync(int businessId, DateOnly startDate, DateOnly endDate)
+        {
+            var heldSlots = new List<SlotStateDto>();
+
+            var allSchedules = GetAllWeeklySchedules(businessId).Data;
+            if (allSchedules == null || allSchedules.Count == 0)
+            {
+                return new SuccessDataResult<List<SlotStateDto>>(heldSlots);
+            }
+
+            
+            var scheduleIds = allSchedules
+                .SelectMany(f => f.Schedules.Select(s => s.FieldPriceScheduleId))
+                .ToList();
+
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                var heldIdsForDate = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
+
+                foreach (var id in heldIdsForDate)
+                {
+                    heldSlots.Add(new SlotStateDto { ScheduleId = id, Date = date });
+                }
+            }
+
+            return new SuccessDataResult<List<SlotStateDto>>(heldSlots, "İşlemde olan slotlar getirildi.");
+        }
+
 
         public async Task<IResult> HoldReservationSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
         {
@@ -67,43 +109,10 @@ namespace Business.Concrete
 
 
 
-        public IDataResult<List<FootballFieldScheduleDto>> GetBusinessFieldSchedules(int businessId, DateOnly date)
-        {
-            
-            int dayOfWeek = (int)date.DayOfWeek;
+        
+        
 
-            
-            int dbDayId = dayOfWeek == 0 ? 7 : dayOfWeek;
-
-            // 3. Sadece o günün (örneğin sadece Cuma'nın) slotlarını çekiyoruz
-            var data = _reservationDal.GetFieldSchedulesByBusinessId(businessId, dbDayId);
-            return new SuccessDataResult<List<FootballFieldScheduleDto>>(data, "Seçilen tarihe ait takvim verisi başarıyla çekildi.");
-        }
-        public IDataResult<List<int>> GetBookedScheduleIdsByDate(int businessId, DateOnly date)
-        {
-            var bookedIds = _reservationDal.GetBookedScheduleIdsByDate(businessId, date);
-            return new SuccessDataResult<List<int>>(bookedIds, "Dolu slotlar başarıyla getirildi.");
-        }
-
-        public async Task<IDataResult<List<int>>> GetHeldScheduleIdsByDateAsync(int businessId, DateOnly date)
-        {
-            // 1. İşletmeye ait tüm takvimi (Schedule) çek
-            var allSchedules = GetBusinessFieldSchedules(businessId, date).Data;
-            if (allSchedules == null || allSchedules.Count == 0)
-            {
-                return new SuccessDataResult<List<int>>(new List<int>());
-            }
-
-            // 2. Takvim içindeki tüm ID'leri düz bir listeye çevir (Örn: [15, 16, 17, ...])
-            var scheduleIds = allSchedules
-                .SelectMany(field => field.Schedules.Select(slot => slot.FieldPriceScheduleId))
-                .ToList();
-
-            // 3. Bu ID listesini Redis'e ver ve sadece kilitli olanları ayıkla
-            var heldIds = await _redisLockService.GetActiveHoldsAsync(businessId, date, scheduleIds);
-
-            return new SuccessDataResult<List<int>>(heldIds, "İşlemde olan slotlar getirildi.");
-        }
+        
 
         public async Task<IResult> CancelHoldSlotAsync(int businessId, DateOnly date, int scheduleId, int userId)
         {

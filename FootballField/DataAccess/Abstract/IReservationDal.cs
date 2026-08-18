@@ -11,8 +11,7 @@ namespace DataAccess.Abstract
     public interface IReservationDal : IEntityRepository<Reservation>
     {
         // 🚀 İşletmenin sahalarına ait takvimi çeken özel metot
-        List<FootballFieldScheduleDto> GetFieldSchedulesByBusinessId(int businessId, int dayId);
-        List<int> GetBookedScheduleIdsByDate(int businessId, DateOnly date);
+       
         bool IsSlotBooked(int fieldPriceScheduleId, DateOnly date);
         int GetDayIdByScheduleId(int scheduleId);
         List<UserReservationDetailDto> GetUserReservations(int userId);
@@ -23,5 +22,7 @@ namespace DataAccess.Abstract
         void CompensateUsersForScheduleChange(List<int> deletedFieldPriceScheduleIds);
         int GetFreeRightCount(int userId, int footballFieldId);
         bool TryUseFreeRight(int userId, int fieldPriceScheduleId);
+        List<SlotStateDto> GetBookedSlotsByDateRange(int businessId, DateOnly startDate, DateOnly endDate);
+        List<FootballFieldScheduleDto> GetAllWeeklySchedulesByBusinessId(int businessId);
     }
 }

@@ -14,6 +14,20 @@ export interface GroupedDaySchedule {
   slots: PriceScheduleDto[];
 }
 
+export interface UIDynamicField {
+  fieldId: number;
+  fieldName: string;
+  dynamicDays: UIDynamicDay[];
+}
+
+export interface UIDynamicDay {
+  date: string;       // API'ye ve Redis'e gidecek "2026-08-11" formatı
+  displayDate: string; // Ekranda yazacak "11.08.2026" formatı
+  dayName: string;    // "Salı"
+  dayId: number;      // 2
+  slots: any[];       // O güne ait düz (flat) listeden filtrelenmiş saatler
+}
+
 export interface FieldWithGroupedSchedules {
   fieldId: number;
   fieldName: string;
@@ -38,11 +52,11 @@ export class ReservationComponent implements OnInit, OnDestroy {
   businessDetail = signal<BusinessDetailDto | null>(null);
 
   // İşlenmiş, arayüze basılmaya hazır veriler
-  groupedFields = signal<FieldWithGroupedSchedules[]>([]);
+  groupedFields = signal<FootballFieldScheduleDto[]>([]);
   isLoading = signal<boolean>(true);
   selectedDate: string = '';
   minDate: string = ''; 
-  bookedScheduleIds = signal<number[]>([]);
+  bookedScheduleIds = signal<{scheduleId: number, date: string}[]>([]);
   businessId: number = 0;
   
   freeRightCount = signal<number>(0);
@@ -51,6 +65,13 @@ export class ReservationComponent implements OnInit, OnDestroy {
 
   pageAlert = signal<{ message: string, title: string, type: string } | null>(null);
   private alertTimeout: any;
+
+  private formatDateForApi(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
 
   private hubConnection!: signalR.HubConnection;
@@ -85,17 +106,9 @@ export class ReservationComponent implements OnInit, OnDestroy {
     if (this.businessId) {
       this.restoreHoldState();
       this.fetchBusinessDetails(this.businessId);
-
-      if (!this.selectedDate) {
-         const today = new Date();
-         this.selectedDate = today.toISOString().split('T')[0];
-      }
-
-
-      this.fetchSchedules(this.businessId, this.selectedDate);
-      this.fetchBookedSlots(this.businessId, this.selectedDate);
-      this.fetchHeldSlots(this.businessId, this.selectedDate);
-      // 🚀 SAYFA AÇILINCA ODAYA BAĞLAN
+      
+      // Eski 3 ayrı fetch yerine artık bunu çağırıyoruz
+      this.fetchWeeklyData(this.selectedDate); 
       this.startSignalRConnection();
     }
   }
@@ -116,6 +129,71 @@ export class ReservationComponent implements OnInit, OnDestroy {
     
       localStorage.removeItem('ff_active_hold');
     }
+  }
+
+  dynamicGroupedFields = signal<UIDynamicField[]>([]);
+
+  // 🚀 GRUPLAMA VE TARİH ATAMA BEYNİ
+  buildDynamicCalendar() {
+    const fields = this.groupedFields(); // Backend'den gelen düz liste
+    if (!fields || fields.length === 0) return;
+
+    const startDate = new Date(this.selectedDate); // Takvimden seçilen gün
+    const dynamicFields: UIDynamicField[] = [];
+
+    // 1. ADIM: 7 Günlük tarih iskeletini oluştur
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+
+      // C#'taki DayOfWeek ile eşleştir (Pzt:1, Pazar:7)
+      let dayId = currentDate.getDay();
+      if (dayId === 0) dayId = 7; 
+
+      // UTC saat farkı yememek için manuel YYYY-MM-DD oluşturuyoruz
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      
+      const dateStr = `${year}-${month}-${day}`; // Redis ve DB için kritik tarih!
+      const displayDate = currentDate.toLocaleDateString('tr-TR'); 
+
+      weekDates.push({ dateStr, displayDate, dayId });
+    }
+
+    // 2. ADIM: Düz listeyi 7 günlük takvime dağıt
+    for (const field of fields) {
+      const dynamicDays: UIDynamicDay[] = [];
+
+      for (const wd of weekDates) {
+        
+        // 🚀 BÜYÜNÜN KOPTUĞU YER: Sadece o güne (dayId) ait slotları filtrele
+        const daySlots = field.schedules.filter((s: any) => s.dayId === wd.dayId);
+        
+        if (daySlots.length > 0) {
+          // Saat sırasına göre diz (Emin olmak için)
+          daySlots.sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
+
+          dynamicDays.push({
+            date: wd.dateStr,
+            displayDate: wd.displayDate,
+            dayName: daySlots[0].dayName,
+            dayId: wd.dayId,
+            slots: daySlots
+          });
+        }
+      }
+
+      dynamicFields.push({
+        fieldId: field.footballFieldId,
+        fieldName: field.footballFieldName,
+        dynamicDays: dynamicDays
+      });
+    }
+
+    // Olay tamam, HTML'in önüne hazır yemeği sunuyoruz
+    this.dynamicGroupedFields.set(dynamicFields);
   }
 
   private startSignalRConnection() {
@@ -143,10 +221,9 @@ export class ReservationComponent implements OnInit, OnDestroy {
       // Başkası kilitlediği slotu satın aldıysa turuncu (işlemde) listesinden çıkar
       this.heldScheduleIds.update(holds => holds.filter(h => !(h.scheduleId === data.scheduleId && h.date === data.date)));
       
-      // Ve kırmızı (dolu) listesine ekle (Eğer ekrandaki tarihe aitse)
-      if (data.date === this.selectedDate) {
-        this.bookedScheduleIds.update(ids => [...ids, data.scheduleId]);
-      }
+      // 🚀 DÜZELTME 1: Artık obje olarak ekliyoruz.
+      // 🚀 DÜZELTME 2: İleri tarihli bir alım da olsa (7 günlük vitrinde görebilmek için) if kısıtlamasını kaldırdık.
+      this.bookedScheduleIds.update(ids => [...ids, { scheduleId: data.scheduleId, date: data.date }]);
     });
 
     // 3. Süre bitti veya sepetten çıkardı (Freed)
@@ -156,10 +233,8 @@ export class ReservationComponent implements OnInit, OnDestroy {
     });
 
     this.hubConnection.on('SlotUnlocked', (data: { scheduleId: number, date: string }) => {
-      if (data.date === this.selectedDate) {
-        // Turuncudan (İşlemden) çıkar, tekrar Yeşile (Boş) döndür
-        this.heldScheduleIds.update(ids => ids.filter(h => !(h.scheduleId === data.scheduleId && h.date === data.date)));
-      }
+      // 🚀 DÜZELTME 3: Tarih kısıtlamasını buradan da kaldırdık, hangi tarihin kilidi açılırsa açılsın yeşile dönsün.
+      this.heldScheduleIds.update(ids => ids.filter(h => !(h.scheduleId === data.scheduleId && h.date === data.date)));
     });
   }
 
@@ -185,74 +260,79 @@ export class ReservationComponent implements OnInit, OnDestroy {
     return `https://localhost:7074${path}`; // Kendi portuna göre kontrol et!
   }
 
-  fetchSchedules(businessId: number, dateStr: string) {
-    this.reservationService.getBusinessFieldSchedules(businessId, dateStr).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.processDataForAccordion(res.data);
-        }
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Takvim çekilirken hata:', err);
-        this.isLoading.set(false);
-      }
-    });
-  }
 
-  // Belirli tarihteki dolu ID'leri backend'den çeker
-  fetchBookedSlots(businessId: number, dateStr: string) {
-    this.reservationService.getBookedScheduleIdsByDate(businessId, dateStr).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.bookedScheduleIds.set(res.data);
-        } else {
-          this.bookedScheduleIds.set([]);
-        }
-      },
-      error: (err) => {
-        console.error('Dolu slotlar çekilirken hata:', err);
-        this.bookedScheduleIds.set([]);
-      }
-    });
-  }
 
   // Kullanıcı takvimden yeni bir tarih seçtiğinde tetiklenir
   onDateChange(event: any) {
     const newDate = event.target.value;
     if (newDate && this.businessId) {
       this.selectedDate = newDate;
-      this.isLoading.set(true); // Veriler gelene kadar loading dönsün
-      
-      // 🚀 YENİ: Tarih değiştiğinde HEM dolu slotları HEM DE o günün programını yeniden çekiyoruz!
-      this.fetchSchedules(this.businessId, newDate);
-      this.fetchBookedSlots(this.businessId, newDate);
-      this.fetchHeldSlots(this.businessId, newDate);
+      // Tarih değişince yeni 7 günlük aralığı çek
+      this.fetchWeeklyData(newDate); 
     }
   }
 
-  fetchHeldSlots(businessId: number, dateStr: string) {
-    this.reservationService.getHeldScheduleIdsByDate(businessId, dateStr).subscribe({
+  
+
+
+
+  fetchWeeklyData(startDateStr: string) {
+    this.isLoading.set(true);
+
+    const start = new Date(startDateStr);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6); // 6 gün ekle (toplam 7 gün)
+    const endDateStr = this.formatDateForApi(end);
+
+    // 1. Şablonu çek
+    this.reservationService.getWeeklyTemplates(this.businessId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          // Gelen düz ID listesini, bizim objeli state yapımıza çeviriyoruz
-          const formattedHolds = res.data.map(id => ({ scheduleId: id, date: dateStr }));
-          this.heldScheduleIds.set(formattedHolds);
+          this.groupedFields.set(res.data);
+          
+          // Şablon geldikten sonra dinamik takvimi hemen inşa et
+          this.buildDynamicCalendar();
+
+          // 2. Kırmızı slotları çek
+          this.reservationService.getBookedSlotsByDateRange(this.businessId, startDateStr, endDateStr).subscribe(res2 => {
+            if (res2.success && res2.data) {
+              this.bookedScheduleIds.set(res2.data);
+            } else {
+              this.bookedScheduleIds.set([]);
+            }
+          });
+
+          // 3. Sarı slotları çek
+          this.reservationService.getHeldSlotsByDateRange(this.businessId, startDateStr, endDateStr).subscribe(res3 => {
+            if (res3.success && res3.data) {
+              this.heldScheduleIds.set(res3.data);
+            } else {
+              this.heldScheduleIds.set([]);
+            }
+          });
         }
+        this.isLoading.set(false);
       },
-      error: (err) => console.error('İşlemdeki slotlar çekilirken hata:', err)
+      error: (err) => {
+        console.error('Veriler çekilirken hata:', err);
+        this.isLoading.set(false);
+      }
     });
   }
 
-  isSlotInPast(slotStartTime: string): boolean {
-    if (!slotStartTime || !this.selectedDate) return false;
+
+  isSlotInPast(slotStartTime: string, slotDate: string): boolean {
+    if (!slotStartTime || !slotDate) return false;
 
     const now = new Date();
     // Saat dilimi kaymalarını önleyerek bugünün tarihini YYYY-MM-DD formatında alıyoruz
     const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
-    // Sadece "Bugün" seçiliyse saat kontrolü yap
-    if (this.selectedDate === todayStr) {
+    // Eğer kontrol edilen gün, geçmiş bir tarihse direkt true dön (saatleri gizle)
+    if (slotDate < todayStr) return true;
+
+    // Sadece kontrol edilen gün "Bugün" ise saat kontrolü yap
+    if (slotDate === todayStr) {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
       
@@ -270,8 +350,9 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   // Verilen slot ID'sinin dolu olup olmadığını kontrol eder
-  isSlotBooked(scheduleId: number): boolean {
-    return this.bookedScheduleIds().includes(scheduleId);
+  isSlotBooked(scheduleId: number, slotDate: string): boolean {
+    // bookedSlots yerine bookedScheduleIds kullanıyoruz
+    return this.bookedScheduleIds().some(x => x.scheduleId === scheduleId && x.date === slotDate);
   }
 
   isSlotHeld(scheduleId: number): boolean {
@@ -283,33 +364,7 @@ export class ReservationComponent implements OnInit, OnDestroy {
   }
 
   // 🚀 Backend'den gelen düz listeyi, günlere göre (Accordion için) gruplar
-  private processDataForAccordion(data: FootballFieldScheduleDto[]) {
-    const processedFields: FieldWithGroupedSchedules[] = [];
-
-    for (const field of data) {
-      const daysMap = new Map<number, GroupedDaySchedule>();
-
-      for (const schedule of field.schedules) {
-        if (!daysMap.has(schedule.dayId)) {
-          daysMap.set(schedule.dayId, {
-            dayId: schedule.dayId,
-            dayName: schedule.dayName,
-            slots: []
-          });
-        }
-        daysMap.get(schedule.dayId)!.slots.push(schedule);
-      }
-
-      processedFields.push({
-        fieldId: field.footballFieldId,
-        fieldName: field.footballFieldName,
-        // Map'i Array'e çevir ve DayId'ye göre tekrar sırala (Garanti olsun)
-        days: Array.from(daysMap.values()).sort((a, b) => a.dayId - b.dayId)
-      });
-    }
-
-    this.groupedFields.set(processedFields);
-  }
+  
 
 
 
@@ -330,19 +385,25 @@ export class ReservationComponent implements OnInit, OnDestroy {
     if (this.alertTimeout) clearTimeout(this.alertTimeout);
   }
 
-  isSlotHeldByOthers(scheduleId: number): boolean {
-    if (this.myActiveHold?.scheduleId === scheduleId && this.myActiveHold?.date === this.selectedDate) {
-      return false; // Bu kilit bana ait, başkasına değil!
+  isSlotHeldByOthers(scheduleId: number, slotDate: string): boolean {
+    if (this.myActiveHold?.scheduleId === scheduleId && this.myActiveHold?.date === slotDate) {
+      return false; // Kendi kilidim
     }
-    return this.heldScheduleIds().some(x => x.scheduleId === scheduleId && x.date === this.selectedDate);
+    // heldSlots yerine heldScheduleIds kullanıyoruz
+    return this.heldScheduleIds().some(x => x.scheduleId === scheduleId && x.date === slotDate);
   }
 
-   onSlotSelected(slot: PriceScheduleDto, fieldName: string, fieldId: number) { // 🚀 fieldId parametresi eklendi
-  if (this.isSlotBooked(slot.fieldPriceScheduleId)) return; 
-  if (this.isSlotHeldByOthers(slot.fieldPriceScheduleId)) {
-    this.showPageAlert("Bu saha şu anda başka biri tarafından işlem görüyor.", "Saha Müsait Değil", "warning");
-    return;
-  }
+   onSlotSelected(slot: PriceScheduleDto, fieldName: string, slotDate: string, fieldId: number) {
+    const sId = slot.fieldPriceScheduleId;
+
+    // 1. 🚀 slotDate parametresini içeriye gönderiyoruz
+    if (this.isSlotBooked(sId, slotDate)) return;
+    
+    // 2. Başkası tarafından tutuluyorsa (Turuncu) tıklanamaz
+    if (this.isSlotHeldByOthers(sId, slotDate)) {
+      this.showPageAlert("Bu saha şu anda başka biri tarafından işlem görüyor.", "Saha Müsait Değil", "warning");
+      return;
+    }
 
   const user = this.userService.currentUser();
   if (!user) {
@@ -350,13 +411,13 @@ export class ReservationComponent implements OnInit, OnDestroy {
     return;
   }
 
-  if (this.myActiveHold && this.myActiveHold.scheduleId === slot.fieldPriceScheduleId) {
-    this.selectedSlot = slot;
-    this.selectedFieldName = fieldName;
-    this.selectedFieldId = fieldId; // 🚀 Eklendi
-    this.reopenModal(); 
-    return;
-  }
+    // 4. EĞER BU SLOT ZATEN KENDİ İŞLEMİMDEYSE (Yeşil - "SİZDE") -> Sadece modalı geri aç
+    if (this.myActiveHold && this.myActiveHold.scheduleId === sId && this.myActiveHold.date === slotDate) {
+      this.selectedSlot = slot;
+      this.selectedFieldName = fieldName;
+      this.reopenModal(); 
+      return;
+    }
 
   if (this.myActiveHold) {
      this.showPageAlert("Zaten işlemde olan bir rezervasyonunuz var. Lütfen önce onu tamamlayın veya iptal edin.", "İşlem Devam Ediyor");
@@ -372,51 +433,56 @@ export class ReservationComponent implements OnInit, OnDestroy {
      }
   }
 
-  this.reservationService.holdReservationSlot(this.businessId, this.selectedDate, slot.fieldPriceScheduleId).subscribe({
-    next: (res) => {
-      if (res.success) {
-        this.selectedSlot = slot;
-        this.selectedFieldName = fieldName;
-        this.selectedFieldId = fieldId; // 🚀 Eklendi
-        this.cardNumber = ''; 
-        this.errorMessage = '';
-        this.useFreeRight.set(false); // Modal açılırken varsayılan kapalı
-        this.freeRightCount.set(0);
+    // 6. İLK DEFA TIKLIYORSA -> API'ye Geçici Kilit (Hold) isteği at!
+    this.reservationService.holdReservationSlot(this.businessId, slotDate, sId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.selectedSlot = slot;
+          this.selectedFieldName = fieldName;
+          
+          // 🚀 SENİN DALINDAN GELEN KODLAR
+          this.selectedFieldId = fieldId; 
+          this.cardNumber = ''; 
+          this.errorMessage = '';
+          this.useFreeRight.set(false); 
+          this.freeRightCount.set(0);
 
-        // 🚀 BOMBAYI BURADA PATLATIYORUZ: API'ye hakkı soruyoruz
-        this.reservationService.checkFreeRights(fieldId).subscribe(rightRes => {
-          if (rightRes.success) {
-            this.freeRightCount.set(rightRes.data);
-          }
-        });
+          // 🚀 BEDAVA HAK SORGUSU
+          this.reservationService.checkFreeRights(fieldId).subscribe(rightRes => {
+            if (rightRes.success) {
+              this.freeRightCount.set(rightRes.data);
+            }
+          });
+          
+          // 🚀 DOĞRU TARİH (slotDate) İLE KİLİT OBJESİ
+          this.myActiveHold = {
+            scheduleId: sId,
+            date: slotDate, 
+            expiresAt: Date.now() + (5 * 60 * 1000),
+            slotName: `${this.formatTime(slot.startTime)} - ${this.formatTime(slot.endTime)}`, 
+            price: slot.price 
+          };
 
-        this.myActiveHold = {
-          scheduleId: slot.fieldPriceScheduleId,
-          date: this.selectedDate,
-          expiresAt: Date.now() + (5 * 60 * 1000),
-          slotName: `${this.formatTime(slot.startTime)} - ${this.formatTime(slot.endTime)}`, 
-          price: slot.price 
-        };
-
-        localStorage.setItem('ff_active_hold', JSON.stringify({
-          businessId: this.businessId,
-          selectedDate: this.selectedDate,
-          selectedFieldName: this.selectedFieldName,
-          selectedFieldId: this.selectedFieldId, // Hafızaya alıyoruz
-          selectedSlot: this.selectedSlot,
-          myActiveHold: this.myActiveHold
-        }));
-        
-        this.startCountdown();
-        this.isModalOpen.set(true);
+          localStorage.setItem('ff_active_hold', JSON.stringify({
+            businessId: this.businessId,
+            selectedDate: slotDate, 
+            selectedFieldName: this.selectedFieldName,
+            selectedFieldId: this.selectedFieldId, 
+            selectedSlot: this.selectedSlot,
+            myActiveHold: this.myActiveHold
+          }));
+          
+          this.startCountdown();
+          this.isModalOpen.set(true);
+        }
+      },
+      error: (err) => {
+         // TEK BİR ERROR BLOĞU (Çakışma temizlendi)
+         const errorMsg = err.error?.message || "Bu saha az önce başka bir kullanıcı tarafından işlem görmeye başladı!";
+         this.showPageAlert(errorMsg, "Saha Müsait Değil", "warning");
+         this.heldScheduleIds.update(holds => [...holds, { scheduleId: sId, date: slotDate }]);
       }
-    },
-    error: (err) => {
-       const errorMsg = err.error?.message || "Bu saha az önce başka bir kullanıcı tarafından işlem görmeye başladı!";
-       this.showPageAlert(errorMsg, "Saha Müsait Değil", "warning");
-       this.heldScheduleIds.update(holds => [...holds, { scheduleId: slot.fieldPriceScheduleId, date: this.selectedDate }]);
-    }
-  });
+    });
 }
 
 
@@ -529,12 +595,54 @@ export class ReservationComponent implements OnInit, OnDestroy {
     }
   }
   confirmReservation() {
-  if (!this.selectedSlot) return;
+    // 1. Temel Güvenlik (main'den gelen myActiveHold kontrolü eklendi)
+    if (!this.selectedSlot || !this.myActiveHold) {
+      this.errorMessage = 'Geçersiz işlem. Lütfen tekrar deneyin.';
+      return;
+    }
   
-  // 🚀 Sadece Hak kullanmıyorsa kart kontrolü yap
-  if (!this.useFreeRight() && !this.cardNumber.trim()) {
-    this.errorMessage = 'Lütfen geçerli bir kart numarası giriniz.';
-    return;
+    // 2. 🚀 SENİN DALINDAN: Sadece Hak kullanmıyorsa kart kontrolü yap
+    if (!this.useFreeRight() && !this.cardNumber.trim()) {
+      this.errorMessage = 'Lütfen geçerli bir kart numarası giriniz.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    // 3. Payload Hazırlığı
+    const payload: any = { // DTO'na useFreeRight eklediysen "any" yerine "CreateReservationDto" kullanabilirsin
+      businessId: this.businessId,
+      fieldPriceScheduleId: this.selectedSlot.fieldPriceScheduleId,
+      
+      // 🚀 main'den: Takvimin bugünü değil, tıklanan slotun GERÇEK tarihi
+      reservationDate: this.myActiveHold.date, 
+      
+      finalPrice: this.selectedSlot.price,
+      
+      // Hak kullanılıyorsa backend'e kart numarası boş gidebilir
+      cardNumber: this.useFreeRight() ? '' : this.cardNumber,
+      
+      // 🚀 YENİ: Backend'in bu rezervasyonun bedava hakla yapıldığını bilmesi için
+      useFreeRight: this.useFreeRight() 
+    };
+
+    this.reservationService.createReservation(payload).subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        
+        this.clearMyHoldState();
+        this.selectedSlot = null;
+        if (this.timerInterval) clearInterval(this.timerInterval);
+
+        this.closeModal();
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = err.error?.message || 'Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar giriş yapıp deneyin.';
+        console.error(err);
+      }
+    });
   }
 
   this.isSubmitting = true;
